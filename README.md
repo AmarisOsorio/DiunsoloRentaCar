@@ -14,6 +14,9 @@ del lugar, esta tendrá mas funcionalidades que más adelante se detallarán.
 - Realizar reservas desde el sitio web
 - Catálogo de los vehículos
 
-# 📌 Tecnologías utilizadas
-
-- Stack MERN
+# 📌 Intergrantes:
+- Amaris Osorio
+- Eduardo Lima
+- Christhian Sánchez
+- Edenilson Amaya
+- José Irhaeta
