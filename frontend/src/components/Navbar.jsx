@@ -1,56 +1,47 @@
 // Navbar consistente para la app
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState } from 'react';
 import './styles/Navbar.css';
 import diunsoloImg from '.././assets/diunsolologo.png';
 import LangDropdown from './LangDropdown';
-import { useLocation } from 'react-router-dom';
+import LoginModal from './modals/LoginModal';
+import RegisterModal from './modals/RegisterModal';
+import ForgotPasswordModal from './modals/ForgotPasswordModal';
+import { useNavbar } from '../hooks/useNavbar.jsx';
+
+const languages = [
+  { value: 'es', label: 'Español' },
+  { value: 'en', label: 'English' }
+];
+const navLinks = [
+  { to: '/', label: 'Inicio', match: ['/','/Home'] },
+  { to: '/catalogo', label: 'Catálogo', match: ['/catalogo'] },
+  { to: '/contacto', label: 'Contáctanos', match: ['/contacto'] },
+];
 
 const Navbar = () => {
-  const [lang, setLang] = React.useState('es');
-  const [langOpen, setLangOpen] = React.useState(false);
-  const location = useLocation();
-  const languages = [
-    { value: 'es', label: 'Español' },
-    { value: 'en', label: 'English' }
-  ];
-  const navLinks = [
-    { to: '/', label: 'Inicio', match: ['/','/Home'] },
-    { to: '/catalogo', label: 'Catálogo', match: ['/catalogo'] },
-    { to: '/contacto', label: 'Contáctanos', match: ['/contacto'] },
-  ];
+  const {
+    lang,
+    langOpen,
+    linksRef,
+    underlineRef,
+    underlineStyle,
+    handleLangBtnClick,
+    handleLangBlur,
+    handleLangSelect,
+  } = useNavbar(navLinks);
 
-  // Sliding underline logic
-  const linksRef = useRef([]);
-  const underlineRef = useRef(null);
-  const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  // Controlar ambos modales aquí
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
 
-  useLayoutEffect(() => {
-    const activeIdx = navLinks.findIndex(link => link.match.some(path => location.pathname.toLowerCase() === path));
-    if (activeIdx !== -1 && linksRef.current[activeIdx]) {
-      const el = linksRef.current[activeIdx];
-      const { left, width } = el.getBoundingClientRect();
-      const parentLeft = el.parentElement.parentElement.getBoundingClientRect().left;
-      setUnderlineStyle({
-        left: left - parentLeft,
-        width,
-        opacity: 1
-      });
-    } else {
-      setUnderlineStyle({ left: 0, width: 0, opacity: 0 });
-    }
-  }, [location.pathname]);
-
-  // Detect open/close for animation
-  const handleLangBtnClick = () => setLangOpen((prev) => !prev);
-  const handleLangBlur = (e) => {
-    // Solo cerrar si el foco sale completamente del wrapper
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setLangOpen(false);
-    }
+  const handleOpenRegister = () => {
+    setLoginModalOpen(false);
+    setTimeout(() => setRegisterModalOpen(true), 10);
   };
-  const handleLangSelect = (value) => {
-    setLang(value);
-    setLangOpen(false);
+  const handleOpenLogin = () => {
+    setRegisterModalOpen(false);
+    setTimeout(() => setLoginModalOpen(true), 10);
   };
 
   return (
@@ -59,7 +50,7 @@ const Navbar = () => {
       <div className="navbar-center">
         <ul className="navbar-links" style={{ position: 'relative' }}>
           {navLinks.map((link, idx) => {
-            const isActive = link.match.some(path => location.pathname.toLowerCase() === path);
+            const isActive = link.match.some(path => window.location.pathname.toLowerCase() === path);
             return (
               <li key={link.to}>
                 <a
@@ -92,7 +83,15 @@ const Navbar = () => {
           onBlur={handleLangBlur}
           onBtnClick={handleLangBtnClick}
         />
-        <button className="login-btn">Iniciar sesión</button>
+        <button className="login-btn" onClick={() => setLoginModalOpen(true)}>Iniciar sesión</button>
+        <LoginModal 
+          open={loginModalOpen} 
+          onClose={() => setLoginModalOpen(false)} 
+          onOpenRegister={handleOpenRegister}
+          onOpenForgot={() => setForgotModalOpen(true)}
+        />
+        <RegisterModal open={registerModalOpen} onClose={() => setRegisterModalOpen(false)} onSwitchToLogin={handleOpenLogin} />
+        <ForgotPasswordModal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} />
       </div>
     </nav>
   );

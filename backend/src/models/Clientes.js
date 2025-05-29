@@ -15,46 +15,36 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const clientsSchema = new Schema({
-    documentoDeIdentificacion: {
-        type: String,
-        required: true,
-        unique: true
-    },
-
-    telefono: {
-        type: String,
-        required: true,
-        unique: true
-    },
-
-    fechaDeNacimiento: {
-        type: Date,
-        required: true
-    },
-
-    licencia: {
-        type: String,
-        required: true,
-        unique: true
-    },
-
-    contraseña: {
+    nombre_completo: {
         type: String,
         required: true
     },
-
     correo: {
         type: String,
         required: true,
         unique: true
     },
-
-    nombre: {
+    contraseña: {
         type: String,
         required: true
     },
-
-    verificado: {
+    telefono: {
+        type: String,
+        required: true
+    },
+    fecha_de_nacimiento: {
+        type: Date,
+        required: true
+    },
+    pasaporte_dui: {
+        type: Buffer,
+        required: false
+    },
+    licencia: {
+        type: Buffer,
+        required: false,
+    },
+    isVerified: {
         type: Boolean,
         default: false
     }
@@ -64,4 +54,4 @@ const clientsSchema = new Schema({
 });
 
 //Export
-export default model("Clients", clientsSchema);
+export default model("Clientes", clientsSchema, "Clientes");

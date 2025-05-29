@@ -1,0 +1,189 @@
+.register-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.register-modal-content {
+  background: #fff;
+  border-radius: 10px;
+  min-width: 700px; /* Further increased width for better two-column layout */
+  max-width: 95vw;
+  padding: 2.5rem 2rem 2rem 2rem;
+  position: relative;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-height: 90vh; /* Limit height to enable scrolling */
+  overflow-y: auto; /* Add vertical scroll when content overflows */
+}
+.register-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #1C318C;
+  transition: color 0.2s, background 0.2s;
+}
+.register-modal-close:hover {
+  color: #009BDB;
+  background: #e6f6fb;
+  border-radius: 50%;
+}
+.register-modal-title {
+  font-size: 2rem;
+  color: #1C318C;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.register-modal-login {
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
+  color: #111;
+  text-align: center;
+}
+.register-modal-link {
+  color: #009BDB;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.register-modal-form {
+  display: grid; /* Changed to grid for two-column layout */
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  gap: 15px 20px; /* Gap between rows and columns */
+}
+.register-modal-label {
+  color: #1C318C;
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-align: left;
+  display: block;
+}
+.register-modal-form input {
+  padding: 8px;
+  border: 1px solid #009BDB;
+  border-radius: 4px;
+  background: #e6f6fb;
+  width: 100%; /* Ensure inputs take full width of their grid cell */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+/* Styling for the file input button */
+.register-modal-form input::file-selector-button {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  background-color: #009BDB;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.register-modal-form input[type="file"] {
+  color: #009BDB; /* Sets the color for "No file selected" and the file name */
+}
+
+.register-modal-form input::file-selector-button:hover {
+  background-color: #1C318C;
+}
+.register-modal-form input:focus {
+  outline: 2px solid #1C318C;
+  box-shadow: 0 0 0 2px #1C318C33;
+}
+/* Styles for elements that should span the full width */
+.form-group-full-width {
+  grid-column: span 2; /* Make this element span both columns */
+}
+
+/* Styles for image previews */
+.register-modal-image-preview {
+  width: 150px; /* Fixed width for the preview */
+  height: 100px; /* Fixed height for the preview */
+  object-fit: cover; /* Ensures the image covers the area without distortion */
+  margin-top: 10px; /* Space above the image */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.register-modal-btn {
+  background: #1C318C;
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.register-modal-btn:hover {
+  background: #009BDB;
+}
+
+/* Animation styles for modal */
+.modal-fade-in {
+  animation: modalFadeIn 0.3s forwards;
+}
+.modal-fade-out {
+  animation: modalFadeOut 0.3s forwards;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.modal-slide-in {
+  animation: modalSlideIn 0.3s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+.modal-slide-out {
+  animation: modalSlideOut 0.3s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+}
+
+@media (max-width: 768px) {
+  .register-modal-content {
+    max-width: 98vw;
+    min-width: auto;
+    padding: 1.5rem 1rem;
+  }
+  .register-modal-form {
+    grid-template-columns: 1fr; 
+    gap: 10px;
+  }
+  .form-group-full-width {
+    grid-column: span 1; /* Reset span for smaller screens */
+  }
+  .register-modal-image-preview {
+    width: 100%; /* Make image preview full width on smaller screens */
+    height: auto; /* Allow height to adjust */
+  }
+}
