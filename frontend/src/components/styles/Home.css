@@ -17,7 +17,7 @@ body, html {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(26, 165, 223, 0.5); /* Oscurece toda la imagen */
+  background-color: rgba(26, 165, 223, 0.5); 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,6 +39,7 @@ body, html {
 }
 
 /* Final del Header */
+
 
 /* Inicio de sección de servicios*/
 .services-section {

@@ -52,8 +52,9 @@
     color: #666;
   }
 
-  
-  /* Responsive */
+
+/******************* RESPONSIVE ********************/
+
 @media (max-width: 768px) {
     .service-card {
       width: 80%;

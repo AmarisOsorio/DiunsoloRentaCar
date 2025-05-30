@@ -72,7 +72,4 @@ const homeServices = [
       );
     }
 
-
-
-
 export default HomePage;
