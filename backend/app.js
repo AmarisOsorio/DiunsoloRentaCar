@@ -7,6 +7,7 @@ import passwordRecoveryRoutes from "./src/routes/passwordRecovery.js";
 import clientsRoutes from "./src/routes/clients.js";
 import { fileURLToPath } from 'url';
 import path from 'path';
+import cors from "cors";
 
 const app = express();
 
@@ -15,6 +16,10 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 
 // Servir la carpeta uploads como estática
 app.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));

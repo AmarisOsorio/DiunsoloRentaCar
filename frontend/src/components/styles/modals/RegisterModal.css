@@ -127,6 +127,28 @@
   background: #009BDB;
 }
 
+/* Centrado y ajuste del icono de ojo en los inputs de contraseña */
+.input-eye-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+  font-size: 1.2rem;
+  color: #1C318C;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  z-index: 2;
+}
+
+/* Ajuste para que el input no tape el icono */
+.register-modal-form input[type="password"],
+.register-modal-form input[type="text"] {
+  padding-right: 2.5rem;
+}
+
 /* Animation styles for modal */
 .modal-fade-in {
   animation: modalFadeIn 0.3s forwards;
