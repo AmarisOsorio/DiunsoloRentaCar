@@ -172,6 +172,27 @@
     transform: translateY(40px) scale(0.98);
   }
 }
+/* Centrado y ajuste del icono de ojo en los inputs de contraseña del login */
+.input-eye-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+  font-size: 1.2rem;
+  color: #1C318C;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  z-index: 2;
+}
+
+.login-modal-form input[type="password"],
+.login-modal-form input[type="text"] {
+  padding-right: 2.5rem;
+}
+
 @media (max-width: 700px) {
   .login-modal-content {
     flex-direction: column;

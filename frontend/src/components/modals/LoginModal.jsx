@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import '../styles/modals/LoginModal.css';
 import ejemploImg from '../../assets/imagenEjemplo.png';
 import RegisterModal from './RegisterModal';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
+  const [error, setError] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -27,6 +32,22 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     onOpenForgot && onOpenForgot();
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const result = await login({ correo: email, contraseña: password });
+      if (result.message !== 'login exitoso') {
+        setError(result.message || 'Error al iniciar sesión');
+      } else {
+        onClose();
+        // Aquí puedes redirigir o actualizar el estado global de usuario
+      }
+    } catch (err) {
+      setError('Error de red o servidor');
+    }
+  };
+
   if (!open && !show) return null;
 
   return (
@@ -44,7 +65,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
               ¿Aún no tienes cuenta?{' '}
               <a href="#" className="login-modal-link" onClick={handleOpenRegister}>Regístrate</a>.
             </div>
-            <form className="login-modal-form">
+            <form className="login-modal-form" onSubmit={handleSubmit}>
               <label htmlFor="login-email" className="login-modal-label">Correo electrónico</label>
               <input
                 id="login-email"
@@ -55,18 +76,30 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
                 autoComplete="email"
               />
               <label htmlFor="login-password" className="login-modal-label">Contraseña</label>
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Contraseña"
-                autoComplete="current-password"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="login-password"
+                  type={showLoginPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Contraseña"
+                  autoComplete="current-password"
+                  className="login-modal-input"
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
+                <span
+                  onClick={() => setShowLoginPassword(v => !v)}
+                  className="input-eye-icon"
+                  title={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
               <div className="login-modal-forgot">
                 ¿Olvidaste tu contraseña?{' '}
                 <a href="#" className="login-modal-link" onClick={handleOpenForgot}>Recuperar contraseña</a>
               </div>
+              {error && <div className="login-modal-error">{error}</div>}
               <button type="submit" className="login-modal-btn">Iniciar sesión</button>
             </form>
           </div>

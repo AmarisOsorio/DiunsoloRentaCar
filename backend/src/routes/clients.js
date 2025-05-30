@@ -4,7 +4,6 @@ const router = express.Router();
 
 router.route("/")
   .get(clientsController.getClients)
-  .post(clientsController.insertClient);
 
 router.route("/:id")
   .get(clientsController.getClientById)

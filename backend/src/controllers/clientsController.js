@@ -16,18 +16,6 @@ clientsController.getClientById = async (req, res) => {
   }
 };
 
-// INSERT
-clientsController.insertClient = async (req, res) => {
-  try {
-    const { nombre_completo, correo, contraseña, telefono, fecha_de_nacimiento, pasaporte_dui, licencia } = req.body;
-    const newClient = new ClientsModel({ nombre_completo, correo, contraseña, telefono, fecha_de_nacimiento, pasaporte_dui, licencia });
-    await newClient.save();
-    res.json({ message: "Cliente guardado" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al guardar cliente", error });
-  }
-};
-
 // UPDATE
 clientsController.updateClient = async (req, res) => {
   try {
