@@ -13,13 +13,13 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <main style={{ padding: '6rem 2rem 2rem 2rem', minHeight: '80vh' }}>
+      
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/contacto" element={<Contacto />} />
         </Routes>
-      </main>
+      
       <Footer />
     </Router>
   );
