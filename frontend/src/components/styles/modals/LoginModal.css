@@ -1,0 +1,210 @@
+.login-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.login-modal-content {
+  display: flex;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 600px;
+  max-width: 95vw;
+  min-height: 350px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  position: relative;
+}
+.login-modal-left {
+  flex: 1 1 50%;
+  position: relative;
+  min-height: 350px;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #f7f7f7;
+  overflow: hidden;
+}
+.login-modal-img-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.login-modal-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: #1AA5DF80;
+  z-index: 2;
+}
+.login-modal-right {
+  flex: 1 1 50%;
+  padding: 2.5rem 2rem 2rem 2rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 3;
+}
+.login-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #1C318C;
+  transition: color 0.2s, background 0.2s;
+}
+.login-modal-close:hover {
+  color: #009BDB;
+  background: #e6f6fb;
+  border-radius: 50%;
+}
+.login-modal-title {
+  font-size: 2rem;
+  color: #1C318C;
+  margin-bottom: 0.5rem;
+}
+.login-modal-register {
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
+  color: #111;
+}
+.login-modal-link {
+  color: #009BDB;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.login-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.login-modal-form label {
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-align: left;
+  display: block;
+}
+.login-modal-label {
+  color: #1C318C;
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-align: left;
+  display: block;
+}
+.login-modal-form input {
+  padding: 8px;
+  border: 1px solid #009BDB;
+  border-radius: 4px;
+  background: #e6f6fb;
+}
+.login-modal-form input:focus {
+  outline: 2px solid #1C318C;
+  box-shadow: 0 0 0 2px #1C318C33;
+}
+.login-modal-forgot {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  color: #111;
+}
+.login-modal-btn {
+  background: #1C318C;
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.login-modal-btn:hover {
+  background: #009BDB;
+}
+.modal-fade-in {
+  animation: modalFadeIn 0.3s forwards;
+}
+.modal-fade-out {
+  animation: modalFadeOut 0.3s forwards;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.modal-slide-in {
+  animation: modalSlideIn 0.3s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+.modal-slide-out {
+  animation: modalSlideOut 0.3s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+}
+/* Centrado y ajuste del icono de ojo en los inputs de contraseña del login */
+.input-eye-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+  font-size: 1.2rem;
+  color: #1C318C;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  z-index: 2;
+}
+
+.login-modal-form input[type="password"],
+.login-modal-form input[type="text"] {
+  padding-right: 2.5rem;
+}
+
+@media (max-width: 700px) {
+  .login-modal-content {
+    flex-direction: column;
+    min-width: 90vw;
+    min-height: unset;
+  }
+  .login-modal-left, .login-modal-right {
+    flex: 1 1 100%;
+    padding: 1.5rem;
+    min-height: 180px;
+  }
+  .login-modal-img-bg {
+    max-height: 180px;
+  }
+}

@@ -1,0 +1,563 @@
+.register-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.register-modal-content {
+  background: #fff;
+  border-radius: 10px;
+  min-width: 340px;
+  max-width: 570px; /* Fijar un ancho máximo consistente */
+  padding: 1.2rem 2rem 1.2rem 2rem;
+  position: relative;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: unset !important;
+  max-height: 580px !important;
+  height: auto !important;
+  overflow-y: auto; /* Permite scroll vertical si el contenido sobrepasa el alto */
+}
+.register-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #1C318C;
+  transition: color 0.2s, background 0.2s;
+}
+.register-modal-close:hover {
+  color: #009BDB;
+  background: #e6f6fb;
+  border-radius: 50%;
+}
+.register-modal-title {
+  font-size: 2rem;
+  color: #1C318C;
+  margin-top: .5rem;
+  margin-bottom: 0rem;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.register-modal-login {
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
+  color: #111;
+  text-align: center;
+}
+.register-modal-link {
+  color: #009BDB;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.register-modal-form {
+  display: grid; /* Changed to grid for two-column layout */
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  gap: 15px 20px; /* Gap between rows and columns */
+}
+.register-modal-label {
+  color: #1C318C;
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-align: left;
+  display: block;
+}
+.register-modal-form input {
+  padding: 8px;
+  border: 1px solid #009BDB;
+  border-radius: 4px;
+  background: #e6f6fb;
+  width: 100%; /* Ensure inputs take full width of their grid cell */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+/* Styling for the file input button */
+.register-modal-form input::file-selector-button {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  background-color: #009BDB;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.register-modal-form input[type="file"] {
+  color: #009BDB;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.register-modal-form input::file-selector-button:hover {
+  background-color: #1C318C;
+}
+.register-modal-form input:focus {
+  outline: 2px solid #1C318C;
+  box-shadow: 0 0 0 2px #1C318C33;
+}
+/* Styles for elements that should span the full width */
+.form-group-full-width {
+  grid-column: span 2; /* Make this element span both columns */
+}
+
+/* Styles for image previews */
+.register-modal-image-preview {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  max-height: 90px;
+  object-fit: contain;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: block;
+  background: #f8fafc;
+}
+
+/* Contenedor para reservar espacio de la imagen */
+.form-group-half-width .register-modal-image-container {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.form-group-half-width .register-modal-image-preview,
+.form-group-half-width .register-modal-image-placeholder {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 90px;
+  max-height: 90px;
+  object-fit: contain;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: block;
+  background: #f8fafc;
+}
+
+.register-modal-btn {
+  background: #1C318C;
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.register-modal-btn:hover {
+  background: #009BDB;
+}
+
+/* Animation styles for modal */
+.modal-fade-in {
+  animation: modalFadeIn 0.3s forwards;
+}
+.modal-fade-out {
+  animation: modalFadeOut 0.3s forwards;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.modal-slide-in {
+  animation: modalSlideIn 0.3s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+.modal-slide-out {
+  animation: modalSlideOut 0.3s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+}
+
+.register-modal-success-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+  box-sizing: border-box;
+}
+.car-animation-container {
+  width: 120px;
+  height: 60px;
+  margin-bottom: 1.2rem;
+  position: relative;
+}
+.car-body {
+  transform: translateX(0);
+  animation: carMove 1.2s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+.car-wheel {
+  transform: scale(1);
+  animation: wheelSpin 1.2s linear forwards;
+}
+.car-check {
+  opacity: 0;
+  transform: scale(0.7);
+  animation: checkAppear 0.7s 1.1s cubic-bezier(.4,1.6,.6,1) forwards;
+}
+@keyframes carMove {
+  0% { transform: translateX(-60px); }
+  70% { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+@keyframes wheelSpin {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+@keyframes checkAppear {
+  0% { opacity: 0; transform: scale(0.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.register-modal-success-text {
+  font-size: 1.25rem;
+  color: #1C318C;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+@media (max-width: 768px) {
+  .register-modal-backdrop {
+    background: rgba(0,0,0,0.4) !important;
+  }
+  .register-modal-content {
+    background: #fff !important;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.13) !important;
+    padding: 0rem 0.5rem 0.7rem 0.5rem !important;
+    max-width: 98vw;
+    min-width: unset !important;
+    max-height: 98vh !important;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    opacity: 1 !important;
+    touch-action: manipulation;
+  }
+  .register-modal-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+  }
+  .register-modal-title {
+    font-size: 1.4rem !important;
+    margin: 0 !important;
+    background: transparent;
+    z-index: 2;
+    padding: 0;
+    flex: 1;
+    text-align: center;
+    display: block;
+    position: static;
+  }
+  .register-modal-close {
+    position: static;
+    background: #fff;
+    margin-left: auto;
+    margin-top: 0;
+    align-self: flex-end;
+    z-index: 10;
+    border-bottom: none;
+  }
+  .register-modal-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.3rem !important;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  .register-modal-close {
+    position: sticky;
+    top: 0;
+    right: 0.5rem;
+    left: auto;
+    z-index: 20;
+    background: #fff;
+    margin-left: auto;
+    margin-top: 0.5rem;
+    align-self: flex-end;
+    border-bottom: 1px solid #eee;
+  }
+  .register-modal-form input, .register-modal-form label {
+    font-size: 0.97rem !important;
+  }
+  .register-modal-form {
+    grid-template-columns: 1fr; 
+    gap: 10px;
+  }
+  .form-group-full-width {
+    grid-column: span 1;
+  }
+  .register-modal-image-preview {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    max-height: 90px;
+    object-fit: contain;
+    margin-bottom: 8px;
+  }
+}
+
+/* Evitar que el modal crezca demasiado por la imagen */
+.form-group-half-width, .form-group-full-width {
+  overflow-x: auto;
+}
+
+/* Error alert styles */
+.fb-alert-error {
+  display: flex;
+  align-items: center;
+  background: #fff6d7;
+  color: #65676b;
+  border: 1px solid #f7b928;
+  border-radius: 6px;
+  font-size: 0.97em;
+  margin-top: 6px;
+  padding: 7px 12px 7px 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  position: relative;
+  min-height: 32px;
+  font-weight: 500;
+}
+.fb-alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7b928;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 1.1em;
+  margin-right: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.fb-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e53935;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 1.1em;
+  margin-left: 4px;
+  margin-right: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  border: 2px solid #fff;
+  z-index: 2;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.fb-error-tooltip {
+  position: absolute;
+  left: auto;
+  right: calc(100% + 10px); /* A la izquierda del input, separado */
+  top: 50%;
+  transform: translateY(-50%);
+  background: #be4b49;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.95em;
+  font-weight: 500;
+  min-width: 120px;
+  max-width: 170px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  white-space: pre-line;
+  z-index: 2001; /* Más alto que el modal */
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+}
+.fb-error-tooltip-arrow {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid #be4b49;
+}
+
+/* Ajuste para que el tooltip y el ícono de error estén más cerca del input (menos separación horizontal) */
+.fb-error-tooltip-portal {
+  position: absolute !important;
+  z-index: 3000 !important;
+  pointer-events: none;
+  min-width: 120px;
+  max-width: 260px;
+  background: #be4b49;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.97em;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  white-space: pre-line;
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.fb-error-tooltip-portal .fb-error-tooltip-arrow {
+  position: absolute;
+  left: 100%;
+  top: 8px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid #be4b49;
+}
+
+/* Menos separación horizontal entre tooltip y el input */
+@media (min-width: 769px) {
+  .fb-error-tooltip-portal {
+    margin-right: -10px;
+  }
+}
+
+/* Ícono de error más pegado al input */
+.fb-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e53935;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 1.1em;
+  margin-left: 4px;
+  margin-right: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  border: 2px solid #fff;
+  z-index: 2;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 768px) {
+  .fb-error-tooltip-portal {
+    left: 10px !important;
+    right: 10px !important;
+    min-width: 90px;
+    max-width: 98vw;
+    font-size: 0.93em;
+    margin-right: 0;
+  }
+  .fb-error-icon {
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    font-size: 1em;
+  }
+}
+
+.input-error {
+  border-color: #e53935 !important;
+  background: #fff6f6 !important;
+}
+.input-eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #1C318C;
+  font-size: 1.2em;
+}
+
+.register-modal-error {
+  word-break: break-word;
+  white-space: pre-line;
+  max-width: 100%;
+  text-align: center;
+  color: #1C318C;
+}
+.register-modal-success-message{
+  word-break: break-word;
+  white-space: pre-line;
+  max-width: 100%;
+  text-align: center;
+  color: #009BDB;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

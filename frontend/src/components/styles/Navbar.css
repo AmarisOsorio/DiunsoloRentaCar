@@ -1,0 +1,155 @@
+.navbar {
+  position: fixed;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  width: auto;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  height: 60px; /* Ajusta el alto del navbar según lo que desees */
+  background: #009BDB;
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  border-radius: 5px;
+  justify-content: space-between;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+  margin-left: 2rem;
+  position: relative;
+}
+
+.navbar-links li {
+  display: flex;
+  align-items: center;
+  height: 33px; /* Más alto para un li más grueso */
+  position: relative;
+}
+
+.navbar-link {
+  position: relative;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 16px 0 16px 0; /* Más padding arriba y abajo para centrar el texto */
+  transition: color 0.2s, filter 0.2s;
+  display: inline-block;
+  overflow: hidden;
+}
+
+/* Per-link hover underline */
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Coloca la línea más arriba del borde inferior del navbar */
+  bottom: 10px; /* Ajusta este valor según el espacio que desees */
+  height: 2.5px;
+  background: #fff;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.32s cubic-bezier(.4,2,.6,1), background 0.18s;
+  z-index: 2; /* Igual o mayor que la línea compartida para que se vea encima al hacer hover */
+  pointer-events: none;
+}
+
+.navbar-link:hover::after,
+.navbar-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.navbar-link:hover,
+.navbar-link:focus-visible {
+  color: #fff;
+  filter: brightness(2.2) drop-shadow(0 0 1px #fff); /* Efecto de brillo al hacer hover */
+}
+
+.navbar-shared-underline {
+  position: absolute;
+  bottom: 0;
+  height: 2.5px;
+  background: #fff;
+  border-radius: 2px;
+  transition: left 0.35s cubic-bezier(.4,2,.6,1), width 0.35s cubic-bezier(.4,2,.6,1), opacity 0.2s;
+  will-change: left, width, opacity;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* Elimina reglas viejas de underline individuales */
+.navbar-link-underline { display: none !important; }
+
+.navbar-img {
+  height: 100%;
+  margin: 0;
+  border-radius: 8px;
+  display: block;
+  object-fit: cover;
+  align-self: stretch;
+}
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-right: 1.5rem;
+  position: relative;
+}
+
+.login-btn {
+  background: #009BDB;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  padding: 8px 22px;
+  font-family: 'DM Sans', Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: background 0.18s, color 0.18s, border 0.18s, box-shadow 0.18s;
+  outline: none;
+}
+
+.login-btn:hover, .login-btn:focus {
+  background: #fff;
+  color: #009BDB;
+  border: 2px solid #009BDB;
+  box-shadow: 0 2px 8px rgba(0,155,219,0.10);
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  .navbar-links {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+}

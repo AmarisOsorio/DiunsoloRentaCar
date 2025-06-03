@@ -1,0 +1,208 @@
+/* VerifyAccountModal.css */
+
+.register-verify-modal-content {
+  background: #fff;
+  border-radius: 14px;
+  min-width: 340px;
+  max-width: 98vw;
+  width: 400px;
+  min-height: 350px;
+  padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+  position: relative;
+  box-shadow: 0 4px 32px rgba(28,49,140,0.13);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.3s, min-height 0.3s;
+}
+
+.register-verify-title {
+  font-size: 2rem;
+  color: #1C318C;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.register-verify-instruction {
+  font-size: 1.08rem;
+  color: #222;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+
+.register-verify-email {
+  color: #009BDB;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.register-verify-icon {
+  font-size: 2.5rem;
+  color: #009BDB;
+  margin-bottom: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-verify-code-inputs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1.2rem;
+  justify-content: center;
+}
+
+.register-verify-code-input {
+  width: 38px;
+  height: 48px;
+  font-size: 1.7rem;
+  text-align: center;
+  border: 2px solid #009BDB;
+  border-radius: 7px;
+  background: #e6f6fb;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.register-verify-code-input:focus {
+  border: 2px solid #1C318C;
+  box-shadow: 0 0 0 2px #1C318C33;
+}
+
+.register-verify-timer {
+  font-size: 1.05rem;
+  color: #1C318C;
+  margin-bottom: 1.1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.register-verify-btn {
+  background: #1C318C;
+  color: #fff;
+  border: none;
+  padding: 12px 0;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1.13rem;
+  width: 100%;
+  margin-bottom: 1.1rem;
+  transition: background 0.2s;
+}
+
+.register-verify-btn:disabled {
+  background: #b3c2e6;
+  cursor: not-allowed;
+}
+
+.register-verify-btn:hover:not(:disabled) {
+  background: #009BDB;
+}
+
+.register-verify-resend {
+  color: #009BDB;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: color 0.2s;
+}
+
+.register-verify-resend:disabled,
+.register-verify-resend.disabled {
+  color: #b3c2e6;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.register-verify-resend-row {
+  font-size: 1rem;
+  color: #222;
+  text-align: center;
+  margin-bottom: 0.2rem;
+}
+
+.register-verify-error {
+  color: #e53935;
+  background: #fff6f6;
+  border: 1px solid #e53935;
+  border-radius: 6px;
+  padding: 7px 12px;
+  margin-bottom: 0.7rem;
+  font-size: 1.01rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.register-verify-success {
+  color: #1C318C;
+  background: #e6f6fb;
+  border: 1px solid #009BDB;
+  border-radius: 6px;
+  padding: 7px 12px;
+  margin-bottom: 0.7rem;
+  font-size: 1.01rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.register-verify-modal-content:focus-within {
+  outline: 2.5px solid #009BDB;
+  box-shadow: 0 0 0 4px #009bdb22;
+  transition: box-shadow 0.2s, outline 0.2s;
+}
+
+@media (max-width: 600px) {
+  .register-verify-modal-content {
+    min-width: unset;
+    width: 98vw;
+    padding: 1.1rem 0.3rem 0.7rem 0.3rem;
+  }
+  .register-verify-title {
+    font-size: 1.3rem;
+  }
+  .register-verify-code-input {
+    width: 32px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid #009BDB;
+  border-top: 2.5px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.register-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #009BDB;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  z-index: 2001;
+  animation: toastIn 0.3s;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
