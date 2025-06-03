@@ -1,10 +1,11 @@
 /*
     Fields:
-        tipoMantenimiento: String,
-        fechaInicio: Date,
-        fechaFinalizacion: Date,
-        idVehiculo: String,
-        estado: String,
+        carID (string),
+        tipo_mantenimiento (string),
+        fecha_inicio (date),
+        fecha_devolucion (date),
+        estado (string: "Pendiente, Activo, Finalizado"),
+        fecha_creacion (date),
 */
 
 //Imports
@@ -12,30 +13,30 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const mantenimientosSchema = new Schema({
-    tipoMantenimiento: {
+    carID: {
         type: String,
         required: true
     },
-
-    fechaInicio: {
-        type: Date,
-        required: true
-    },
-
-    fechaFinalizacion: {
-        type: Date,
-        required: true
-    },
-
-    idVehiculo: {
+    tipo_mantenimiento: {
         type: String,
         required: true
     },
-
+    fecha_inicio: {
+        type: Date,
+        required: true
+    },
+    fecha_devolucion: {
+        type: Date,
+        required: true
+    },
     estado: {
         type: String,
-        required: true,
-        enum: ["En Proceso", "Finalizado", "Cancelado"]
+        enum: ["Pendiente", "Activo", "Finalizado"],
+        default: "Pendiente"
+    },
+    fecha_creacion: {
+        type: Date,
+        default: Date.now
     }
 }, {
     timestamps: true,
