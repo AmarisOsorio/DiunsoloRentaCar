@@ -1,15 +1,17 @@
 /*
     Fields:
-        id_Usuario: String,
-        cliente: Object (nombre, correo, telefono),
-        id_Vehiculo: String,
-        fechaEntrega: Date,
-        fechaInicio: Date,
-        estado: String,
-        precioDia: Number,
-        precioTotal: Number,
-        id_Contrato: String,
-        id_HojaDeEstado: String
+        clientID (string),
+        cliente (object){
+            nombre (string),
+            telefono (string),
+            correo_electronico (string)
+        },
+        carID (string),
+        fecha_inicio (date),
+        fecha_devolucion (date),
+        estado (string: "Pendiente,Activa,Finalizada"),
+        precioPorDia (number),
+        fecha_creacion (date),
 */
 
 //Imports
@@ -17,59 +19,43 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const reservasSchema = new Schema({
-    id_Usuario: {
+    clientID: {
         type: String,
         required: true
     },
-
     cliente: {
-        type: Object,
-        required: true,
-        properties: {
-            nombre: {type: String, required: true},
-            correo: {type: String, required: true},
-            telefono: {type: String, required: true}
+        nombre: {
+            type: String,
+            required: true
+        },
+        telefono: {
+            type: String,
+            required: true
+        },
+        correo_electronico: {
+            type: String,
+            required: true
         }
     },
-
-    id_Vehiculo: {
+    carID: {
         type: String,
         required: true
     },
-
-    fechaEntrega: {
+    fecha_inicio: {
         type: Date,
         required: true
     },
-
-    fechaInicio: {
+    fecha_devolucion: {
         type: Date,
         required: true
     },
-
     estado: {
         type: String,
-        required: true,
-        enum: ["Reservado", "Pendiente", "Finalizado", "Cancelado"]
+        enum: ["Pendiente", "Activa", "Finalizada"],
+        default: "Pendiente"
     },
-
-    precioDia: {
+    precioPorDia: {
         type: Number,
-        required: true
-    },
-
-    precioTotal: {
-        type: Number,
-        required: true
-    },
-
-    id_Contrato: {
-        type: String,
-        required: true
-    },
-
-    id_HojaDeEstado: {
-        type: String,
         required: true
     }
 }, {
