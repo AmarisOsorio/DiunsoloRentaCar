@@ -1,7 +1,7 @@
 /*
     Fields:
-        logo: String,
-        nombre: String,
+        nombre_marca: (String),
+        logo: (String: URL)
 */
 
 //Imports
@@ -9,15 +9,14 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const marcasSchema = new Schema({
-    logo: {
-        type: String,
-        required: true
-    },
-
-    nombre: {
+    nombre_marca: {
         type: String,
         required: true,
         unique: true
+    },
+    logo: {
+        type: String,
+        required: true
     }
 }, {
     timestamps: true,

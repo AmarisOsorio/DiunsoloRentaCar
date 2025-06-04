@@ -1,13 +1,13 @@
 /*
     Fields:
-        documentoDeIdentificacion: String,
-        telefono: String,
-        fechaDeNacimiento: Date,
-        licencia: String,
-        contraseña: String,
-        correo: String,
-        nombre: String,
-        verificado: Boolean,
+        nombre_completo (string),
+        correo (string: unique),
+        contraseña (string),
+        telefono (string),
+        fecha_de_nacimiento (date),
+        pasaporte_dui (Buffer: optional),
+        licencia (Buffer: optional),
+        isVerified (boolean: default false)
 */
 
 //Imports

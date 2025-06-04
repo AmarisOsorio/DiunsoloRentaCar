@@ -3,13 +3,18 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
     "multer": "^2.0.0",
+<<<<<<< HEAD
     "nodemailer": "^7.0.3",
+=======
+    "nodemailer": "^7.0.2",
+>>>>>>> 449f0af5a0de2b3361abab0a3baf2e0434011934
     "nodemon": "^3.1.10"
   },
   "scripts": {

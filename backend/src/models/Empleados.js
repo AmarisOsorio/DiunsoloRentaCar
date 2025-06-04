@@ -1,11 +1,11 @@
 /*
     Fields:
-        nombre: String,
-        correo: String,
-        contraseña: String,
-        DUI: String,
-        telefono: String,
-        rol: String
+        nombre_completo (string),
+        correo_electronico (string),
+        contraseña (string),
+        telefono (string),
+        dui (string),
+        rol (string: "Empleado,Gestor,Admin")
 */
 
 //Imports
@@ -13,12 +13,12 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const empleadosSchema = new Schema({
-    nombre: {
+    nombre_completo: {
         type: String,
         required: true
     },
 
-    correo: {
+    correo_electronico: {
         type: String,
         required: true,
         unique: true
@@ -29,7 +29,7 @@ const empleadosSchema = new Schema({
         required: true
     },
 
-    DUI: {
+    dui: {
         type: String,
         required: true,
         unique: true
