@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '../styles/modals/VerifyAccountModal.css';
 import { FaEnvelope } from 'react-icons/fa';
 import useVerifyAccountModal from '../../hooks/useVerifyAccountModal';
+import SuccessCheckAnimation from '../SuccessCheckAnimation';
+import usePostVerification from '../../hooks/usePostVerification';
 
 const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password }) => {
   const [showToast, setShowToast] = useState(false);
@@ -38,35 +40,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
   });
 
   // Efecto: cerrar modal y redirigir tras éxito + login automático
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(async () => {
-        // Login automático tras verificación exitosa
-        if (email && password) {
-          try {
-            const res = await fetch('/api/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ correo: email, contraseña: password })
-            });
-            const data = await res.json();
-            if (data.message && data.message.toLowerCase().includes('login exitoso')) {
-              onClose && onClose();
-              window.location.href = '/'; // Redirige a inicio
-            } else {
-              // Si el login falla, solo cierra el modal
-              onClose && onClose();
-            }
-          } catch {
-            onClose && onClose();
-          }
-        } else {
-          onClose && onClose();
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [success, onClose, email, password]);
+  usePostVerification({ success, email, password, onClose, redirectUrl: '/catalogo' });
 
   if (!open) return null;
 
@@ -78,23 +52,19 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
       <div className="register-verify-modal-content modal-slide-in" onClick={e => e.stopPropagation()}>
         <button className="register-modal-close" onClick={onClose}>&times;</button>
         {showSuccessTick ? (
-          <div className="register-verify-success-anim-container">
-            <div className="register-verify-success-anim">
-              <svg width="80" height="80" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="36" fill="#e6f9ed" stroke="#34c759" strokeWidth="4" />
-                <polyline
-                  points="24,44 36,56 56,32"
-                  fill="none"
-                  stroke="#34c759"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="register-verify-tick-path"
-                />
-              </svg>
-            </div>
-            <div className="register-verify-success-message">¡Cuenta Verificada!</div>
-          </div>
+          <SuccessCheckAnimation
+            message="¡Cuenta verificada con éxito!"
+            subtitle={<span style={{fontWeight:'normal',fontSize:'1rem'}}>¡Bienvenido a DIUNSOLO Renta Car!</span>}
+            nextAction={
+              <>
+                <span>¿Listo para tu primer viaje?</span><br/>
+                <span style={{color:'#7c3aed',fontWeight:'bold'}}>Serás dirigido al <b>Catálogo</b> automáticamente...</span>
+                <div style={{marginTop:'1.2rem'}}>
+                  <a href="/catalogo" className="catalogo-cta-btn">Ir al Catálogo</a>
+                </div>
+              </>
+            }
+          />
         ) : (
           <>
             <div className="register-verify-icon" aria-hidden="true">

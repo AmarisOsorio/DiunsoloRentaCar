@@ -1,0 +1,48 @@
+.success-check-anim-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem 1.5rem 1rem;
+  background: #fff;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 32px rgba(60, 60, 60, 0.10);
+  min-width: 320px;
+  min-height: 320px;
+  animation: fadeInScale 0.7s cubic-bezier(.4,2,.6,1) both;
+}
+.success-check-anim {
+  margin-bottom: 1.2rem;
+}
+.success-check-tick-path {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: tickDraw 0.7s 0.2s cubic-bezier(.4,2,.6,1) forwards;
+}
+@keyframes tickDraw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+.success-check-message {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #34c759;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.success-check-subtitle {
+  font-size: 1.1rem;
+  color: #222;
+  margin-bottom: 1.1rem;
+  text-align: center;
+}
+.success-check-next-action {
+  font-size: 1rem;
+  color: #7c3aed;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 0.5rem;
+}
