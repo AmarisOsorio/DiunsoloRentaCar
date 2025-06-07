@@ -1,0 +1,100 @@
+.account-verified-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(76, 175, 80, 0.18); /* Verde sutil con opacidad */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
+  opacity: 1;
+}
+
+.account-verified-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.account-verified-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 32px 32px 32px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  text-align: center;
+  min-width: 320px;
+  animation: popIn 0.5s cubic-bezier(.68,-0.55,.27,1.55);
+  position: relative;
+}
+
+.account-verified-icon {
+  margin-bottom: 16px;
+  animation: bounce 1s;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.account-verified-particles {
+  position: absolute;
+  left: 0; top: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.account-verified-particle {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--particle-color, #FFD700);
+  opacity: 0.85;
+  box-shadow: 0 0 8px 2px var(--particle-color, #FFD700);
+  transform: scale(0.7);
+  animation: particle-burst 0.7s cubic-bezier(.68,-0.55,.27,1.55) forwards;
+}
+
+@keyframes particle-burst {
+  0% { opacity: 0; transform: scale(0.2); }
+  60% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(0.7); }
+}
+
+.account-verified-container h2 {
+  color: #4BB543;
+  margin-bottom: 8px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.account-verified-container p {
+  color: #333;
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+}
+
+.account-verified-btn {
+  background: #4BB543;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.account-verified-btn:hover {
+  background: #399c36;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounce {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

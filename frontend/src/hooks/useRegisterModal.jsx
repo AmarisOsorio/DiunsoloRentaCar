@@ -152,11 +152,7 @@ const useRegisterModal = () => {
         ) {
           setRegisterError('La cuenta ya está registrada pero no verificada. Se ha enviado un nuevo código de verificación. Si modificas tus datos, se actualizarán.');
           setShowVerify(true);
-          if (typeof window !== 'undefined') {
-            if (window.resendVerificationCode) {
-              await window.resendVerificationCode();
-            }
-          }
+          // Ya no llamamos a resendVerificationCode aquí
           setLoading(false);
           return;
         }
@@ -220,12 +216,12 @@ const useRegisterModal = () => {
     setLoading(false);
   };
 
-  const handleVerify = async (code, onClose) => {
+  const handleVerify = async (code) => {
     const result = await verifyAccount(code);
     if (result.message && result.message.includes('exitosamente')) {
-      setShowVerify(false);
+      // No cerrar el modal de verificación aquí, solo mostrar el éxito
       setRegisterSuccess('¡Cuenta verificada! Ya puedes iniciar sesión.');
-      onClose && onClose();
+      // El cierre del modal de verificación lo maneja el flujo del modal de verificación
     }
     return result;
   };

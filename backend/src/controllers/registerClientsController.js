@@ -2,9 +2,15 @@ import jsonwebtoken from "jsonwebtoken"; // Token
 import bcryptjs from "bcryptjs"; // Encriptar
 import nodemailer from "nodemailer"; // Enviar Correo
 import crypto from "crypto"; // Codigo aleatorio
+import path from "path";
+import { fileURLToPath } from "url";
 
 import clientsModel from "../models/Clientes.js";
 import { config } from "../config.js";
+
+// Obtener __dirname para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const registerClientsController = {};
 
@@ -80,7 +86,7 @@ registerClientsController.register = async (req, res) => {
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
               <div style="text-align: center; margin-bottom: 24px;">
-                <img src=\"https://i.ibb.co/3yQw1kF/logo-rentacar.png\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
+                <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
               </div>
               <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
               <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
@@ -92,11 +98,18 @@ registerClientsController.register = async (req, res) => {
               <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;" />
               <p style="font-size: 0.95em; color: #888;">¿No solicitaste este código? Si no fuiste tú quien se registró, por favor ignora este correo electrónico.</p>
               <div style="margin-top: 24px; text-align: center;">
-                <a href="https://diunsolorentacar.com" style="color: #007bff; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a><br>
-                <a href="https://diunsolorentacar.com/soporte" style="color: #888; font-size: 0.95em;">Soporte</a>
+                <a href="http://localhost:5173" style="color: #007bff; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a><br>
+                <a href="http://localhost:5173/contacto" style="color: #888; font-size: 0.95em;">Soporte</a>
               </div>
             </div>
           `,
+          attachments: [
+            {
+              filename: 'diunsolologo.png',
+              path: path.join(__dirname, '../../../frontend/src/assets/diunsolologo.png'),
+              cid: 'diunsolologo'
+            }
+          ],
         };
         transporter.sendMail(mailOptionsUpdate, (error, info) => {
           if (error) {
@@ -143,7 +156,7 @@ registerClientsController.register = async (req, res) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src=\"https://i.ibb.co/3yQw1kF/logo-rentacar.png\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
+            <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
           </div>
           <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
           <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
@@ -160,6 +173,13 @@ registerClientsController.register = async (req, res) => {
           </div>
         </div>
       `,
+      attachments: [
+        {
+          filename: 'diunsolologo.png',
+          path: path.join(__dirname, '../../../frontend/src/assets/diunsolologo.png'),
+          cid: 'diunsolologo'
+        }
+      ],
     };
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
@@ -202,8 +222,13 @@ registerClientsController.verifyCodeEmail = async (req, res) => {
     await client.save();
     res.json({ message: "Correo verificado exitosamente" });
     res.clearCookie("VerificationToken");
+    // NO MÁS CÓDIGO DESPUÉS DE ENVIAR LA RESPUESTA
+    return;
   } catch (error) {
-    res.json({ message: "error" });
+    // IMPORTANTE: solo una respuesta en el catch
+    if (!res.headersSent) {
+      return res.json({ message: "error" });
+    }
   }
 };
 
@@ -212,12 +237,28 @@ registerClientsController.resendCodeEmail = async (req, res) => {
   if (!token) {
     return res.status(400).json({ message: "No hay sesión de verificación activa." });
   }
+  // Definir chars aquí para evitar ReferenceError
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  // Definir transporter aquí para evitar error
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: config.email.email_user,
+      pass: config.email.email_pass,
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
   try {
     const decoded = jsonwebtoken.verify(token, config.JWT.secret);
     const { correo } = decoded;
     if (!correo) {
       return res.status(400).json({ message: "No se encontró el correo en la sesión." });
     }
+    // Obtener nombre_completo del cliente
+    const client = await clientsModel.findOne({ correo });
+    const nombre_completo = client ? client.nombre_completo : '';
     // Generar nuevo código de 6 caracteres alfanuméricos (mayúsculas y números)
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
@@ -237,7 +278,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src=\"https://i.ibb.co/3yQw1kF/logo-rentacar.png\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
+            <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
           </div>
           <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
           <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
@@ -254,6 +295,13 @@ registerClientsController.resendCodeEmail = async (req, res) => {
           </div>
         </div>
       `,
+      attachments: [
+        {
+          filename: 'diunsolologo.png',
+          path: path.join(__dirname, '../../../frontend/src/assets/diunsolologo.png'),
+          cid: 'diunsolologo'
+        }
+      ],
     };
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
