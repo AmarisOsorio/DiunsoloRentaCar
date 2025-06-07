@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import '../styles/modals/VerifyAccountModal.css';
 import { FaEnvelope } from 'react-icons/fa';
 import useVerifyAccountModal from '../../hooks/useVerifyAccountModal';
-import AccountVerifiedScreen from '../AccountVerifiedScreen.jsx';
+import AccountVerifiedScreen from '../AccountVerifiedScreen.jsx'; // Se queda la importación de Eduardo
 
 const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password, onLoginAfterVerify }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
-  const [showAccountVerified, setShowAccountVerified] = useState(false);
+  const [showAccountVerified, setShowAccountVerified] = useState(false); // Se queda el estado de Eduardo
 
   const {
-    code: codeArr,
+    code: codeArr, // Se queda la desestructuración de Eduardo
     handleInput,
     handlePaste,
     handleSubmit: originalHandleSubmit,
@@ -41,7 +41,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
     }
   });
 
-  // Permite cerrar el modal de verificación exitosa manualmente o automáticamente
+  // Lógica del useEffect de Eduardo para el cierre del modal y redirección
   const handleAccountVerifiedClose = () => {
     setShowAccountVerified(false);
     if (onClose) onClose();
@@ -62,15 +62,16 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    originalHandleSubmit();
+    originalHandleSubmit(); // Se mantiene el handleSubmit original
   };
 
+  // Se usa la condición de renderizado de Eduardo
   if (!open && !showAccountVerified) return null;
 
   return (
     <div className="register-modal-backdrop modal-fade-in" onClick={onClose}>
       <div className="register-verify-modal-content modal-slide-in" onClick={e => e.stopPropagation()}>
-        {/* Botón de cerrar siempre visible */}
+        {/* Botón de cerrar y renderizado condicional de Eduardo */}
         <button
           className="register-modal-close"
           onClick={showAccountVerified ? handleAccountVerifiedClose : onClose}
@@ -89,7 +90,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
         </div>
         <form onSubmit={originalHandleSubmit} autoComplete="off">
           <div className="register-verify-code-inputs" onPaste={handlePaste}>
-            {codeArr.map((digit, idx) => (
+            {codeArr.map((digit, idx) => ( // Se usa `codeArr` de Eduardo
               <input
                 key={idx}
                 type="text"
@@ -116,7 +117,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
           </div>
           {error && <div className="register-verify-error" role="alert">{error}</div>}
           {success && <div className="register-verify-success" role="status">{success}</div>}
-          <button className="register-verify-btn" type="submit" disabled={loading || codeArr.some(d => d === '')}>
+          <button className="register-verify-btn" type="submit" disabled={loading || codeArr.some(d => d === '')}> {/* Se usa `codeArr` de Eduardo */}
             {loading ? (
               <span className="spinner" style={{ marginRight: 8 }}></span>
             ) : null}
