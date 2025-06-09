@@ -36,7 +36,7 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     registrationSuccessData,
     setRegistrationSuccessData
   } = useRegisterModal();
-  const { resendVerificationCode } = useAuth();
+  const { resendVerificationCode, login } = useAuth();
 
   React.useEffect(() => {
     // Hacer disponible resendVerificationCode globalmente para el hook
@@ -79,14 +79,17 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
 
   // Si está mostrando el modal de verificación, solo renderiza ese modal
   if (showVerify) {
+    // Si se cierra el modal de verificación, vuelve a mostrar el de registro (no redirige)
+    const handleCloseVerify = () => setShowVerify(false);
     return (
-      <div className={`register-modal-backdrop${open ? ' modal-fade-in' : ' modal-fade-out'}`} onClick={onClose}>
+      <div className={`register-modal-backdrop${open ? ' modal-fade-in' : ' modal-fade-out'}`}>
         <VerifyAccountModal
           open={showVerify}
-          onClose={() => setShowVerify(false)}
-          onVerify={code => handleVerify(code, onClose)}
+          onClose={handleCloseVerify}
+          onVerify={handleVerify}
           onResend={resendVerificationCode}
           email={form.email}
+          password={form.password}
         />
       </div>
     );

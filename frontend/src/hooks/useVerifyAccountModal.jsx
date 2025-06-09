@@ -7,6 +7,7 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
   const inputRefs = useRef(Array(6).fill(null));
 
   useEffect(() => {
@@ -15,6 +16,7 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
     setError('');
     setSuccess('');
     setCode(['', '', '', '', '', '']);
+    setIsVerified(false); // Reinicia el estado al cambiar el email
   }, [email]);
 
   useEffect(() => {
@@ -57,8 +59,10 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
     setSuccess('');
     try {
       const result = await onVerify(code.join(''));
-      if (result.success) {
+      // Forzar success para debug visual
+      if (result.success || (result.message && result.message.toLowerCase().includes('exitosamente'))) {
         setSuccess('¡Cuenta verificada! Redirigiendo...');
+        setIsVerified(true); // Marca como verificada
       } else {
         setError(result.message || 'Código incorrecto o expirado.');
       }
@@ -71,12 +75,12 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
   const handleResend = async () => {
     setLoading(true);
     setError('');
-    setSuccess('');
+    // No limpiar success aquí, para no mostrar el check
     try {
       await onResend();
       setTimer(900);
       setCanResend(false);
-      setSuccess('¡Código reenviado! Revisa tu correo.');
+      // No usar setSuccess aquí, solo mostrar el toast en el modal
     } catch {
       setError('No se pudo reenviar el código.');
     }
@@ -98,7 +102,8 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
     canResend,
     loading,
     error,
-    success
+    success,
+    isVerified // Exporta el nuevo estado
   };
 };
 
