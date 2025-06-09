@@ -5,6 +5,7 @@
   max-width: 220px;
   pointer-events: none;
   transform: none;
+  border-radius: 8px 0 8px 8px; /* Esquina superior derecha sin borde redondeado */
 }
 .fb-error-tooltip-arrow {
   left: 100%;
@@ -14,7 +15,7 @@
 .fb-error-tooltip-arrow-top {
   position: absolute;
   left: 20px;
-  top: -12px;
+  top: -10px; /* Cambiado de -12px a -10px para pegar la flecha al cuadro */
   width: 0;
   height: 0;
   border-left: 7px solid transparent;
@@ -40,6 +41,7 @@
   .fb-error-tooltip-arrow-top {
     display: block;
     left: 50%;
+    top: -10px; /* Cambiado de -12px a -10px también en responsive */
     transform: translateX(-50%);
   }
 }

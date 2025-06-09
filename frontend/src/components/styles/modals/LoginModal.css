@@ -7,6 +7,7 @@
   justify-content: center;
   z-index: 1000;
 }
+
 .login-modal-content {
   display: flex;
   background: #fff;
@@ -94,6 +95,7 @@
   margin-bottom: 2px;
   text-align: left;
   display: block;
+  width: 100%;
 }
 .login-modal-label {
   color: #1C318C;
@@ -102,7 +104,12 @@
   text-align: left;
   display: block;
 }
-.login-modal-form input {
+.login-modal-form input,
+.login-modal-form input[type="password"],
+.login-modal-form input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 8px;
   border: 1px solid #009BDB;
   border-radius: 4px;
@@ -191,6 +198,13 @@
 .login-modal-form input[type="password"],
 .login-modal-form input[type="text"] {
   padding-right: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.login-modal-input-error {
+  border-color: #d8000c !important;
+  background: #fff0f0 !important;
 }
 
 @media (max-width: 700px) {

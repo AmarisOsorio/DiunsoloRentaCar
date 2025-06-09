@@ -5,8 +5,8 @@
         contraseña (string),
         telefono (string),
         fecha_de_nacimiento (date),
-        pasaporte_dui (Buffer: optional),
-        licencia (Buffer: optional),
+        pasaporte_dui (String: optional, URL),
+        licencia (String: optional, URL),
         isVerified (boolean: default false)
 */
 
@@ -37,11 +37,11 @@ const clientsSchema = new Schema({
         required: true
     },
     pasaporte_dui: {
-        type: Buffer,
+        type: String, // Cambiado de Buffer a String (URL)
         required: false
     },
     licencia: {
-        type: Buffer,
+        type: String, // Cambiado de Buffer a String (URL)
         required: false,
     },
     isVerified: {

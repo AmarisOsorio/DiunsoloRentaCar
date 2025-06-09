@@ -44,28 +44,42 @@ const useRegisterModal = () => {
   };
 
   // Handles changes to form input fields, including file inputs.
-  const handleChange = e => {
+  const handleChange = async e => {
     const { name, value, files } = e.target;
-    setForm(prev => {
-      if (files && files[0]) {
-        return {
-          ...prev,
-          [name]: files[0],
-          [`${name}Preview`]: URL.createObjectURL(files[0])
-        };
-      } else if (name === 'licencia' || name === 'pasaporte') {
-        return {
-          ...prev,
-          [name]: null,
-          [`${name}Preview`]: null
-        };
-      } else {
-        return {
-          ...prev,
-          [name]: value
-        };
+    if (files && files[0]) {
+      // Subir la imagen al backend y guardar la URL
+      const formData = new FormData();
+      formData.append('image', files[0]);
+      try {
+        const res = await fetch('/api/upload/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url) {
+          setForm(prev => ({
+            ...prev,
+            [name]: data.url,
+            [`${name}Preview`]: URL.createObjectURL(files[0])
+          }));
+        } else {
+          setRegisterError('Error subiendo la imagen.');
+        }
+      } catch (err) {
+        setRegisterError('Error subiendo la imagen.');
       }
-    });
+    } else if (name === 'licencia' || name === 'pasaporte') {
+      setForm(prev => ({
+        ...prev,
+        [name]: null,
+        [`${name}Preview`]: null
+      }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async e => {

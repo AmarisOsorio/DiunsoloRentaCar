@@ -22,14 +22,22 @@ loginController.login = async (req, res) => {
       userType = "Admin";
       userFound = { _id: "Admin" };
     } else {
-      userFound = await empleadosModel.findOne({ correo });
+      // Buscar empleados por correo_electronico y clientes por correo
+      userFound = await empleadosModel.findOne({ correo_electronico: correo });
       userType = "Empleado";
       if (!userFound) {
+        // Log búsqueda exacta y resultado
+        const allClients = await clientsModel.find({});
+        console.log('Correo recibido:', correo);
+        console.log('Primeros 3 clientes:', allClients.slice(0,3).map(c=>c.correo));
         userFound = await clientsModel.findOne({ correo });
+        console.log('Resultado búsqueda cliente:', userFound);
         userType = "Cliente";
       }
     }
+    console.log('Tipo de usuario:', userType);
     if (!userFound) {
+      console.log('No se encontró usuario para:', correo);
       return res.json({ message: "Usuario no encontrado" });
     }
     if (userType !== "Admin") {

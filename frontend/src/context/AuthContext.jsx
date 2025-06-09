@@ -25,16 +25,16 @@ export const AuthProvider = ({ children }) => {
         const normalizedType = data.userType.toLowerCase();
         setUserType(normalizedType);
         setIsAuthenticated(true);
-        return normalizedType;
+        return { ...data, message: data.message || 'login exitoso' };
       } else {
         setUserType(null);
         setIsAuthenticated(false);
-        return null;
+        return { message: data.message || 'Credenciales incorrectas' };
       }
     } catch (err) {
       setUserType(null);
       setIsAuthenticated(false);
-      return null;
+      return { message: 'Error de red o servidor' };
     }
   };
 

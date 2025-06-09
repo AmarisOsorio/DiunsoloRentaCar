@@ -65,8 +65,8 @@ registerClientsController.register = async (req, res) => {
         existsClient.fecha_de_nacimiento = fecha_de_nacimiento;
         existsClient.telefono = telefono;
         existsClient.contraseña = passwordHashUpdate;
-        if (pasaporteBuffer) existsClient.pasaporte_dui = pasaporteBuffer;
-        if (licenciaBuffer) existsClient.licencia = licenciaBuffer;
+        if (req.body.pasaporte_dui) existsClient.pasaporte_dui = req.body.pasaporte_dui;
+        if (req.body.licencia) existsClient.licencia = req.body.licencia;
         await existsClient.save();
         // Generar y enviar nuevo código de verificación (6 caracteres alfanuméricos)
         let verificationCodeUpdate = '';
@@ -131,8 +131,8 @@ registerClientsController.register = async (req, res) => {
       correo,
       contraseña: passwordHash,
       telefono,
-      pasaporte_dui: pasaporteBuffer,
-      licencia: licenciaBuffer
+      pasaporte_dui: req.body.pasaporte_dui || null, // URL
+      licencia: req.body.licencia || null // URL
     });
     await newClient.save();
     // Generar código de 6 caracteres alfanuméricos (números y letras mayúsculas)
