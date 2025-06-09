@@ -17,8 +17,6 @@ const registerClientsController = {};
 registerClientsController.register = async (req, res) => {
   try {
     // LOG para depuración
-    console.log('req.body:', req.body);
-    console.log('req.files:', req.files);
     let pasaporteBuffer = null;
     let licenciaBuffer = null;
     if (req.files && req.files.pasaporte_dui && req.files.pasaporte_dui[0]) {
@@ -68,6 +66,7 @@ registerClientsController.register = async (req, res) => {
         if (pasaporteBuffer) existsClient.pasaporte_dui = pasaporteBuffer;
         if (licenciaBuffer) existsClient.licencia = licenciaBuffer;
         await existsClient.save();
+        console.log("Cliente actualizado: ", correo);
         // Generar y enviar nuevo código de verificación (6 caracteres alfanuméricos)
         let verificationCodeUpdate = '';
         for (let i = 0; i < 6; i++) {
@@ -111,7 +110,7 @@ registerClientsController.register = async (req, res) => {
             }
           ],
         };
-        transporter.sendMail(mailOptionsUpdate, (error, info) => {
+        transporter.sendMail(mailOptionsUpdate, (error) => {
           if (error) {
             console.error("Error enviando correo:", error);
             return res.status(500).json({ message: "Error enviando correo" });
@@ -135,6 +134,7 @@ registerClientsController.register = async (req, res) => {
       licencia: licenciaBuffer
     });
     await newClient.save();
+    console.log("Nuevo cliente registrado: ", correo);
     // Generar código de 6 caracteres alfanuméricos (números y letras mayúsculas)
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
@@ -192,10 +192,9 @@ registerClientsController.register = async (req, res) => {
         }
         return res.status(500).json({ message: "Error enviando correo", error: error.toString(), smtp: error.response });
       }
-      console.log("Correo enviado:", info.response);
+      console.log("Correo enviado: ", correo);
       res.json({
-        message: "Cliente registrado. Por favor verifica tu correo con el código enviado",
-        info: info.response
+        message: "Cliente registrado. Por favor verifica tu correo con el código enviado"
       });
     });
   } catch (error) {
@@ -221,6 +220,7 @@ registerClientsController.verifyCodeEmail = async (req, res) => {
     client.isVerified = true;
     await client.save();
     res.json({ message: "Correo verificado exitosamente" });
+    console.log("Correo verificado exitosamente para: ", correo);
     res.clearCookie("VerificationToken");
     // NO MÁS CÓDIGO DESPUÉS DE ENVIAR LA RESPUESTA
     return;
@@ -308,7 +308,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
         console.error("Error enviando correo:", error);
         return res.status(500).json({ message: "Error enviando correo" });
       }
-      console.log("Correo reenviado: " + info.response);
+      console.log("Correo reenviado exitosamente a:", correo);
       return res.json({ message: "Nuevo código enviado" });
     });
   } catch (error) {
