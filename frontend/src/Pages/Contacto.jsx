@@ -2,18 +2,70 @@ import React, { useState } from 'react';
 import '../components/styles/Home.css';
 import contactHeader from '../assets/contactHeader.png';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
 const Contacto = () => {
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: '' });
   const [enviado, setEnviado] = useState(false);
+  const [telefonoError, setTelefonoError] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === 'telefono') {
+      // Solo números, máximo 8 dígitos, formato ####-####
+      let soloNumeros = value.replace(/\D/g, '').slice(0, 8);
+      let formateado = soloNumeros;
+      if (soloNumeros.length > 4) {
+        formateado = soloNumeros.slice(0, 4) + '-' + soloNumeros.slice(4);
+      }
+      setForm({ ...form, telefono: formateado });
+
+      // Validación
+      const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+      if (formateado.length === 9 && !regex.test(formateado)) {
+        setTelefonoError('Ingrese un teléfono válido de 8 dígitos (inicia con 2, 6 o 7)');
+      } else {
+        setTelefonoError('');
+      }
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    setEnviado(true);
-    // Aquí podrías enviar el formulario a tu backend si lo deseas
+    setError('');
+    setEnviado(false);
+
+    // Validación final de teléfono
+    const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+    if (!regex.test(form.telefono)) {
+      setTelefonoError('Ingrese un teléfono válido de 8 dígitos (inicia con 2, 6 o 7)');
+      return;
+    }
+    setTelefonoError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/contacto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (response.ok) {
+        setEnviado(true);
+        setForm({ nombre: '', telefono: '', email: '', mensaje: '' });
+      } else {
+        setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
+      }
+    } catch (err) {
+      setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -66,23 +118,30 @@ const Contacto = () => {
                 background: "#fff"
               }}
             />
-            <input
-              type="text"
-              name="telefono"
-              placeholder="Teléfono"
-              value={form.telefono}
-              onChange={handleChange}
-              required
-              style={{
-                flex: 1,
-                padding: "0.8rem",
-                borderRadius: 20,
-                border: "2px solid #b6e0fc",
-                fontSize: "1rem",
-                outline: "none",
-                background: "#fff"
-              }}
-            />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <input
+                type="text"
+                name="telefono"
+                placeholder="Teléfono"
+                value={form.telefono}
+                onChange={handleChange}
+                required
+                maxLength={9}
+                inputMode="numeric"
+                pattern="[0-9]{4}-[0-9]{4}"
+                style={{
+                  padding: "0.8rem",
+                  borderRadius: 20,
+                  border: telefonoError ? "2px solid #e74c3c" : "2px solid #b6e0fc",
+                  fontSize: "1rem",
+                  outline: "none",
+                  background: "#fff"
+                }}
+              />
+              {telefonoError && (
+                <span style={{ color: "#e74c3c", fontSize: 13, marginTop: 2 }}>{telefonoError}</span>
+              )}
+            </div>
           </div>
           <input
             type="email"
@@ -131,12 +190,18 @@ const Contacto = () => {
               cursor: "pointer",
               transition: "background 0.2s, color 0.2s"
             }}
+            disabled={!!telefonoError || loading}
           >
-            Enviar
+            {loading ? 'Enviando...' : 'Enviar'}
           </button>
           {enviado && (
             <div style={{ color: 'green', textAlign: 'center', fontWeight: 'bold', marginTop: 10 }}>
               ¡Mensaje enviado! Nos pondremos en contacto pronto.
+            </div>
+          )}
+          {error && (
+            <div style={{ color: 'red', textAlign: 'center', fontWeight: 'bold', marginTop: 10 }}>
+              {error}
             </div>
           )}
         </form>
