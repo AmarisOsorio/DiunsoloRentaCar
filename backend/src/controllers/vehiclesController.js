@@ -1,5 +1,6 @@
 //Imports
 import vehiclesModel from "../models/Vehiculos.js";
+import { v2 as cloudinary } from "cloudinary";
 
 const vehiclesController = {};
 
@@ -28,43 +29,57 @@ vehiclesController.getVehicleById = async (req, res) => {
 
 //Insert - Post
 vehiclesController.addVehicle = async (req, res) => {
-  const {
-    imagenes,
-    nombre_vehiculo,
-    precio_por_dia,
-    placa,
-    id_marca,
-    clase,
-    color,
-    año,
-    capacidad,
-    modelo,
-    numero_motor,
-    numero_chasis_grabado,
-    numero_vin_chasis,
-    contratoArrendamientoPDF,
-    estado
-  } = req.body;
-
-  const newVehicle = new vehiclesModel({
-    imagenes,
-    nombre_vehiculo,
-    precio_por_dia,
-    placa,
-    id_marca,
-    clase,
-    color,
-    año,
-    capacidad,
-    modelo,
-    numero_motor,
-    numero_chasis_grabado,
-    numero_vin_chasis,
-    contratoArrendamientoPDF,
-    estado
-  });
-
   try {
+    // req.files es un array de archivos subidos por multer
+    let imagenes = [];
+    if (req.files && req.files.length > 0) {
+      // Subir cada imagen a Cloudinary y guardar las URLs
+      for (const file of req.files) {
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+          folder: "vehiculos"
+        });
+        imagenes.push(uploadResult.secure_url);
+      }
+    } else if (req.body.imagenes) {
+      // Si se envían URLs directamente (opcional)
+      imagenes = Array.isArray(req.body.imagenes) ? req.body.imagenes : [req.body.imagenes];
+    }
+
+    const {
+      nombre_vehiculo,
+      precio_por_dia,
+      placa,
+      id_marca,
+      clase,
+      color,
+      año,
+      capacidad,
+      modelo,
+      numero_motor,
+      numero_chasis_grabado,
+      numero_vin_chasis,
+      contratoArrendamientoPDF,
+      estado
+    } = req.body;
+
+    const newVehicle = new vehiclesModel({
+      imagenes,
+      nombre_vehiculo,
+      precio_por_dia,
+      placa,
+      id_marca,
+      clase,
+      color,
+      año,
+      capacidad,
+      modelo,
+      numero_motor,
+      numero_chasis_grabado,
+      numero_vin_chasis,
+      contratoArrendamientoPDF,
+      estado
+    });
+
     await newVehicle.save();
     res.status(201).json({ message: "Vehículo agregado exitosamente" });
   } catch (error) {
