@@ -7,6 +7,7 @@ import passwordRecoveryRoutes from "./src/routes/passwordRecovery.js";
 import clientsRoutes from "./src/routes/clients.js";
 import sendWelcome from "./src/routes/sendWelcome.js";
 import uploadImageRoutes from "./src/routes/uploadImage.js";
+import vehiclesRoutes from "./src/routes/vehicles.js";
 
 import contactRoutes from "./src/routes/contact.js";
 import { fileURLToPath } from 'url';
@@ -36,6 +37,7 @@ app.use("/api/clients", clientsRoutes);
 app.use("/api/send-welcome", sendWelcome);
 app.use("/api/upload", uploadImageRoutes);
 app.use("/api", contactRoutes);
+app.use("/api/vehicles", vehiclesRoutes);
 
 
 export default app;
