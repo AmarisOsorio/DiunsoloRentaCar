@@ -5,6 +5,7 @@ import loginRoutes from "./src/routes/login.js";
 import logoutRoutes from "./src/routes/logout.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.js";
 import clientsRoutes from "./src/routes/clients.js";
+import mantenimientosRoutes from "./src/routes/mantenimientos.js";
 import sendWelcome from "./src/routes/sendWelcome.js";
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -32,4 +33,7 @@ app.use("/api/passwordRecovery", passwordRecoveryRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/send-welcome", sendWelcome);
 
+
+
+app.use("/api/mantenimientos", mantenimientosRoutes); 
 export default app;
