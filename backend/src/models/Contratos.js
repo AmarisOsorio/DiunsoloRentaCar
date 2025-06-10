@@ -1,4 +1,4 @@
-/*
+    /*
     Fields: 
         reservationId (string)
         clientID (string)
@@ -161,131 +161,311 @@ const contratosSchema = new Schema({
     fechaFin: {
         type: Date
     },
-    datosHojaEstado: {
-        fechaEntrega: Date,
-        fechaDevolucion: Date,
-        numeroUnidad: String,
-        marcaModelo: String,
-        placa: String,
-        nombreCliente: String,
-        anotaciones: String,
-        documentacionEntrega: {
+    datosHojaEstado: [{
+        fechaEntrega:{ 
+            type: Date
+        },
+        fechaDevolucion:{ 
+            type: Date
+        },
+        numeroUnidad: {
+            type: String
+        },
+        marcaModelo: {
+            type: String
+        },
+        placa: {
+            type: String
+        },
+        nombreCliente: {
+           type: String
+        },
+        anotaciones: {
+           type: String
+        },
+        documentacionEntrega: [{
+            entrega: [{
+                llaves: {
+                    type: Boolean
+                },
+                tarjetaCirculacion: {
+                    type:Boolean
+                },
+                facturaConsumidor: {
+                    type:Boolean
+                }
+            }],
+            devolucion: [{
+                llaves: {
+                    type: Boolean
+                },
+                tarjetaCirculacion: {
+                    type: Boolean
+                },
+                facturaConsumidor: {
+                    type: Boolean
+                }
+            }]
+        }
+        ],
+        inspeccionFisica: [{
+            entrega: [{
+                externa: [{
+                    condicionGeneral: {
+                        type: String
+                    },
+                    capo: {
+                        type: Boolean
+                    },
+                    medidaAceite: {
+                        type: String
+                    },
+                    antena: {
+                       type: Boolean
+                    },
+                    espejos: {
+                        type: Boolean
+                    },
+                    maletero: {
+                       type: Boolean
+                    },
+                    vidriosBuenEstado: {
+                        type: Boolean
+                    },
+                    bolsaHerramientas: {
+                        type: Boolean
+                    },
+                    manijasPuertas: {
+                        type: Boolean
+                    },
+                    tapaGasolina: {
+                       type: Boolean
+                    },
+                    tazasRines: [{
+                        presente: {
+                            type: Boolean
+                        },
+                        cantidad: {
+                           type: Number
+                        }
+                    }]
+                }],
+                interna: [{
+                    interruptorMaletero: {
+                       type: Boolean
+                    },
+                    llaveEncendido: {
+                        type: Boolean
+                    },
+                    luces: {
+                        type: Boolean
+                    },
+                    radioOriginal: {
+                       type: Boolean
+                    },
+                    ventilacionAcCalefaccion: {
+                        type: Boolean
+                    },
+                    panelInstrumentos: {
+                        type: String
+                    },
+                    palancaCambios: {
+                        type: Boolean
+                    },
+                    seguroPuerta: {
+                        type: Boolean
+                    },
+                    alfombras: {
+                        type: Boolean
+                    },
+                    llantaRepuesto: {
+                        type: Boolean
+                    }
+                }]
+            }],
+            devolucion: [{
+                externa: [{
+                    condicionGeneral: {
+                        type: String
+                    },
+                    capo: {
+                        type: Boolean
+                    },
+                    medidaAceite: {
+                        type: String
+                    },
+                    antena: {
+                        type: Boolean
+                    },
+                    espejos: {
+                        type: Boolean
+                    },
+                    maletero: {
+                        type: Boolean
+                    },
+                    vidriosBuenEstado: {
+                        type: Boolean
+                    },
+                    bolsaHerramientas: {
+                        type: Boolean
+                    },
+                    manijasPuertas: {
+                        type: Boolean
+                    },
+                    tapaGasolina: {
+                        type: Boolean
+                    },
+                    tazasRines: [{
+                        presente: {
+                           type:  Boolean
+                        },
+                        cantidad: {
+                           type:  Number
+                        }
+                    }]
+                }],
+                interna: [{
+                    interruptorMaletero: {
+                        type: Boolean
+                    },
+                    llaveEncendido: {
+                        type: Boolean
+                    },
+                    luces: {
+                        type: Boolean
+                    },
+                    radioOriginal: {
+                        type: Boolean
+                    },
+                    ventilacionAcCalefaccion: {
+                        type: Boolean
+                    },
+                    panelInstrumentos: {
+                        type: String
+                    },
+                    palancaCambios: {
+                        type: Boolean
+                    },
+                    seguroPuerta: {
+                        type: Boolean
+                    },
+                    alfombras: {
+                        type: Boolean
+                    },
+                    llantaRepuesto: {
+                        type: Boolean
+                    }
+                }]
+            }]
+        }],
+        fotosCondicionGeneral: {
+            type: String
+        },
+        estadoCombustible: [{
             entrega: {
-                llaves: Boolean,
-                tarjetaCirculacion: Boolean,
-                facturaConsumidor: Boolean
+                type: String
             },
             devolucion: {
-                llaves: Boolean,
-                tarjetaCirculacion: Boolean,
-                facturaConsumidor: Boolean
+                type: String
             }
-        },
-        inspeccionFisica: {
-            entrega: {
-                externa: {
-                    condicionGeneral: String,
-                    capo: Boolean,
-                    medidaAceite: String,
-                    antena: Boolean,
-                    espejos: Boolean,
-                    maletero: Boolean,
-                    vidriosBuenEstado: Boolean,
-                    bolsaHerramientas: Boolean,
-                    manijasPuertas: Boolean,
-                    tapaGasolina: Boolean,
-                    tazasRines: {
-                        presente: Boolean,
-                        cantidad: Number
-                    }
-                },
-                interna: {
-                    interruptorMaletero: Boolean,
-                    llaveEncendido: Boolean,
-                    luces: Boolean,
-                    radioOriginal: Boolean,
-                    ventilacionAcCalefaccion: Boolean,
-                    panelInstrumentos: String,
-                    palancaCambios: Boolean,
-                    seguroPuerta: Boolean,
-                    alfombras: Boolean,
-                    llantaRepuesto: Boolean
-                }
-            },
-            devolucion: {
-                externa: {
-                    condicionGeneral: String,
-                    capo: Boolean,
-                    medidaAceite: String,
-                    antena: Boolean,
-                    espejos: Boolean,
-                    maletero: Boolean,
-                    vidriosBuenEstado: Boolean,
-                    bolsaHerramientas: Boolean,
-                    manijasPuertas: Boolean,
-                    tapaGasolina: Boolean,
-                    tazasRines: {
-                        presente: Boolean,
-                        cantidad: Number
-                    }
-                },
-                interna: {
-                    interruptorMaletero: Boolean,
-                    llaveEncendido: Boolean,
-                    luces: Boolean,
-                    radioOriginal: Boolean,
-                    ventilacionAcCalefaccion: Boolean,
-                    panelInstrumentos: String,
-                    palancaCambios: Boolean,
-                    seguroPuerta: Boolean,
-                    alfombras: Boolean,
-                    llantaRepuesto: Boolean
-                }
-            }
-        },
-        fotosCondicionGeneral: [String],
-        estadoCombustible: {
-            entrega: String,
-            devolucion: String
-        },
-        firmaEntrega: String
-    },
-    datosArrendamiento: {
-        nombreArrendatario: String,
-        profesionArrendatario: String,
-        direccionArrendatario: String,
-        paisPasaporte: String,
-        numeroPasaporte: String,
-        paisLicencia: String,
-        numeroLicencia: String,
-        extraDriverName: String,
-        paisPasaporteConductorExtra: String,
-        numeroPasaporteConductorExtra: String,
-        paisLicenciaConductorExtra: String,
-        numeroLicenciaConductorExtra: String,
-        ciudadEntrega: String,
-        horaEntrega: String,
-        fechaEntrega: Date,
-        precioDiario: Number,
-        montoTotal: Number,
-        diasAlquiler: Number,
-        montoDeposito: Number,
-        diasPlazo: Number,
-        penalidadMalUso: Number,
-        ciudadFirma: String,
-        horaFirma: String,
-        fechaFirma: Date,
-        firmaArrendador: String,
-        firmaArrendatario: String
-    },
-    documentos: {
-        hojaEstadoPdf: String,
-        arrendamientoPdf: String
+        }],
+        firmaEntrega: {
+            type: String
+        }
     }
+],
+    datosArrendamiento: [{
+        nombreArrendatario: {
+            type:String
+        },
+        profesionArrendatario: {
+           type: String
+        },
+        direccionArrendatario: {
+          type:  String
+        },
+        paisPasaporte: {
+           type: String
+        },
+        numeroPasaporte: {
+           type: String
+        },
+        paisLicencia: {
+           type: String
+        },
+        numeroLicencia: {
+           type: String
+        },
+        extraDriverName: {
+          type:  String
+        },
+        paisPasaporteConductorExtra: {
+          type:  String
+        },
+        numeroPasaporteConductorExtra: {
+           type: String
+        },
+        paisLicenciaConductorExtra: {
+          type:  String
+        },
+        numeroLicenciaConductorExtra: {
+          type:  String
+        },
+        ciudadEntrega: {
+           type: String
+        },
+        horaEntrega: {
+           type: String
+        },
+        fechaEntrega: {
+            type: Date
+        },
+        precioDiario: {
+            type: Number
+        },
+        montoTotal: {
+          type: Number
+        },
+        diasAlquiler: {
+           type: Number
+        },
+        montoDeposito: {
+          type: Number
+        },
+        diasPlazo: {
+            type:Number
+        },
+        penalidadMalUso: {
+           type: Number
+        },
+        ciudadFirma: {
+          type: String
+        },
+        horaFirma: {
+           type: String
+        },
+        fechaFirma: {
+           type: Date
+        },
+        firmaArrendador: {
+           type: String
+        },
+        firmaArrendatario: {
+           type: String
+        }
+    }],
+    documentos: [{
+        hojaEstadoPdf: {
+           type: String
+        },
+        arrendamientoPdf: {
+           type: String
+        }
+    }]
 }, {
     timestamps: true,
     strict: false
 });
 
 //Export
-export const Contratos = model("Contratos", contratosSchema);
+export const Contratos = model("Contratos", contratosSchema); 
