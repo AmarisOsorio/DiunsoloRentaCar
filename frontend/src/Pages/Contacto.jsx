@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import '../components/styles/Home.css';
 import contactHeader from '../assets/contactHeader.png';
+import LocationIcon from '../assets/LocationIcon.png';
+import EmailIcon from '../assets/EmailIcon.png';
+import PhoneIcon from '../assets/PhoneIcon.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -213,85 +216,97 @@ const Contacto = () => {
           marginBottom: "2rem",
           flexWrap: "wrap"
         }}>
+          {/* Ubicación */}
           <div style={{
             flex: 1,
             minWidth: 220,
-            background: "#fff",
-            borderRadius: 16,
-            padding: "1.2rem",
+            background: "#eaf6ff",
+            borderRadius: 20,
+            padding: 0,
             display: "flex",
             alignItems: "center",
-            gap: "1rem",
-            boxShadow: "0 2px 8px #0001"
+            boxShadow: "0 2px 8px #0001",
+            overflow: "hidden",
+            position: "relative",
+            height: 100
           }}>
             <span style={{
+              display: "inline-block",
               background: "#eaf6ff",
               borderRadius: "50%",
               width: 40,
               height: 40,
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               justifyContent: "center",
-              fontSize: 22,
-              color: "#1aa5df"
-            }}>📍</span>
-            <div>
-              <div style={{ fontWeight: 700, color: "#0a2740" }}>Encuéntranos</div>
-              <div style={{ color: "#555", fontSize: 14 }}>Avenida El Rosario, Santa Tecla, La Libertad, El Salvador</div>
+              alignItems: "center",
+              padding: "1.2rem 1rem"
+            }}>
+              <div style={{ fontWeight: 700, color: "#0a2740", fontSize: 18, marginBottom: 2 }}>Encuéntranos</div>
+              <div style={{ color: "#0a2740", fontSize: 15, textAlign: "center", lineHeight: 1.2 }}>
+                Avenida El Rosario,<br />
+                Santa Tecla, La Libertad, El Salvador
+              </div>
             </div>
           </div>
+          {/* Correo */}
           <div style={{
             flex: 1,
             minWidth: 220,
-            background: "#eaf6ff",
-            borderRadius: 16,
-            padding: "1.2rem",
+            background: "#cbeafd",
+            borderRadius: 20,
+            padding: 0,
             display: "flex",
             alignItems: "center",
-            gap: "1rem",
-            boxShadow: "0 2px 8px #0001"
+            boxShadow: "0 2px 8px #0001",
+            overflow: "hidden",
+            position: "relative",
+            height: 100
           }}>
             <span style={{
+              display: "inline-block",
               background: "#fff",
               borderRadius: "50%",
               width: 40,
               height: 40,
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               justifyContent: "center",
-              fontSize: 22,
-              color: "#1aa5df"
-            }}>✉️</span>
-            <div>
-              <div style={{ fontWeight: 700, color: "#0a2740" }}>Correo electrónico</div>
-              <div style={{ color: "#555", fontSize: 14 }}>renta@diunsolo.rent</div>
+              alignItems: "center",
+              padding: "1.2rem 1rem"
+            }}>
+              <div style={{ fontWeight: 700, color: "#0a2740", fontSize: 18, marginBottom: 2 }}>Correo electrónico</div>
+              <div style={{ color: "#0a2740", fontSize: 15, textAlign: "center" }}>renta@diunsolo.rent</div>
             </div>
           </div>
+          {/* Teléfono */}
           <div style={{
             flex: 1,
             minWidth: 220,
-            background: "#1aa5df",
-            borderRadius: 16,
-            padding: "1.2rem",
+            background: "#29abe2",
+            borderRadius: 20,
+            padding: 0,
             display: "flex",
             alignItems: "center",
-            gap: "1rem",
-            boxShadow: "0 2px 8px #0001"
+            boxShadow: "0 2px 8px #0001",
+            overflow: "hidden",
+            position: "relative",
+            height: 100
           }}>
             <span style={{
+              display: "inline-block",
               background: "#fff",
               borderRadius: "50%",
               width: 40,
               height: 40,
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               justifyContent: "center",
-              fontSize: 22,
-              color: "#1aa5df"
-            }}>📞</span>
-            <div>
-              <div style={{ fontWeight: 700, color: "#fff" }}>Teléfono</div>
-              <div style={{ color: "#fff", fontSize: 18, fontWeight: 600 }}>7423-4724</div>
+              alignItems: "center",
+              padding: "1.2rem 1rem"
+            }}>
+              <div style={{ fontWeight: 700, color: "#fff", fontSize: 20, marginBottom: 2 }}>Teléfono</div>
+              <div style={{ color: "#fff", fontSize: 20, fontWeight: 700, letterSpacing: 1 }}>7423–4724</div>
             </div>
           </div>
         </div>
