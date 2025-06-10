@@ -202,11 +202,6 @@
   box-sizing: border-box;
 }
 
-.login-modal-input-error {
-  border-color: #d8000c !important;
-  background: #fff0f0 !important;
-}
-
 @media (max-width: 700px) {
   .login-modal-content {
     flex-direction: column;

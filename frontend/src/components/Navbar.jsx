@@ -1,5 +1,5 @@
 // Navbar consistente para la app
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/Navbar.css';
 import diunsoloImg from '.././assets/diunsolologo.png';
 import LangDropdown from './LangDropdown';
@@ -34,6 +34,18 @@ const Navbar = () => {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Cerrar menú móvil si cambia a vista desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 700 && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mobileMenuOpen]);
 
   const handleOpenRegister = () => {
     setLoginModalOpen(false);
@@ -44,15 +56,18 @@ const Navbar = () => {
     setTimeout(() => setLoginModalOpen(true), 10);
   };
 
+  // Cerrar menú móvil al navegar
+  const handleNavClick = () => setMobileMenuOpen(false);
+
   return (
     <nav className="navbar">
-      <img className="navbar-img" src={diunsoloImg} alt="Diunsolo Logo" />
-      <div className="navbar-center">
+      <img className="navbar-img" src={diunsoloImg} alt="Diunsolo Logo" style={{ marginLeft: 0 }} />
+      <div className={`navbar-center${mobileMenuOpen ? ' navbar-center-mobile-open' : ''}`}>
         <ul className="navbar-links" style={{ position: 'relative' }}>
           {navLinks.map((link, idx) => {
             const isActive = link.match.some(path => window.location.pathname.toLowerCase() === path);
             return (
-              <li key={link.to}>
+              <li key={link.to} onClick={handleNavClick}>
                 <a
                   href={link.to}
                   className={`navbar-link${isActive ? ' active' : ''}`}
@@ -73,26 +88,66 @@ const Navbar = () => {
             }}
           />
         </ul>
+        {/* Acciones móviles integradas debajo del menú de páginas */}
+        {mobileMenuOpen && (
+          <div className="navbar-mobile-actions navbar-mobile-actions-column">
+            <LangDropdown
+              open={langOpen}
+              current={lang}
+              languages={languages}
+              onSelect={handleLangSelect}
+              onBlur={handleLangBlur}
+              onBtnClick={handleLangBtnClick}
+            />
+            <button
+              className="login-btn"
+              onClick={() => {
+                setLoginModalOpen(true);
+                setMobileMenuOpen(false); // Cierra el menú móvil al abrir login
+              }}
+              style={{ width: '100%', marginTop: '0.5rem' }}
+            >
+              Iniciar sesión
+            </button>
+          </div>
+        )}
       </div>
       <div className="navbar-right">
-        <LangDropdown
-          open={langOpen}
-          current={lang}
-          languages={languages}
-          onSelect={handleLangSelect}
-          onBlur={handleLangBlur}
-          onBtnClick={handleLangBtnClick}
-        />
-        <button className="login-btn" onClick={() => setLoginModalOpen(true)}>Iniciar sesión</button>
-        <LoginModal 
-          open={loginModalOpen} 
-          onClose={() => setLoginModalOpen(false)} 
-          onOpenRegister={handleOpenRegister}
-          onOpenForgot={() => setForgotModalOpen(true)}
-        />
-        <RegisterModal open={registerModalOpen} onClose={() => setRegisterModalOpen(false)} onSwitchToLogin={handleOpenLogin} />
-        <ForgotPasswordModal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} />
+        {/* Solo mostrar en desktop (cuando el botón hamburguesa NO es visible) */}
+        <span className="navbar-desktop-actions">
+          <LangDropdown
+            open={langOpen}
+            current={lang}
+            languages={languages}
+            onSelect={handleLangSelect}
+            onBlur={handleLangBlur}
+            onBtnClick={handleLangBtnClick}
+          />
+          <button className="login-btn" onClick={() => setLoginModalOpen(true)}>Iniciar sesión</button>
+        </span>
       </div>
+      <LoginModal 
+        open={loginModalOpen} 
+        onClose={() => setLoginModalOpen(false)} 
+        onOpenRegister={handleOpenRegister}
+        onOpenForgot={() => setForgotModalOpen(true)}
+      />
+      <RegisterModal open={registerModalOpen} onClose={() => setRegisterModalOpen(false)} onSwitchToLogin={handleOpenLogin} />
+      <ForgotPasswordModal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} />
+      <button
+        className="navbar-hamburger"
+        onClick={() => setMobileMenuOpen(v => !v)}
+        aria-label="Abrir menú"
+        style={
+          (loginModalOpen || registerModalOpen || forgotModalOpen)
+            ? { zIndex: 1, position: 'relative' }
+            : {}
+        }
+      >
+        <span className="navbar-hamburger-bar" />
+        <span className="navbar-hamburger-bar" />
+        <span className="navbar-hamburger-bar" />
+      </button>
     </nav>
   );
 };

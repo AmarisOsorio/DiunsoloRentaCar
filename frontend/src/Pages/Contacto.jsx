@@ -225,7 +225,6 @@ const Contacto = () => {
             boxShadow: "0 2px 8px #0001"
           }}>
             <span style={{
-              display: "inline-block",
               background: "#eaf6ff",
               borderRadius: "50%",
               width: 40,
@@ -253,7 +252,6 @@ const Contacto = () => {
             boxShadow: "0 2px 8px #0001"
           }}>
             <span style={{
-              display: "inline-block",
               background: "#fff",
               borderRadius: "50%",
               width: 40,
@@ -281,7 +279,6 @@ const Contacto = () => {
             boxShadow: "0 2px 8px #0001"
           }}>
             <span style={{
-              display: "inline-block",
               background: "#fff",
               borderRadius: "50%",
               width: 40,
