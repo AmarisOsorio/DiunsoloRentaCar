@@ -1,5 +1,5 @@
 import React from 'react';
-import '../components/styles/Contacto.css';
+import './styles/Contacto.css';
 import contactHeader from '../assets/contactHeader.png';
 import LocationIcon from '../assets/LocationIcon.png';
 import EmailIcon from '../assets/EmailIcon.png';

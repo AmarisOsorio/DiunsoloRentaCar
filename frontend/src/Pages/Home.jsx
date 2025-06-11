@@ -1,5 +1,5 @@
 import React from 'react';
-import '../components/styles/Home.css';
+import './styles/Home.css';
 import ServicesCard from '../components/ServicesCard';
 import Rapido from '../assets/FlashOn.png'
 import Seguro from '../assets/Protect.png'
