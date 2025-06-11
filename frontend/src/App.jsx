@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import Home from './Pages/Home';
 import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
+import TerminosCondiciones from './Pages/TerminosCondiciones';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
 import RegisterModal from './components/modals/RegisterModal';
@@ -25,6 +26,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/contacto" element={<Contacto />} />
+          <Route path="/terminos" element={<TerminosCondiciones />} />
         </Routes>
         <LoginModal open={showLogin} onClose={() => setShowLogin(false)} onOpenRegister={() => { setShowLogin(false); setShowRegister(true); }} onOpenForgot={() => { setShowLogin(false); setShowForgot(true); }} />
         <RegisterModal open={showRegister} onClose={() => setShowRegister(false)} onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }} />

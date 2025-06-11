@@ -1,6 +1,7 @@
 // Ejemplo de Footer consistente para la app
 import React from 'react';
 import diunsolologo from '../assets/diunsolologo.png';
+import { Link } from 'react-router-dom';
 
 const Footer = () => (
   <footer style={{
@@ -57,7 +58,19 @@ const Footer = () => (
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 8 }}>Términos y condiciones</div>
+        <Link
+          to="/terminos"
+          style={{
+            fontSize: 20,
+            fontWeight: 400,
+            marginBottom: 8,
+            color: "#fff",
+            textDecoration: "none",
+            transition: "color 0.2s"
+          }}
+        >
+          Términos y condiciones
+        </Link>
       </div>
     </div>
     <div style={{
