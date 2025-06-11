@@ -1,0 +1,213 @@
+/* General container */
+.contacto-bg {
+  background: #f9f9f9;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+/* Header */
+.contacto-header {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  height: 300px;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-overlay {
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 39, 64, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-overlay h1 {
+  color: #fff;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-overlay p {
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+/* Formulario */
+.contacto-form {
+  background: #eaf6ff;
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 2px 12px #0001;
+  margin-bottom: 2rem;
+}
+
+.contacto-form input,
+.contacto-form textarea {
+  padding: 0.8rem;
+  border-radius: 20px;
+  border: 2px solid #b6e0fc;
+  font-size: 1rem;
+  outline: none;
+  background: #fff;
+}
+
+.contacto-form input[type="text"]:invalid,
+.contacto-form input[type="email"]:invalid,
+.contacto-form textarea:invalid {
+  border: 2px solid #29abe2;
+}
+
+.contacto-form button {
+  align-self: flex-end;
+  padding: 0.6rem 2.5rem;
+  border-radius: 20px;
+  border: 2px solid #0a2740;
+  background: #fff;
+  color: #0a2740;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.contacto-form .error {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.contacto-form .success {
+  color: green;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Info boxes */
+.info-boxes {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.info-card {
+  flex: 1;
+  min-width: 220px;
+  border-radius: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px #0001;
+  overflow: hidden;
+  position: relative;
+  height: 100px;
+}
+
+.info-card.ubicacion {
+  background: #eaf6ff;
+}
+
+.info-card.correo {
+  background: #cbeafd;
+}
+
+.info-card.telefono {
+  background: #29abe2;
+}
+
+.info-card-content {
+  margin-left: 95px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1.2rem 1rem;
+}
+
+.info-card-content .title {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.info-card-content .subtitle {
+  color: #0a2740;
+  font-size: 15px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.info-card.telefono .info-card-content .title,
+.info-card.telefono .info-card-content .subtitle {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.info-card-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: auto;
+  z-index: 2;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px #0001);
+  border-radius: 20px;
+}
+
+/* Mapa y horarios */
+.contacto-mapa-horarios {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.contacto-mapa {
+  flex: 2;
+  min-width: 260px;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px #0001;
+}
+
+.contacto-horarios {
+  flex: 1;
+  min-width: 220px;
+  background: #eaf6ff;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px #0001;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.contacto-horarios .title {
+  font-weight: 700;
+  color: #0a2740;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.contacto-horarios .subtitle {
+  color: #0a2740;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.contacto-horarios .text {
+  color: #555;
+  font-size: 14px;
+}
