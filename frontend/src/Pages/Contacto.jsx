@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './styles/Contacto.css';
 import contactHeader from '../assets/contactHeader.png';
 import LocationIcon from '../assets/LocationIcon.png';
@@ -148,7 +148,7 @@ const Contacto = () => {
             }}
             disabled={!!telefonoError || loading}
           >
-            {isLoading ? 'Enviando...' : 'Enviar'}
+            {loading ? 'Enviando...' : 'Enviar'}
           </button>
           {enviado && (
             <div style={{ color: 'green', textAlign: 'center', fontWeight: 'bold', marginTop: 10 }}>
@@ -228,4 +228,4 @@ const Contacto = () => {
   );
 };
 
-export default ContactPage;
+export default Contacto;
