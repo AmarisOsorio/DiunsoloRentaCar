@@ -230,7 +230,7 @@ const Contacto = () => {
             position: "relative",
             height: 100
           }}>
-            <span style={{
+            <div style={{
               display: "inline-block",
               background: "#eaf6ff",
               borderRadius: "50%",
@@ -263,7 +263,7 @@ const Contacto = () => {
             position: "relative",
             height: 100
           }}>
-            <span style={{
+            <div style={{
               display: "inline-block",
               background: "#fff",
               borderRadius: "50%",
@@ -293,7 +293,7 @@ const Contacto = () => {
             position: "relative",
             height: 100
           }}>
-            <span style={{
+            <div style={{
               display: "inline-block",
               background: "#fff",
               borderRadius: "50%",

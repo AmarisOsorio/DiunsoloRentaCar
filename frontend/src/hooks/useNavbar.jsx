@@ -1,10 +1,25 @@
 import { useState, useRef, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 
 export function useNavbar(navLinks) {
-  const [lang, setLang] = useState('es');
+  // React Hook Form para idioma y loginModalOpen
+  const {
+    register,
+    setValue,
+    watch,
+    formState: { errors },
+    handleSubmit
+  } = useForm({
+    defaultValues: {
+      lang: 'es',
+      loginModalOpen: false
+    }
+  });
+
+  const lang = watch('lang');
+  const loginModalOpen = watch('loginModalOpen');
   const [langOpen, setLangOpen] = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const location = useLocation();
   const linksRef = useRef([]);
   const underlineRef = useRef(null);
@@ -33,13 +48,14 @@ export function useNavbar(navLinks) {
     }
   };
   const handleLangSelect = (value) => {
-    setLang(value);
+    setValue('lang', value);
     setLangOpen(false);
   };
+  const setLoginModalOpen = (v) => setValue('loginModalOpen', v);
 
   return {
     lang,
-    setLang,
+    setLang: v => setValue('lang', v),
     langOpen,
     setLangOpen,
     loginModalOpen,
@@ -50,6 +66,11 @@ export function useNavbar(navLinks) {
     underlineStyle,
     handleLangBtnClick,
     handleLangBlur,
-    handleLangSelect
+    handleLangSelect,
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    errors
   };
 }

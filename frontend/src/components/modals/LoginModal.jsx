@@ -4,25 +4,33 @@ import LoginImg from '../../assets/imgLogin.jpg';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useLogin from '../../hooks/useLogin.js';
 import TooltipPortal from './TooltipPortal.jsx';
+import { useForm } from 'react-hook-form';
 
 const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   const {
-    email,
-    password,
     error,
     showLoginPassword,
-    setEmail,
-    setPassword,
+    setShowLoginPassword,
     toggleShowPassword,
-    handleSubmit,
+    handleSubmit: handleLoginSubmit,
     SuccessScreen,
     showSuccess
   } = useLogin(onClose);
   const [show, setShow] = React.useState(false);
   const [emailRef, setEmailRef] = React.useState(null);
   const [passwordRef, setPasswordRef] = React.useState(null);
-  const [emailError, setEmailError] = React.useState('');
-  const [passwordError, setPasswordError] = React.useState('');
+
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    setError,
+    clearErrors,
+    watch
+  } = useForm({
+    mode: 'onBlur',
+    defaultValues: { email: '', password: '' }
+  });
 
   React.useEffect(() => {
     if (open) {
@@ -43,28 +51,17 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     onOpenForgot && onOpenForgot();
   };
 
-  const validateEmail = (value) => {
-    if (!value) return 'El correo es obligatorio';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return 'Correo inválido';
-    return '';
-  };
-  const validatePassword = (value) => {
-    if (!value) return 'La contraseña es obligatoria';
-    if (value.length < 6) return 'Mínimo 6 caracteres';
-    return '';
-  };
+  // Para mostrar/ocultar contraseña
+  const [showPassword, setShowPassword] = React.useState(false);
+  const togglePassword = () => setShowPassword(v => !v);
 
-  const handleEmailBlur = () => setEmailError(validateEmail(email));
-  const handlePasswordBlur = () => setPasswordError(validatePassword(password));
-
-  const handleSubmitWithValidation = (e) => {
-    e.preventDefault();
-    const emailErr = validateEmail(email);
-    const passErr = validatePassword(password);
-    setEmailError(emailErr);
-    setPasswordError(passErr);
-    if (emailErr || passErr) return;
-    handleSubmit(e);
+  // Submit usando react-hook-form
+  const onSubmit = (data) => {
+    // data: { email, password }
+    handleLoginSubmit({
+      preventDefault: () => {},
+      target: { email: { value: data.email }, password: { value: data.password } }
+    });
   };
 
   if (!open && !show) return null;
@@ -85,45 +82,50 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
               ¿Aún no tienes cuenta?{' '}
               <a href="#" className="login-modal-link" onClick={handleOpenRegister}>Regístrate</a>.
             </div>
-            <form className="login-modal-form" onSubmit={handleSubmitWithValidation} autoComplete="off">
+            <form className="login-modal-form" onSubmit={handleSubmit(onSubmit)} autoComplete="off">
               <label htmlFor="login-email" className="login-modal-label">Correo electrónico</label>
               <input
                 id="login-email"
                 type="email"
-                value={email}
-                onChange={setEmail}
                 placeholder="Correo Electrónico"
                 autoComplete="email"
                 ref={el => setEmailRef(el)}
-                onBlur={handleEmailBlur}
-                style={emailError ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
+                {...register('email', {
+                  required: 'El correo es obligatorio',
+                  pattern: {
+                    value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+                    message: 'Correo inválido'
+                  }
+                })}
+                style={errors.email ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
               />
-              <TooltipPortal targetRef={{ current: emailRef }} visible={!!emailError || error === 'Usuario no encontrado'}>
-                {emailError || (error === 'Usuario no encontrado' ? error : '')}
+              <TooltipPortal targetRef={{ current: emailRef }} visible={!!errors.email || error === 'Usuario no encontrado'}>
+                {errors.email?.message || (error === 'Usuario no encontrado' ? error : '')}
               </TooltipPortal>
               <label htmlFor="login-password" className="login-modal-label">Contraseña</label>
               <div style={{ position: 'relative' }}>
                 <input
                   id="login-password"
-                  type={showLoginPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={setPassword}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Contraseña"
                   autoComplete="current-password"
                   className="login-modal-input"
                   ref={el => setPasswordRef(el)}
-                  onBlur={handlePasswordBlur}
-                  style={passwordError || error === 'Contraseña inválida' ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
+                  {...register('password', {
+                    required: 'La contraseña es obligatoria',
+                    minLength: { value: 6, message: 'Mínimo 6 caracteres' }
+                  })}
+                  style={errors.password || error === 'Contraseña inválida' ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
                 />
                 <span
-                  onClick={toggleShowPassword}
+                  onClick={togglePassword}
                   className="input-eye-icon"
-                  title={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
-                <TooltipPortal targetRef={{ current: passwordRef }} visible={!!passwordError || error === 'Contraseña inválida'}>
-                  {passwordError || (error === 'Contraseña inválida' ? error : '')}
+                <TooltipPortal targetRef={{ current: passwordRef }} visible={!!errors.password || error === 'Contraseña inválida'}>
+                  {errors.password?.message || (error === 'Contraseña inválida' ? error : '')}
                 </TooltipPortal>
               </div>
               <div className="login-modal-forgot">

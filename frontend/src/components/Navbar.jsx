@@ -28,10 +28,11 @@ const Navbar = () => {
     handleLangBtnClick,
     handleLangBlur,
     handleLangSelect,
+    loginModalOpen,
+    setLoginModalOpen,
   } = useNavbar(navLinks);
 
   // Controlar ambos modales aquí
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

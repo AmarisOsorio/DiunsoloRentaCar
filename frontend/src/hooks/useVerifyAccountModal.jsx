@@ -1,23 +1,28 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
 const useVerifyAccountModal = (email, onVerify, onResend) => {
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  // RHF para el código de 6 dígitos
+  const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm({
+    mode: 'onBlur',
+    defaultValues: { code: '' }
+  });
+
   const [timer, setTimer] = useState(900); // 15 minutos
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isVerified, setIsVerified] = useState(false);
-  const inputRefs = useRef(Array(6).fill(null));
 
   useEffect(() => {
     setTimer(900);
     setCanResend(false);
     setError('');
     setSuccess('');
-    setCode(['', '', '', '', '', '']);
-    setIsVerified(false); // Reinicia el estado al cambiar el email
-  }, [email]);
+    reset({ code: '' });
+    setIsVerified(false);
+  }, [email, reset]);
 
   useEffect(() => {
     if (timer <= 0) return;
@@ -26,31 +31,9 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const handleInput = (idx, val) => {
-    if (!/^\w?$/.test(val)) return; // Permite letras y números
-    const newCode = [...code];
-    newCode[idx] = val;
-    setCode(newCode);
-    setError('');
-    if (val && idx < 5) {
-      inputRefs.current[idx + 1]?.focus();
-    }
-    if (!val && idx > 0) {
-      inputRefs.current[idx - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e) => {
-    const paste = e.clipboardData.getData('text').replace(/[^\w]/g, '').slice(0, 6); // Permite letras y números
-    if (paste.length === 6) {
-      setCode(paste.split(''));
-      setTimeout(() => inputRefs.current[5]?.focus(), 10);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (code.some(d => d === '')) {
+  // Submit usando RHF
+  const onSubmit = async ({ code }) => {
+    if (!code || code.length !== 6) {
       setError('Completa el código de 6 dígitos.');
       return;
     }
@@ -58,11 +41,10 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
     setError('');
     setSuccess('');
     try {
-      const result = await onVerify(code.join(''));
-      // Forzar success para debug visual
+      const result = await onVerify(code);
       if (result.success || (result.message && result.message.toLowerCase().includes('exitosamente'))) {
         setSuccess('¡Cuenta verificada! Redirigiendo...');
-        setIsVerified(true); // Marca como verificada
+        setIsVerified(true);
       } else {
         setError(result.message || 'Código incorrecto o expirado.');
       }
@@ -75,12 +57,10 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
   const handleResend = async () => {
     setLoading(true);
     setError('');
-    // No limpiar success aquí, para no mostrar el check
     try {
       await onResend();
       setTimer(900);
       setCanResend(false);
-      // No usar setSuccess aquí, solo mostrar el toast en el modal
     } catch {
       setError('No se pudo reenviar el código.');
     }
@@ -90,20 +70,21 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
   const formattedTimer = `${String(Math.floor(timer / 60)).padStart(2, '0')}:${String(timer % 60).padStart(2, '0')}`;
 
   return {
-    code,
-    setCode,
-    handleInput,
-    handlePaste,
+    register,
     handleSubmit,
-    handleResend,
-    inputRefs,
+    setValue,
+    watch,
+    errors,
     timer,
     formattedTimer,
     canResend,
     loading,
     error,
+    setError,
     success,
-    isVerified // Exporta el nuevo estado
+    isVerified,
+    onSubmit,
+    handleResend
   };
 };
 
