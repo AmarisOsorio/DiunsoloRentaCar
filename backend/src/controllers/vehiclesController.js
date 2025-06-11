@@ -31,44 +31,44 @@ vehiclesController.addVehicle = async (req, res) => {
   try {
     let imagenes = [];
     if (req.files && req.files.length > 0) {
-      // Guarda la ruta pública de cada imagen subida
+    // Guarda la ruta pública de cada imagen subida
       imagenes = req.files.map(file => `/uploads/${file.filename}`);
     } else if (req.body.imagenes) {
       imagenes = Array.isArray(req.body.imagenes) ? req.body.imagenes : [req.body.imagenes];
     }
 
     const {
-      nombre_vehiculo,
-      precio_por_dia,
+      nombreVehiculo,
+      precioPorDia,
       placa,
-      id_marca,
+      idMarca,
       clase,
       color,
-      año,
+      anio,
       capacidad,
       modelo,
-      numero_motor,
-      numero_chasis_grabado,
-      numero_vin_chasis,
-      contratoArrendamientoPDF,
+      numeroMotor,
+      numeroChasisGrabado,
+      numeroVinChasis,
+      contratoArrendamientoPdf,
       estado
     } = req.body;
 
     const newVehicle = new vehiclesModel({
       imagenes,
-      nombre_vehiculo,
-      precio_por_dia,
+      nombreVehiculo,
+      precioPorDia,
       placa,
-      id_marca,
+      idMarca,
       clase,
       color,
-      año,
+      anio,
       capacidad,
       modelo,
-      numero_motor,
-      numero_chasis_grabado,
-      numero_vin_chasis,
-      contratoArrendamientoPDF,
+      numeroMotor,
+      numeroChasisGrabado,
+      numeroVinChasis,
+      contratoArrendamientoPdf,
       estado
     });
 
@@ -93,19 +93,19 @@ vehiclesController.deleteVehicle = async (req, res) => {
 vehiclesController.updateVehicle = async (req, res) => {
   const {
     imagenes,
-    nombre_vehiculo,
-    precio_por_dia,
+    nombreVehiculo,
+    precioPorDia,
     placa,
-    id_marca,
+    idMarca,
     clase,
     color,
-    año,
+    anio,
     capacidad,
     modelo,
-    numero_motor,
-    numero_chasis_grabado,
-    numero_vin_chasis,
-    contratoArrendamientoPDF,
+    numeroMotor,
+    numeroChasisGrabado,
+    numeroVinChasis,
+    contratoArrendamientoPdf,
     estado
   } = req.body;
 
@@ -114,19 +114,19 @@ vehiclesController.updateVehicle = async (req, res) => {
       req.params.id,
       {
         imagenes,
-        nombre_vehiculo,
-        precio_por_dia,
+        nombreVehiculo,
+        precioPorDia,
         placa,
-        id_marca,
+        idMarca,
         clase,
         color,
-        año,
+        anio,
         capacidad,
         modelo,
-        numero_motor,
-        numero_chasis_grabado,
-        numero_vin_chasis,
-        contratoArrendamientoPDF,
+        numeroMotor,
+        numeroChasisGrabado,
+        numeroVinChasis,
+        contratoArrendamientoPdf,
         estado
       },
       { new: true }

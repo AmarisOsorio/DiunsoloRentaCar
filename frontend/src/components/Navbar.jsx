@@ -32,7 +32,7 @@ const Navbar = () => {
     setLoginModalOpen,
   } = useNavbar(navLinks);
 
-  // Controlar ambos modales aquí
+    // Controlar ambos modales aquí
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

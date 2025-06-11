@@ -9,7 +9,7 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const marcasSchema = new Schema({
-    nombre_marca: {
+    nombreMarca: {
         type: String,
         required: true,
         unique: true

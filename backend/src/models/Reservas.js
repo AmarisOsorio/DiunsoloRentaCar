@@ -19,7 +19,7 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const reservasSchema = new Schema({
-    clientID: {
+    clientId: {
         type: String,
         required: true
     },
@@ -32,20 +32,20 @@ const reservasSchema = new Schema({
             type: String,
             required: true
         },
-        correo_electronico: {
+        correoElectronico: {
             type: String,
             required: true
         }
     },
-    carID: {
+    carId: {
         type: String,
         required: true
     },
-    fecha_inicio: {
+    fechaInicio: {
         type: Date,
         required: true
     },
-    fecha_devolucion: {
+    fechaDevolucion: {
         type: Date,
         required: true
     },

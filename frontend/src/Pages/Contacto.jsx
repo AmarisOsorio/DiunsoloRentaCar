@@ -7,12 +7,12 @@ import PhoneIcon from '../assets/PhoneIcon.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-const Contacto = () => {
+const ContactPage = () => {
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: '' });
-  const [enviado, setEnviado] = useState(false);
+  const [isSent, setIsSent] = useState(false);
   const [telefonoError, setTelefonoError] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -42,7 +42,7 @@ const Contacto = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
-    setEnviado(false);
+    setIsSent(false);
 
     // Validación final de teléfono
     const regex = /^[267][0-9]{3}-[0-9]{4}$/;
@@ -51,7 +51,7 @@ const Contacto = () => {
       return;
     }
     setTelefonoError('');
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/contacto`, {
@@ -60,7 +60,7 @@ const Contacto = () => {
         body: JSON.stringify(form)
       });
       if (response.ok) {
-        setEnviado(true);
+        setIsSent(true);
         setForm({ nombre: '', telefono: '', email: '', mensaje: '' });
       } else {
         setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
@@ -68,7 +68,7 @@ const Contacto = () => {
     } catch (err) {
       setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
     }
-    setLoading(false);
+    setIsLoading(false);
   };
 
   return (
@@ -193,11 +193,11 @@ const Contacto = () => {
               cursor: "pointer",
               transition: "background 0.2s, color 0.2s"
             }}
-            disabled={!!telefonoError || loading}
+            disabled={!!telefonoError || isLoading}
           >
-            {loading ? 'Enviando...' : 'Enviar'}
+            {isLoading ? 'Enviando...' : 'Enviar'}
           </button>
-          {enviado && (
+          {isSent && (
             <div style={{ color: 'green', textAlign: 'center', fontWeight: 'bold', marginTop: 10 }}>
               ¡Mensaje enviado! Nos pondremos en contacto pronto.
             </div>
@@ -360,4 +360,4 @@ const Contacto = () => {
   );
 };
 
-export default Contacto;
+export default ContactPage;

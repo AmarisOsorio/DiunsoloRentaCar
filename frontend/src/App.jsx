@@ -13,9 +13,9 @@ import RegisterModal from './components/modals/RegisterModal';
 import ForgotPasswordModal from './components/modals/ForgotPasswordModal';
 
 function App() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   return (
     <Router>
@@ -26,9 +26,9 @@ function App() {
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/contacto" element={<Contacto />} />
         </Routes>
-        <LoginModal open={showLogin} onClose={() => setShowLogin(false)} onOpenRegister={() => { setShowLogin(false); setShowRegister(true); }} onOpenForgot={() => { setShowLogin(false); setShowForgot(true); }} />
-        <RegisterModal open={showRegister} onClose={() => setShowRegister(false)} onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }} />
-        <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} />
+        <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
+        <RegisterModal open={showRegisterModal} onClose={() => setShowRegisterModal(false)} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
+        <ForgotPasswordModal open={showForgotModal} onClose={() => setShowForgotModal(false)} />
       </main>
       <Footer />
     </Router>
