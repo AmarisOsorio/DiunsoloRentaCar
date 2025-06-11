@@ -11,11 +11,11 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const registrosSchema = new Schema({
-    id_reservacion: {
+    idReservacion: {
         type: String,
         required: true
     },
-    id_empleado: {
+    idEmpleado: {
         type: String,
         required: true
     },

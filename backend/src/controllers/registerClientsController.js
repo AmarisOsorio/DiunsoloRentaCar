@@ -19,24 +19,24 @@ registerClientsController.register = async (req, res) => {
     // LOG para depuración
     let pasaporteBuffer = null;
     let licenciaBuffer = null;
-    if (req.files && req.files.pasaporte_dui && req.files.pasaporte_dui[0]) {
-      pasaporteBuffer = req.files.pasaporte_dui[0].buffer;
+    if (req.files && req.files.pasaporteDui && req.files.pasaporteDui[0]) {
+      pasaporteBuffer = req.files.pasaporteDui[0].buffer;
     }
     if (req.files && req.files.licencia && req.files.licencia[0]) {
       licenciaBuffer = req.files.licencia[0].buffer;
     }
 
     const {
-      nombre_completo,
-      fecha_de_nacimiento,
+      nombreCompleto,
+      fechaDeNacimiento,
       correo,
-      contraseña: contraseñaRaw,
+      contrasena: contrasenaRaw,
       telefono
     } = req.body;
 
-    const contraseña = contraseñaRaw || req.body['contraseÃ±a'];
-    if (!contraseña) {
-      return res.status(400).json({ message: "El campo 'contraseña' es obligatorio y no fue recibido correctamente." });
+    const contrasena = contrasenaRaw || req.body['contrasena'];
+    if (!contrasena) {
+      return res.status(400).json({ message: "El campo 'contrasena' es obligatorio y no fue recibido correctamente." });
     }
 
     // Declarar transporter y chars solo una vez
@@ -58,12 +58,12 @@ registerClientsController.register = async (req, res) => {
         return res.json({ message: "Client already exists", isVerified: true });
       } else {
         // Actualizar datos del cliente no verificado
-        const passwordHashUpdate = await bcryptjs.hash(contraseña, 10);
-        existsClient.nombre_completo = nombre_completo;
-        existsClient.fecha_de_nacimiento = fecha_de_nacimiento;
+        const passwordHashUpdate = await bcryptjs.hash(contrasena, 10);
+        existsClient.nombreCompleto = nombreCompleto;
+        existsClient.fechaDeNacimiento = fechaDeNacimiento;
         existsClient.telefono = telefono;
-        existsClient.contraseña = passwordHashUpdate;
-        if (req.body.pasaporte_dui) existsClient.pasaporte_dui = req.body.pasaporte_dui;
+        existsClient.contrasena = passwordHashUpdate;
+        if (req.body.pasaporteDui) existsClient.pasaporteDui = req.body.pasaporteDui;
         if (req.body.licencia) existsClient.licencia = req.body.licencia;
         await existsClient.save();
         console.log("Cliente actualizado: ", correo);
@@ -88,7 +88,7 @@ registerClientsController.register = async (req, res) => {
                 <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
               </div>
               <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-              <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
+              <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
               <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
               <div style="text-align: center; margin: 32px 0;">
                 <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCodeUpdate}</span>
@@ -123,14 +123,14 @@ registerClientsController.register = async (req, res) => {
     }
 
     // Si no existe, crear nuevo cliente
-    const passwordHash = await bcryptjs.hash(contraseña, 10);
+    const passwordHash = await bcryptjs.hash(contrasena, 10);
     const newClient = new clientsModel({
-      nombre_completo,
-      fecha_de_nacimiento,
+      nombreCompleto,
+      fechaDeNacimiento,
       correo,
-      contraseña: passwordHash,
+      contrasena: passwordHash,
       telefono,
-      pasaporte_dui: req.body.pasaporte_dui || null, // URL
+      pasaporteDui: req.body.pasaporteDui || null, // URL
       licencia: req.body.licencia || null // URL
     });
     await newClient.save();
@@ -159,7 +159,7 @@ registerClientsController.register = async (req, res) => {
             <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
           </div>
           <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-          <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
+          <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
           <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
           <div style="text-align: center; margin: 32px 0;">
             <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCode}</span>
@@ -192,19 +192,16 @@ registerClientsController.register = async (req, res) => {
         }
         return res.status(500).json({ message: "Error enviando correo", error: error.toString(), smtp: error.response });
       }
-      console.log("Correo enviado: ", correo);
       res.json({
         message: "Cliente registrado. Por favor verifica tu correo con el código enviado"
       });
     });
   } catch (error) {
-    console.error('Error en registerClientsController.register:', error);
     res.json({ message: "Error" + error });
   }
 };
 
 registerClientsController.verifyCodeEmail = async (req, res) => {
-  // Validación robusta del body
   if (!req.body || !req.body.verificationCode) {
     return res.status(400).json({ message: "El campo 'verificationCode' es obligatorio en el body." });
   }
@@ -220,12 +217,9 @@ registerClientsController.verifyCodeEmail = async (req, res) => {
     client.isVerified = true;
     await client.save();
     res.json({ message: "Correo verificado exitosamente" });
-    console.log("Correo verificado exitosamente para: ", correo);
     res.clearCookie("VerificationToken");
-    // NO MÁS CÓDIGO DESPUÉS DE ENVIAR LA RESPUESTA
     return;
   } catch (error) {
-    // IMPORTANTE: solo una respuesta en el catch
     if (!res.headersSent) {
       return res.json({ message: "error" });
     }
@@ -237,9 +231,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
   if (!token) {
     return res.status(400).json({ message: "No hay sesión de verificación activa." });
   }
-  // Definir chars aquí para evitar ReferenceError
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  // Definir transporter aquí para evitar error
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -256,10 +248,8 @@ registerClientsController.resendCodeEmail = async (req, res) => {
     if (!correo) {
       return res.status(400).json({ message: "No se encontró el correo en la sesión." });
     }
-    // Obtener nombre_completo del cliente
     const client = await clientsModel.findOne({ correo });
-    const nombre_completo = client ? client.nombre_completo : '';
-    // Generar nuevo código de 6 caracteres alfanuméricos (mayúsculas y números)
+    const nombreCompleto = client ? client.nombreCompleto : '';
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
       verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -270,7 +260,6 @@ registerClientsController.resendCodeEmail = async (req, res) => {
       { expiresIn: "15m" }
     );
     res.cookie("VerificationToken", tokenCode, { maxAge: 15 * 60 * 1000 });
-    // Enviar correo
     const mailOptions = {
       from: config.email.email_user,
       to: correo,
@@ -281,7 +270,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
             <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
           </div>
           <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-          <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
+          <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
           <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
           <div style="text-align: center; margin: 32px 0;">
             <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCode}</span>
@@ -305,14 +294,11 @@ registerClientsController.resendCodeEmail = async (req, res) => {
     };
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error("Error enviando correo:", error);
         return res.status(500).json({ message: "Error enviando correo" });
       }
-      console.log("Correo reenviado exitosamente a:", correo);
       return res.json({ message: "Nuevo código enviado" });
     });
   } catch (error) {
-    console.error("Error en resendCodeEmail:", error);
     res.status(500).json({ message: "Error reenviando código" });
   }
 };

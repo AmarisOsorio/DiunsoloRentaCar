@@ -13,19 +13,19 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const mantenimientosSchema = new Schema({
-    carID: {
+    carId: {
         type: String,
         required: true
     },
-    tipo_mantenimiento: {
+    tipoMantenimiento: {
         type: String,
         required: true
     },
-    fecha_inicio: {
+    fechaInicio: {
         type: Date,
         required: true
     },
-    fecha_devolucion: {
+    fechaDevolucion: {
         type: Date,
         required: true
     },
@@ -34,7 +34,7 @@ const mantenimientosSchema = new Schema({
         enum: ["Pendiente", "Activo", "Finalizado"],
         default: "Pendiente"
     },
-    fecha_creacion: {
+    fechaCreacion: {
         type: Date,
         default: Date.now
     }

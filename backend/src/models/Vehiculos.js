@@ -26,11 +26,11 @@ const vehiculosSchema = new Schema({
         type: [String],
         required: true
     },
-    nombre_vehiculo: {
+    nombreVehiculo: {
         type: String,
         required: true
     },
-    precio_por_dia: {
+    precioPorDia: {
         type: Number,
         required: true
     },
@@ -39,7 +39,7 @@ const vehiculosSchema = new Schema({
         required: true,
         unique: true
     },
-    id_marca: {
+    idMarca: {
         type: String,
         required: true
     },
@@ -51,7 +51,7 @@ const vehiculosSchema = new Schema({
         type: String,
         required: true
     },
-    año: {
+    anio: {
         type: Number,
         required: true
     },
@@ -63,19 +63,19 @@ const vehiculosSchema = new Schema({
         type: String,
         required: true
     },
-    numero_motor: {
+    numeroMotor: {
         type: String,
         required: true
     },
-    numero_chasis_grabado: {
+    numeroChasisGrabado: {
         type: String,
         required: true
     },
-    numero_vin_chasis: {
+    numeroVinChasis: {
         type: String,
         required: true
     },
-    contratoArrendamientoPDF: {
+    contratoArrendamientoPdf: {
         type: String,
         required: true
     },

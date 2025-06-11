@@ -141,11 +141,11 @@ const contratosSchema = new Schema({
         type: String, 
         required: true
     },
-    clientID: {
+    clientId: {
         type: String, 
         required: true
     },
-    carID: {
+    carId: {
         type: String, 
         required: true
     },
@@ -154,133 +154,133 @@ const contratosSchema = new Schema({
         enum: ["Activo", "Finalizado", "Anulado"], 
         default: "Activo"
     },
-    fecha_inicio: {
+    fechaInicio: {
         type: Date, 
         default: Date.now
     },
-    fecha_fin: {
+    fechaFin: {
         type: Date
     },
-    datos_hoja_estado: {
-        fecha_entrega: Date,
-        fecha_devolucion: Date,
-        numero_unidad: String,
-        marca_modelo: String,
+    datosHojaEstado: {
+        fechaEntrega: Date,
+        fechaDevolucion: Date,
+        numeroUnidad: String,
+        marcaModelo: String,
         placa: String,
-        nombre_cliente: String,
+        nombreCliente: String,
         anotaciones: String,
-        documentacion_entrega: {
+        documentacionEntrega: {
             entrega: {
                 llaves: Boolean,
-                tarjeta_circulacion: Boolean,
-                factura_consumidor: Boolean
+                tarjetaCirculacion: Boolean,
+                facturaConsumidor: Boolean
             },
             devolucion: {
                 llaves: Boolean,
-                tarjeta_circulacion: Boolean,
-                factura_consumidor: Boolean
+                tarjetaCirculacion: Boolean,
+                facturaConsumidor: Boolean
             }
         },
-        inspeccion_fisica: {
+        inspeccionFisica: {
             entrega: {
                 interna: {
-                    condicion_general: String,
+                    condicionGeneral: String,
                     capo: Boolean,
-                    medida_aceite: String,
+                    medidaAceite: String,
                     antena: Boolean,
                     espejos: Boolean,
                     maletero: Boolean,
-                    vidrios_buen_estado: Boolean,
-                    bolsa_herramientas: Boolean,
-                    manijas_puertas: Boolean,
-                    tapa_gasolina: Boolean,
-                    tazas_rines: {
+                    vidriosBuenEstado: Boolean,
+                    bolsaHerramientas: Boolean,
+                    manijasPuertas: Boolean,
+                    tapaGasolina: Boolean,
+                    tazasRines: {
                         presente: Boolean,
                         cantidad: Number
                     }
                 },
                 externa:{
-                    interruptor_maletero:Boolean,
-                    llave_encendido:Boolean,
+                    interruptorMaletero:Boolean,
+                    llaveEncendido:Boolean,
                     luces:Boolean,
-                    radio_original:Boolean,
-                    ventilacion_ac_calefaccion:Boolean,
-                    panel_instrumentos:String,
-                    palanca_cambios:Boolean,
-                    seguro_puerta:Boolean,
+                    radioOriginal:Boolean,
+                    ventilacionAcCalefaccion:Boolean,
+                    panelInstrumentos:String,
+                    palancaCambios:Boolean,
+                    seguroPuerta:Boolean,
                     alfombras:Boolean,
-                    llanta_repuesto:Boolean
+                    llantaRepuesto:Boolean
                 }
             },
             devolucion:{
                 interna:{
-                    condicion_general:String,
+                    condicionGeneral:String,
                     capo:Boolean,
-                    medida_aceite:String,
+                    medidaAceite:String,
                     antena:Boolean,
                     espejos:Boolean,
                     maletero:Boolean,
-                    vidrios_buen_estado:Boolean,
-                    bolsa_herramientas:Boolean,
-                    manijas_puertas:Boolean,
-                    tapa_gasolina:Boolean,
-                    tazas_rines:{
+                    vidriosBuenEstado:Boolean,
+                    bolsaHerramientas:Boolean,
+                    manijasPuertas:Boolean,
+                    tapaGasolina:Boolean,
+                    tazasRines:{
                         presente:Boolean,
                         cantidad:Number
                     }
                 },
                 externa:{
-                    interruptor_maletero:Boolean,
-                    llave_encendido:Boolean,
+                    interruptorMaletero:Boolean,
+                    llaveEncendido:Boolean,
                     luces:Boolean,
-                    radio_original:Boolean,
-                    ventilacion_ac_calefaccion:Boolean,
-                    panel_instrumentos:String,
-                    palanca_cambios:Boolean,
-                    seguro_puerta:Boolean,
+                    radioOriginal:Boolean,
+                    ventilacionAcCalefaccion:Boolean,
+                    panelInstrumentos:String,
+                    palancaCambios:Boolean,
+                    seguroPuerta:Boolean,
                     alfombras:Boolean,
-                    llanta_repuesto:Boolean
+                    llantaRepuesto:Boolean
                 }
             }
         },
-        fotos_condicion_general: [String],
-        estado_combustible: {
+        fotosCondicionGeneral: [String],
+        estadoCombustible: {
             entrega: String,
             devolucion: String
         },
-        firma_entrega: String
+        firmaEntrega: String
     },
-    datos_arrendamiento: {
-        nombre_arrendatario: String,
-        profesion_arrendatario: String,
-        direccion_arrendatario: String,
-        pais_pasaporte: String,
-        numero_pasaporte: String,
-        pais_licencia: String,
-        numero_licencia: String,
-        extra_driver_name: String,
-        pais_pasaporte_conductor_extra: String,
-        numero_pasaporte_conductor_extra: String,
-        pais_licencia_conductor_extra: String,
-        numero_licencia_conductor_extra: String,
-        ciudad_entrega: String,
-        hora_entrega: String,
-        fecha_entrega: Date,
-        precio_diario: Number,
-        monto_total: Number,
-        dias_alquiler: Number,
-        monto_deposito: Number,
-        dias_plazo: Number,
-        penalidad_mal_uso: Number,
-        ciudad_firma: String,
-        hora_firma: String,
-        fecha_firma: Date,
-        firma_arrendador: String,
-        firma_arrendatario: String
+    datosArrendamiento: {
+        nombreArrendatario: String,
+        profesionArrendatario: String,
+        direccionArrendatario: String,
+        paisPasaporte: String,
+        numeroPasaporte: String,
+        paisLicencia: String,
+        numeroLicencia: String,
+        extraDriverName: String,
+        paisPasaporteConductorExtra: String,
+        numeroPasaporteConductorExtra: String,
+        paisLicenciaConductorExtra: String,
+        numeroLicenciaConductorExtra: String,
+        ciudadEntrega: String,
+        horaEntrega: String,
+        fechaEntrega: Date,
+        precioDiario: Number,
+        montoTotal: Number,
+        diasAlquiler: Number,
+        montoDeposito: Number,
+        diasPlazo: Number,
+        penalidadMalUso: Number,
+        ciudadFirma: String,
+        horaFirma: String,
+        fechaFirma: Date,
+        firmaArrendador: String,
+        firmaArrendatario: String
     },
     documentos: {
-        hoja_estado_pdf: String,
-        arrendamiento_pdf: String
+        hojaEstadoPdf: String,
+        arrendamientoPdf: String
     }
 }, {
     timestamps: true,

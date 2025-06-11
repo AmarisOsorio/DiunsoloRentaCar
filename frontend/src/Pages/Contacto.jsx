@@ -1,5 +1,5 @@
 import React from 'react';
-import '../components/styles/Contacto.css';
+import './styles/Contacto.css';
 import contactHeader from '../assets/contactHeader.png';
 import LocationIcon from '../assets/LocationIcon.png';
 import EmailIcon from '../assets/EmailIcon.png';
@@ -9,15 +9,68 @@ import useContactoForm from '../hooks/useContactoForm';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 const Contacto = () => {
-  const {
-    form,
-    enviado,
-    telefonoError,
-    error,
-    loading,
-    handleChange,
-    handleSubmit,
-  } = useContactoForm();
+  const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: '' });
+  const [enviado, setEnviado] = useState(false);
+  const [telefonoError, setTelefonoError] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+
+    if (name === 'telefono') {
+      // Solo números, máximo 8 dígitos, formato ####-####
+      let soloNumeros = value.replace(/\D/g, '').slice(0, 8);
+      let formateado = soloNumeros;
+      if (soloNumeros.length > 4) {
+        formateado = soloNumeros.slice(0, 4) + '-' + soloNumeros.slice(4);
+      }
+      setForm({ ...form, telefono: formateado });
+
+      // Validación
+      const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+      if (formateado.length === 9 && !regex.test(formateado)) {
+        setTelefonoError('Ingrese un teléfono válido de 8 dígitos (inicia con 2, 6 o 7)');
+      } else {
+        setTelefonoError('');
+      }
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setError('');
+    setEnviado(false);
+
+    // Validación final de teléfono
+    const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+    if (!regex.test(form.telefono)) {
+      setTelefonoError('Ingrese un teléfono válido de 8 dígitos (inicia con 2, 6 o 7)');
+      return;
+    }
+    setTelefonoError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/contacto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (response.ok) {
+        setEnviado(true);
+        setForm({ nombre: '', telefono: '', email: '', mensaje: '' });
+      } else {
+        setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
+      }
+    } catch (err) {
+      setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="contacto-bg">
@@ -81,12 +134,24 @@ const Contacto = () => {
           />
           <button
             type="submit"
+            style={{
+              alignSelf: "flex-end",
+              padding: "0.6rem 2.5rem",
+              borderRadius: 20,
+              border: "2px solid #0a2740",
+              background: "#fff",
+              color: "#0a2740",
+              fontWeight: 700,
+              fontSize: "1rem",
+              cursor: "pointer",
+              transition: "background 0.2s, color 0.2s"
+            }}
             disabled={!!telefonoError || loading}
           >
-            {loading ? 'Enviando...' : 'Enviar'}
+            {isLoading ? 'Enviando...' : 'Enviar'}
           </button>
           {enviado && (
-            <div className="success">
+            <div style={{ color: 'green', textAlign: 'center', fontWeight: 'bold', marginTop: 10 }}>
               ¡Mensaje enviado! Nos pondremos en contacto pronto.
             </div>
           )}
@@ -163,4 +228,4 @@ const Contacto = () => {
   );
 };
 
-export default Contacto;
+export default ContactPage;

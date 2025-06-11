@@ -20,10 +20,10 @@ clientsController.getClientById = async (req, res) => {
 clientsController.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre_completo, correo, contraseña, telefono, fecha_de_nacimiento, pasaporte_dui, licencia } = req.body;
+    const { nombreCompleto, correo, contrasena, telefono, fechaDeNacimiento, pasaporteDui, licencia } = req.body;
     const updated = await ClientsModel.findByIdAndUpdate(
       id,
-      { nombre_completo, correo, contraseña, telefono, fecha_de_nacimiento, pasaporte_dui, licencia },
+      { nombreCompleto, correo, contrasena, telefono, fechaDeNacimiento, pasaporteDui, licencia },
       { new: true }
     );
     if (!updated) return res.status(404).json({ message: "Cliente no encontrado" });

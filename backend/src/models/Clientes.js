@@ -15,7 +15,7 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const clientsSchema = new Schema({
-    nombre_completo: {
+    nombreCompleto: {
         type: String,
         required: true
     },
@@ -32,11 +32,11 @@ const clientsSchema = new Schema({
         type: String,
         required: true
     },
-    fecha_de_nacimiento: {
+    fechaDeNacimiento: {
         type: Date,
         required: true
     },
-    pasaporte_dui: {
+    pasaporteDui: {
         type: String, // Cambiado de Buffer a String (URL)
         required: false
     },
