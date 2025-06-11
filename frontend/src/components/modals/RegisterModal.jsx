@@ -95,8 +95,8 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
           onClose={handleCloseVerify}
           onVerify={handleVerify}
           onResend={resendVerificationCode}
-          email={form.email}
-          password={form.password}
+          email={getValues('email')}
+          password={getValues('password')}
         />
       </div>
     );

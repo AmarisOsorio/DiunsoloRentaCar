@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "cloudinary": "^2.6.1",
     "cors": "^2.8.5",
     "react-hook-form": "^7.57.0"
   }
