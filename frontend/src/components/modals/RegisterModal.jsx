@@ -50,6 +50,7 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     validateConfirmPassword
   } = useRegisterModal();
   const { resendVerificationCode, login } = useAuth();
+  const nacimientoRef = React.useRef();
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -130,7 +131,11 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
               onBlur={() => setFocusedField(null)}
             />
             {errors.nombre && <span className="fb-error-icon">!</span>}
-            <TooltipPortal targetRef={nombreRef} visible={!!errors.nombre && focusedField === 'nombre'}>
+            <TooltipPortal
+              fieldName="nombre"
+              targetRef={nombreRef}
+              visible={!!errors.nombre && focusedField === 'nombre'}
+            >
               {errors.nombre?.message}
             </TooltipPortal>
           </div>
@@ -159,7 +164,11 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
               </span>
               {errors.password && <span className="fb-error-icon">!</span>}
             </div>
-            <TooltipPortal targetRef={passwordRef} visible={!!errors.password && focusedField === 'password'}>
+            <TooltipPortal
+              fieldName="password"
+              targetRef={passwordRef}
+              visible={!!errors.password && focusedField === 'password'}
+            >
               {errors.password?.message}
             </TooltipPortal>
           </div>
@@ -187,7 +196,11 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
               </span>
               {errors.confirmPassword && <span className="fb-error-icon">!</span>}
             </div>
-            <TooltipPortal targetRef={confirmPasswordRef} visible={!!errors.confirmPassword && focusedField === 'confirmPassword'}>
+            <TooltipPortal
+              fieldName="confirmPassword"
+              targetRef={confirmPasswordRef}
+              visible={!!errors.confirmPassword && focusedField === 'confirmPassword'}
+            >
               {errors.confirmPassword?.message}
             </TooltipPortal>
           </div>
@@ -213,7 +226,11 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
               />
               {errors.telefono && <span className="fb-error-icon">!</span>}
             </div>
-            <TooltipPortal targetRef={telefonoRef} visible={!!errors.telefono && focusedField === 'telefono'}>
+            <TooltipPortal
+              fieldName="telefono"
+              targetRef={telefonoRef}
+              visible={!!errors.telefono && focusedField === 'telefono'}
+            >
               {errors.telefono?.message}
             </TooltipPortal>
           </div>
@@ -237,7 +254,11 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
               />
               {errors.email && <span className="fb-error-icon">!</span>}
             </div>
-            <TooltipPortal targetRef={emailRef} visible={!!errors.email && focusedField === 'email'}>
+            <TooltipPortal
+              fieldName="email"
+              targetRef={emailRef}
+              visible={!!errors.email && focusedField === 'email'}
+            >
               {errors.email?.message}
             </TooltipPortal>
           </div>
@@ -258,9 +279,10 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
             )}
           </div>
 
-          <div className="form-group-full-width">
+          <div className="form-group-full-width" style={{ position: 'relative' }}>
             <label htmlFor="nacimiento" className="register-modal-label">Fecha de nacimiento</label>
             <input
+              ref={nacimientoRef}
               id="nacimiento"
               type="date"
               {...register('nacimiento', { required: 'La fecha de nacimiento es obligatoria', validate: validateEdad })}
@@ -269,7 +291,8 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
               onBlur={() => setFocusedField(null)}
             />
             <TooltipPortal
-              targetRef={{ current: document.getElementById('nacimiento') }}
+              fieldName="nacimiento"
+              targetRef={nacimientoRef}
               visible={!!errors.nacimiento && focusedField === 'nacimiento'}
             >
               {errors.nacimiento?.message}

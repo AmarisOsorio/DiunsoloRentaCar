@@ -75,14 +75,26 @@
   display: block;
 }
 .register-modal-form input {
-  padding: 8px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: 8px;
+  padding-right: 38px;
   border: 1px solid #009BDB;
   border-radius: 4px;
   background: #e6f6fb;
-  width: 100%; /* Ensure inputs take full width of their grid cell */
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
+  font-size: 1rem;
 }
-/* Styling for the file input button */
+
+/* Inputs que no llevan icono (como file o date) pueden sobrescribir si es necesario */
+.register-modal-form input[type="file"],
+.register-modal-form input[type="date"] {
+  padding-right: 8px;
+}
+
 .register-modal-form input::file-selector-button {
   padding: 8px;
   border: none;
@@ -102,8 +114,9 @@
   background-color: #1C318C;
 }
 .register-modal-form input:focus {
-  outline: 2px solid #1C318C;
+  outline: none;
   box-shadow: 0 0 0 2px #1C318C33;
+  border-color: #1C318C;
 }
 /* Styles for elements that should span the full width */
 .form-group-full-width {
@@ -398,6 +411,10 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 .fb-error-icon {
+  right: 34px; /* Deja espacio para el icono de ojo si está presente */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -453,7 +470,7 @@
 
 /* Ajuste para que el tooltip y el ícono de error estén más cerca del input (menos separación horizontal) */
 .fb-error-tooltip-portal {
-  position: absolute !important;
+  position: fixed;
   z-index: 3000 !important;
   pointer-events: none;
   min-width: 120px;
@@ -521,10 +538,14 @@
     margin-right: 0;
   }
   .fb-error-icon {
-    right: 2px;
+    right: 28px;
     width: 20px;
     height: 20px;
     font-size: 1em;
+  }
+  .input-eye-icon {
+    right: 6px;
+    font-size: 1.1em;
   }
 }
 
@@ -540,6 +561,7 @@
   cursor: pointer;
   color: #1C318C;
   font-size: 1.2em;
+  z-index: 3;
 }
 
 .register-modal-error {

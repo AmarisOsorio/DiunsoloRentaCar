@@ -1,11 +1,14 @@
 .fb-error-tooltip.fb-error-tooltip-portal {
-  position: absolute;
-  z-index: 3000;
+  z-index: 4000 !important; /* Asegura que esté por encima del modal */
   min-width: 180px;
   max-width: 220px;
-  pointer-events: none;
   transform: none;
   border-radius: 8px 0 8px 8px; /* Esquina superior derecha sin borde redondeado */
+  background: #be4b49 !important;
+  color: #fff !important;
+  border: 2px solid #e53935 !important;
+  box-shadow: 0 0 12px 2px #0008 !important;
+  margin-left: 6px; /* Más pegado al input */
 }
 .fb-error-tooltip-arrow {
   left: 100%;
@@ -26,14 +29,11 @@
 
 @media (max-width: 768px) {
   .fb-error-tooltip.fb-error-tooltip-portal {
-    left: 50% !important;
-    right: auto !important;
     min-width: 90px;
     max-width: 90vw;
     font-size: 0.93em;
     margin-right: 0;
-    top: unset;
-    transform: translateX(-50%);
+    margin-left: 0 !important;
   }
   .fb-error-tooltip-arrow {
     display: none;
