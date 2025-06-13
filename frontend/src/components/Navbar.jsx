@@ -28,14 +28,13 @@ const Navbar = () => {
     handleLangBtnClick,
     handleLangBlur,
     handleLangSelect,
-    loginModalOpen,
-    setLoginModalOpen,
   } = useNavbar(navLinks);
 
-    // Controlar ambos modales aquí
+  // Controlar ambos modales aquí
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // Cerrar menú móvil si cambia a vista desktop
   useEffect(() => {

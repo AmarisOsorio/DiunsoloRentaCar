@@ -162,41 +162,104 @@ const Contacto = () => {
           )}
         </form>
 
-        <div className="info-boxes">
-          <div className="info-card ubicacion">
-            <img
-              src={LocationIcon}
-              alt="Ubicación"
-              className="info-card-img"
-            />
-            <div className="info-card-content">
-              <div className="title">Encuéntranos</div>
-              <div className="subtitle">
+        {/* Info boxes */}
+        <div style={{
+          display: "flex",
+          gap: "1rem",
+          marginBottom: "2rem",
+          flexWrap: "wrap"
+        }}>
+          {/* Ubicación */}
+          <div style={{
+            flex: 1,
+            minWidth: 220,
+            background: "#eaf6ff",
+            borderRadius: 20,
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            boxShadow: "0 2px 8px #0001",
+            overflow: "hidden",
+            position: "relative",
+            height: 100
+          }}>
+            <div style={{
+              display: "inline-block",
+              background: "#eaf6ff",
+              borderRadius: "50%",
+              width: 40,
+              height: 40,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "1.2rem 1rem"
+            }}>
+              <div style={{ fontWeight: 700, color: "#0a2740", fontSize: 18, marginBottom: 2 }}>Encuéntranos</div>
+              <div style={{ color: "#0a2740", fontSize: 15, textAlign: "center", lineHeight: 1.2 }}>
                 Avenida El Rosario,<br />
                 Santa Tecla, La Libertad, El Salvador
               </div>
             </div>
           </div>
-          <div className="info-card correo">
-            <img
-              src={EmailIcon}
-              alt="Correo"
-              className="info-card-img"
-            />
-            <div className="info-card-content">
-              <div className="title">Correo electrónico</div>
-              <div className="subtitle">renta@diunsolo.rent</div>
+          {/* Correo */}
+          <div style={{
+            flex: 1,
+            minWidth: 220,
+            background: "#cbeafd",
+            borderRadius: 20,
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            boxShadow: "0 2px 8px #0001",
+            overflow: "hidden",
+            position: "relative",
+            height: 100
+          }}>
+            <div style={{
+              display: "inline-block",
+              background: "#fff",
+              borderRadius: "50%",
+              width: 40,
+              height: 40,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "1.2rem 1rem"
+            }}>
+              <div style={{ fontWeight: 700, color: "#0a2740", fontSize: 18, marginBottom: 2 }}>Correo electrónico</div>
+              <div style={{ color: "#0a2740", fontSize: 15, textAlign: "center" }}>renta@diunsolo.rent</div>
             </div>
           </div>
-          <div className="info-card telefono">
-            <img
-              src={PhoneIcon}
-              alt="Teléfono"
-              className="info-card-img"
-            />
-            <div className="info-card-content">
-              <div className="title">Teléfono</div>
-              <div className="subtitle">7423–4724</div>
+          {/* Teléfono */}
+          <div style={{
+            flex: 1,
+            minWidth: 220,
+            background: "#29abe2",
+            borderRadius: 20,
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            boxShadow: "0 2px 8px #0001",
+            overflow: "hidden",
+            position: "relative",
+            height: 100
+          }}>
+            <div style={{
+              display: "inline-block",
+              background: "#fff",
+              borderRadius: "50%",
+              width: 40,
+              height: 40,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "1.2rem 1rem"
+            }}>
+              <div style={{ fontWeight: 700, color: "#fff", fontSize: 20, marginBottom: 2 }}>Teléfono</div>
+              <div style={{ color: "#fff", fontSize: 20, fontWeight: 700, letterSpacing: 1 }}>7423–4724</div>
             </div>
           </div>
         </div>
