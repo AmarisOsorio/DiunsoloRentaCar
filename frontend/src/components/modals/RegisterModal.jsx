@@ -11,23 +11,15 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
-    errors,
-    setError,
-    clearErrors,
-    getValues,
-    reset,
-    handleFileChange,
+    onSubmit,
+    handleChange,
     handlePhoneChange,
     handleInputChange,
     show,
     showVerify,
     setShowVerify,
     registerError,
-    setRegisterError,
     registerSuccess,
-    setRegisterSuccess,
     showPassword,
     setShowPassword,
     showConfirmPassword,
@@ -44,23 +36,28 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     loading,
     registrationSuccessData,
     setRegistrationSuccessData,
+    getValues,
     licenciaPreview,
     pasaportePreview,
     validateEdad,
-    validateConfirmPassword
+    validateConfirmPassword,
+    errors // <-- agregar errors del form
   } = useRegisterModal();
   const { resendVerificationCode, login } = useAuth();
   const nacimientoRef = React.useRef();
 
   React.useEffect(() => {
+    // Hacer disponible resendVerificationCode globalmente para el hook
     if (typeof window !== 'undefined') {
       window.resendVerificationCode = resendVerificationCode;
     }
     handleOpenEffect(open);
   }, [open, handleOpenEffect, resendVerificationCode]);
 
+  // Si el modal no está abierto y no está en proceso de animación de cierre, devuelve null para no renderizar nada.
   if (!open && !show) return null;
 
+  // Mostrar animación de carga
   if (loading) {
     return (
       <div className="register-modal-backdrop modal-fade-in">
@@ -74,6 +71,7 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     );
   }
 
+  // Mostrar animación de éxito
   if (registrationSuccessData) {
     return (
       <div className="register-modal-backdrop modal-fade-in">
@@ -87,7 +85,9 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     );
   }
 
+  // Si está mostrando el modal de verificación, solo renderiza ese modal
   if (showVerify) {
+    // Si se cierra el modal de verificación, vuelve a mostrar el de registro (no redirige)
     const handleCloseVerify = () => setShowVerify(false);
     return (
       <div className={`register-modal-backdrop${open ? ' modal-fade-in' : ' modal-fade-out'}`}>
@@ -112,31 +112,40 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
           ¿Ya tienes cuenta?{' '}
           <a href="#" className="register-modal-link" onClick={e => { e.preventDefault(); onSwitchToLogin && onSwitchToLogin(); }}>Iniciar sesión</a>
         </div>
-        <form className="register-modal-form" onSubmit={handleSubmit}>
+        <form className="register-modal-form" onSubmit={handleSubmit(onSubmit)}>
           <div className="form-group-full-width" style={{ position: 'relative' }}>
             <label htmlFor="nombre" className="register-modal-label">Nombre</label>
             <input
+              {...register('nombre', {
+                required: 'El nombre es obligatorio'
+              })}
               ref={nombreRef}
               id="nombre"
+              name="nombre"
               type="text"
-              {...register('nombre', {
-                required: 'El nombre es obligatorio',
-                pattern: {
-                  value: /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/,
-                  message: 'Solo letras y espacios'
-                }
-              })}
-              className={errors.nombre ? 'input-error' : ''}
+              pattern="[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+"
+              className={(errors.nombre || (registerError && registerError.toLowerCase().includes('nombre'))) ? 'input-error' : ''}
               onFocus={() => setFocusedField('nombre')}
               onBlur={() => setFocusedField(null)}
+              onChange={e => {
+                const value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+                if (e.target.value !== value) {
+                  e.target.value = value;
+                }
+                nombreRef.current.value = value;
+                if (typeof window !== 'undefined' && window.dispatchEvent) {
+                  const event = new Event('input', { bubbles: true });
+                  nombreRef.current.dispatchEvent(event);
+                }
+              }}
             />
-            {errors.nombre && <span className="fb-error-icon">!</span>}
-            <TooltipPortal
-              fieldName="nombre"
-              targetRef={nombreRef}
-              visible={!!errors.nombre && focusedField === 'nombre'}
-            >
-              {errors.nombre?.message}
+
+            {(errors.nombre || (registerError && registerError.toLowerCase().includes('nombre'))) && (
+              <span className="fb-error-icon">!</span>
+            )}
+            <TooltipPortal targetRef={nombreRef} visible={(errors.nombre || (registerError && registerError.toLowerCase().includes('nombre'))) && focusedField === 'nombre'}>
+              {errors.nombre?.message || registerError}
+
             </TooltipPortal>
           </div>
 
@@ -144,64 +153,71 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
             <label htmlFor="password" className="register-modal-label">Contraseña</label>
             <div style={{ position: 'relative' }}>
               <input
+                {...register('password', { required: 'La contraseña es obligatoria' })}
                 ref={passwordRef}
                 id="password"
+                name="password"
                 type={showPassword ? 'text' : 'password'}
-                {...register('password', {
-                  required: 'La contraseña es obligatoria',
-                  minLength: { value: 6, message: 'Mínimo 6 caracteres' }
-                })}
-                className={errors.password ? 'input-error' : ''}
+                className={
+                  (errors.password || (registerError && registerError.toLowerCase().includes('contraseña')))
+                    ? 'input-error input-error-has-icon'
+                    : ''
+                }
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField(null)}
               />
               <span
                 onClick={() => setShowPassword(v => !v)}
-                className="input-eye-icon"
+                className={`input-eye-icon${(errors.password || (registerError && registerError.toLowerCase().includes('contraseña'))) ? ' input-eye-icon-error' : ''}`}
                 title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
-              {errors.password && <span className="fb-error-icon">!</span>}
+              {(errors.password || (registerError && registerError.toLowerCase().includes('contraseña'))) && (
+                <span className="fb-error-icon">!</span>
+              )}
             </div>
-            <TooltipPortal
-              fieldName="password"
-              targetRef={passwordRef}
-              visible={!!errors.password && focusedField === 'password'}
-            >
-              {errors.password?.message}
+
+            <TooltipPortal targetRef={passwordRef} visible={(errors.password || (registerError && registerError.toLowerCase().includes('contraseña'))) && focusedField === 'password'}>
+              {errors.password?.message || registerError}
+
             </TooltipPortal>
           </div>
           <div className="form-group-half-width" style={{ position: 'relative' }}>
             <label htmlFor="confirmPassword" className="register-modal-label">Confirmar contraseña</label>
             <div style={{ position: 'relative' }}>
               <input
-                ref={confirmPasswordRef}
-                id="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
                 {...register('confirmPassword', {
                   required: 'Confirma tu contraseña',
                   validate: validateConfirmPassword
                 })}
-                className={errors.confirmPassword ? 'input-error' : ''}
+                ref={confirmPasswordRef}
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                className={
+                  (errors.confirmPassword || registerError === 'Las contraseñas no coinciden.')
+                    ? 'input-error input-error-has-icon'
+                    : ''
+                }
                 onFocus={() => setFocusedField('confirmPassword')}
                 onBlur={() => setFocusedField(null)}
               />
               <span
                 onClick={() => setShowConfirmPassword(v => !v)}
-                className="input-eye-icon"
+                className={`input-eye-icon${(errors.confirmPassword || registerError === 'Las contraseñas no coinciden.') ? ' input-eye-icon-error' : ''}`}
                 title={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
-              {errors.confirmPassword && <span className="fb-error-icon">!</span>}
+              {(errors.confirmPassword || registerError === 'Las contraseñas no coinciden.') && (
+                <span className="fb-error-icon">!</span>
+              )}
             </div>
-            <TooltipPortal
-              fieldName="confirmPassword"
-              targetRef={confirmPasswordRef}
-              visible={!!errors.confirmPassword && focusedField === 'confirmPassword'}
-            >
-              {errors.confirmPassword?.message}
+
+            <TooltipPortal targetRef={confirmPasswordRef} visible={(errors.confirmPassword || registerError === 'Las contraseñas no coinciden.') && focusedField === 'confirmPassword'}>
+              {errors.confirmPassword?.message || 'Las contraseñas no coinciden.'}
+
             </TooltipPortal>
           </div>
 
@@ -209,63 +225,53 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
             <label htmlFor="telefono" className="register-modal-label">Teléfono</label>
             <div style={{ position: 'relative' }}>
               <input
+                {...register('telefono', { required: 'El teléfono es obligatorio' })}
                 ref={telefonoRef}
                 id="telefono"
+                name="telefono"
                 type="tel"
-                {...register('telefono', {
-                  required: 'El teléfono es obligatorio',
-                  pattern: {
-                    value: /^[0-9]{4}-[0-9]{4}$/,
-                    message: 'Formato: 0000-0000'
-                  }
-                })}
-                onChange={handlePhoneChange}
-                className={errors.telefono ? 'input-error' : ''}
+                onChange={e => { /* ...tu lógica de formato... */ handlePhoneChange(e); }}
+                className={(errors.telefono || (registerError && registerError.toLowerCase().includes('teléfono'))) ? 'input-error' : ''}
                 onFocus={() => setFocusedField('telefono')}
                 onBlur={() => setFocusedField(null)}
               />
-              {errors.telefono && <span className="fb-error-icon">!</span>}
+              {(errors.telefono || (registerError && registerError.toLowerCase().includes('teléfono'))) && (
+                <span className="fb-error-icon">!</span>
+              )}
             </div>
-            <TooltipPortal
-              fieldName="telefono"
-              targetRef={telefonoRef}
-              visible={!!errors.telefono && focusedField === 'telefono'}
-            >
-              {errors.telefono?.message}
+
+            <TooltipPortal targetRef={telefonoRef} visible={(errors.telefono || (registerError && registerError.toLowerCase().includes('teléfono'))) && focusedField === 'telefono'}>
+              {errors.telefono?.message || registerError}
+
             </TooltipPortal>
           </div>
           <div className="form-group-half-width" style={{ position: 'relative' }}>
             <label htmlFor="email" className="register-modal-label">Correo electrónico</label>
             <div style={{ position: 'relative' }}>
               <input
+                {...register('email', { required: 'El correo es obligatorio' })}
                 ref={emailRef}
                 id="email"
+                name="email"
                 type="email"
-                {...register('email', {
-                  required: 'El correo es obligatorio',
-                  pattern: {
-                    value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
-                    message: 'Correo inválido'
-                  }
-                })}
-                className={errors.email ? 'input-error' : ''}
+                className={(errors.email || (registerError && registerError.toLowerCase().includes('correo'))) ? 'input-error' : ''}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField(null)}
               />
-              {errors.email && <span className="fb-error-icon">!</span>}
+              {(errors.email || (registerError && registerError.toLowerCase().includes('correo'))) && (
+                <span className="fb-error-icon">!</span>
+              )}
             </div>
-            <TooltipPortal
-              fieldName="email"
-              targetRef={emailRef}
-              visible={!!errors.email && focusedField === 'email'}
-            >
-              {errors.email?.message}
+
+            <TooltipPortal targetRef={emailRef} visible={(errors.email || (registerError && registerError.toLowerCase().includes('correo'))) && focusedField === 'email'}>
+              {errors.email?.message || registerError}
+
             </TooltipPortal>
           </div>
 
           <div className="form-group-half-width">
             <label htmlFor="licencia" className="register-modal-label">Licencia (foto)</label>
-            <input id="licencia" name="licencia" type="file" accept="image/*" onChange={handleFileChange} />
+            <input id="licencia" name="licencia" type="file" accept="image/*" onChange={handleChange} />
             {licenciaPreview && (
               <img src={licenciaPreview} alt="Previsualización de Licencia" className="register-modal-image-preview" />
             )}
@@ -273,7 +279,7 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
 
           <div className="form-group-half-width">
             <label htmlFor="pasaporte" className="register-modal-label">Pasaporte/DUI (foto)</label>
-            <input id="pasaporte" name="pasaporte" type="file" accept="image/*" onChange={handleFileChange} />
+            <input id="pasaporte" name="pasaporte" type="file" accept="image/*" onChange={handleChange} />
             {pasaportePreview && (
               <img src={pasaportePreview} alt="Previsualización de Pasaporte/DUI" className="register-modal-image-preview" />
             )}
@@ -282,20 +288,26 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
           <div className="form-group-full-width" style={{ position: 'relative' }}>
             <label htmlFor="nacimiento" className="register-modal-label">Fecha de nacimiento</label>
             <input
-              ref={nacimientoRef}
+
+              {...register('nacimiento', {
+                required: 'La fecha de nacimiento es obligatoria',
+                validate: validateEdad
+              })}
+
               id="nacimiento"
+              name="nacimiento"
               type="date"
-              {...register('nacimiento', { required: 'La fecha de nacimiento es obligatoria', validate: validateEdad })}
-              className={errors.nacimiento ? 'input-error' : ''}
+              className={(errors.nacimiento || (registerError && registerError.toLowerCase().includes('mayor de edad'))) ? 'input-error' : ''}
               onFocus={() => setFocusedField('nacimiento')}
               onBlur={() => setFocusedField(null)}
             />
             <TooltipPortal
-              fieldName="nacimiento"
-              targetRef={nacimientoRef}
-              visible={!!errors.nacimiento && focusedField === 'nacimiento'}
+
+              targetRef={{ current: document.getElementById('nacimiento') }}
+              visible={(errors.nacimiento || (registerError && registerError.toLowerCase().includes('mayor de edad'))) && focusedField === 'nacimiento'}
+
             >
-              {errors.nacimiento?.message}
+              {errors.nacimiento?.message || registerError}
             </TooltipPortal>
           </div>
 

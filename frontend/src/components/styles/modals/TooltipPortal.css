@@ -8,7 +8,8 @@
   color: #fff !important;
   border: 2px solid #e53935 !important;
   box-shadow: 0 0 12px 2px #0008 !important;
-  margin-left: 6px; /* Más pegado al input */
+  margin-left: 0 !important; /* Ajuste: elimina el margen izquierdo excesivo */
+  margin-right: 0 !important;
 }
 .fb-error-tooltip-arrow {
   left: 100%;

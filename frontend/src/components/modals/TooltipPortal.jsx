@@ -94,20 +94,8 @@ const TooltipPortal = ({ targetRef, children, visible, fieldName }) => {
       zIndex: 9999
     };
     arrowClass += ' fb-error-tooltip-arrow-top';
-  } else if (rightSpace > 0) {
-    // Mostrar a la derecha
-    let top = coords.top + coords.height / 2 - tooltipHeight / 2;
-    if (top < 8) top = 8;
-    if (top + tooltipHeight > viewportHeight - 8) top = viewportHeight - tooltipHeight - 8;
-    style = {
-      position: 'fixed',
-      top,
-      left: coords.left + coords.width + TOOLTIP_GAP,
-      zIndex: 9999
-    };
-    arrowClass += ' fb-error-tooltip-arrow-left';
   } else if (leftSpace > 0) {
-    // Mostrar a la izquierda
+    // Mostrar a la izquierda (PRIORIDAD)
     let top = coords.top + coords.height / 2 - tooltipHeight / 2;
     if (top < 8) top = 8;
     if (top + tooltipHeight > viewportHeight - 8) top = viewportHeight - tooltipHeight - 8;
@@ -118,6 +106,18 @@ const TooltipPortal = ({ targetRef, children, visible, fieldName }) => {
       zIndex: 9999
     };
     arrowClass += ' fb-error-tooltip-arrow-right';
+  } else if (rightSpace > 0) {
+    // Mostrar a la derecha SOLO si no hay espacio a la izquierda
+    let top = coords.top + coords.height / 2 - tooltipHeight / 2;
+    if (top < 8) top = 8;
+    if (top + tooltipHeight > viewportHeight - 8) top = viewportHeight - tooltipHeight - 8;
+    style = {
+      position: 'fixed',
+      top,
+      left: coords.left + coords.width + TOOLTIP_GAP,
+      zIndex: 9999
+    };
+    arrowClass += ' fb-error-tooltip-arrow-left';
   } else {
     // Fallback: encima del input
     let top = Math.max(coords.top - tooltipHeight - TOOLTIP_GAP, 8);
