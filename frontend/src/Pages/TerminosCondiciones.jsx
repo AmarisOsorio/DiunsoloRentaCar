@@ -1,14 +1,18 @@
 import React from 'react';
-//import './TerminosCondiciones.css';
+import './styles/TerminosCondiciones.css';
+import ToSHeader from '../assets/ToSHeader.png';
 
 const TerminosCondiciones = () => (
   <div className="terminos-bg">
-    <header className="terminos-header">
-      <div className="terminos-overlay">
-        <h1>Términos y Condiciones</h1>
-        <p>Por favor, lee cuidadosamente antes de utilizar nuestros servicios.</p>
-      </div>
-    </header>
+    <header
+            className="terminos-header"
+            style={{ backgroundImage: `url(${ToSHeader})` }}
+          >
+            <div className="header-overlay">
+              <h1>Términos y Condiciones</h1>
+              <p>Por favor, lee cuidadosamente antes de utilizar nuestros servicios.</p>
+            </div>
+          </header>
     <section className="terminos-section">
       <div className="terminos-content">
         <h2>1. Aceptación de los términos</h2>
