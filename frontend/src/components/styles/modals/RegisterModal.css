@@ -414,7 +414,7 @@
   border: 2px solid #fff;
   z-index: 2;
   position: absolute;
-  right: 4px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -506,7 +506,7 @@
   border: 2px solid #fff;
   z-index: 2;
   position: absolute;
-  right: 4px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -540,6 +540,10 @@
   cursor: pointer;
   color: #1C318C;
   font-size: 1.2em;
+  z-index: 1;
+}
+.input-eye-icon.input-eye-icon-error {
+  right: 36px; /* Mueve el ojo a la izquierda cuando hay error */
 }
 
 .register-modal-error {

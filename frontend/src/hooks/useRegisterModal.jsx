@@ -282,6 +282,7 @@ const useRegisterModal = () => {
     telefonoRef,
     emailRef,
     handleSubmit,
+    onSubmit,
     handleVerify,
     handlePhoneChange,
     handleInputChange,
@@ -292,7 +293,8 @@ const useRegisterModal = () => {
     licenciaPreview,
     pasaportePreview,
     validateEdad,
-    validateConfirmPassword
+    validateConfirmPassword,
+    errors // <-- exponer errors
   };
 };
 
