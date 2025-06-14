@@ -26,6 +26,10 @@ export const AuthProvider = ({ children }) => {
         setUserType(normalizedType);
         setIsAuthenticated(true);
         return { ...data, message: data.message || 'login exitoso' };
+      } else if (data.needVerification) {
+        setUserType(null);
+        setIsAuthenticated(false);
+        return data; // <-- Retorna el objeto completo para que useLogin lo detecte
       } else {
         setUserType(null);
         setIsAuthenticated(false);
@@ -42,8 +46,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value);
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
       });
+      // DEBUG: Log all FormData keys and values before sending
+      // if (typeof window !== 'undefined') {
+      //   console.log('FormData about to be sent:');
+      //   for (let pair of formData.entries()) {
+      //     console.log(pair[0], ':', pair[1]);
+      //   }
+      // }
       const res = await fetch(`${API_URL}/registerClients`, {
         method: 'POST',
         body: formData,

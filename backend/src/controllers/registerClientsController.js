@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 
 import clientsModel from "../models/Clientes.js";
 import { config } from "../config.js";
+import sendWelcomeMail from '../utils/mailWelcome.js';
 
 // Obtener __dirname para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +18,8 @@ const registerClientsController = {};
 registerClientsController.register = async (req, res) => {
   try {
     // LOG para depuración
+    // console.log('BODY:', req.body);
+    // console.log('FILES:', req.files);
     let pasaporteBuffer = null;
     let licenciaBuffer = null;
     if (req.files && req.files.pasaporteDui && req.files.pasaporteDui[0]) {
@@ -30,13 +33,17 @@ registerClientsController.register = async (req, res) => {
       nombreCompleto,
       fechaDeNacimiento,
       correo,
+      contraseña: contraseñaRaw,
       contrasena: contrasenaRaw,
-      telefono
+      telefono,
+      pasaporteDui,
+      licencia
     } = req.body;
 
-    const contrasena = contrasenaRaw || req.body['contrasena'];
-    if (!contrasena) {
-      return res.status(400).json({ message: "El campo 'contrasena' es obligatorio y no fue recibido correctamente." });
+    // Soportar ambos: 'contraseña', 'contrasena', y variantes mal codificadas
+    const contraseña = contraseñaRaw || contrasenaRaw || req.body['contraseña'] || req.body['contrasena'] || req.body['contraseÃ±a'];
+    if (!contraseña) {
+      return res.status(400).json({ message: "El campo 'contraseña' es obligatorio y no fue recibido correctamente." });
     }
 
     // Declarar transporter y chars solo una vez
@@ -58,15 +65,15 @@ registerClientsController.register = async (req, res) => {
         return res.json({ message: "Client already exists", isVerified: true });
       } else {
         // Actualizar datos del cliente no verificado
-        const passwordHashUpdate = await bcryptjs.hash(contrasena, 10);
+        const passwordHashUpdate = await bcryptjs.hash(contraseña, 10);
         existsClient.nombreCompleto = nombreCompleto;
         existsClient.fechaDeNacimiento = fechaDeNacimiento;
         existsClient.telefono = telefono;
-        existsClient.contrasena = passwordHashUpdate;
+        existsClient.contraseña = passwordHashUpdate;
         if (req.body.pasaporteDui) existsClient.pasaporteDui = req.body.pasaporteDui;
         if (req.body.licencia) existsClient.licencia = req.body.licencia;
         await existsClient.save();
-        console.log("Cliente actualizado: ", correo);
+        // console.log("Cliente actualizado: ", correo);
         // Generar y enviar nuevo código de verificación (6 caracteres alfanuméricos)
         let verificationCodeUpdate = '';
         for (let i = 0; i < 6; i++) {
@@ -123,18 +130,18 @@ registerClientsController.register = async (req, res) => {
     }
 
     // Si no existe, crear nuevo cliente
-    const passwordHash = await bcryptjs.hash(contrasena, 10);
+    const passwordHash = await bcryptjs.hash(contraseña, 10);
     const newClient = new clientsModel({
       nombreCompleto,
       fechaDeNacimiento,
       correo,
-      contrasena: passwordHash,
+      contraseña: passwordHash,
       telefono,
-      pasaporteDui: req.body.pasaporteDui || null, // URL
-      licencia: req.body.licencia || null // URL
+      pasaporteDui: pasaporteDui || null, // URL
+      licencia: licencia || null // URL
     });
     await newClient.save();
-    console.log("Nuevo cliente registrado: ", correo);
+    // console.log("Nuevo cliente registrado: ", correo);
     // Generar código de 6 caracteres alfanuméricos (números y letras mayúsculas)
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
@@ -216,6 +223,13 @@ registerClientsController.verifyCodeEmail = async (req, res) => {
     const client = await clientsModel.findOne({ correo });
     client.isVerified = true;
     await client.save();
+    // Enviar correo de bienvenida tras verificación exitosa
+    try {
+      await sendWelcomeMail({ correo, nombre: client.nombreCompleto });
+    } catch (e) {
+      // No bloquear la verificación si el correo de bienvenida falla
+      console.error('Error enviando correo de bienvenida:', e);
+    }
     res.json({ message: "Correo verificado exitosamente" });
     res.clearCookie("VerificationToken");
     return;

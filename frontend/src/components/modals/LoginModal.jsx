@@ -4,6 +4,7 @@ import LoginImg from '../../assets/imgLogin.jpg';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useLogin from '../../hooks/useLogin.js';
 import TooltipPortal from './TooltipPortal.jsx';
+import VerifyAccountModal from './VerifyAccountModal.jsx';
 
 const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   const {
@@ -16,7 +17,11 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     toggleShowPassword,
     handleSubmit,
     SuccessScreen,
-    showSuccess
+    showSuccess,
+    showVerifyModal,
+    setShowVerifyModal,
+    pendingVerificationEmail,
+    pendingVerificationPassword
   } = useLogin(onClose);
   const [show, setShow] = React.useState(false);
   const [emailRef, setEmailRef] = React.useState(null);
@@ -66,6 +71,65 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     if (emailErr || passErr) return;
     handleSubmit(e);
   };
+
+  // Handler para cerrar el modal de verificación
+  const handleCloseVerify = () => {
+    setShowVerifyModal(false);
+    onClose && onClose();
+  };
+
+  // Handler para verificar y loguear automáticamente
+  const handleVerifyAndLogin = async (code) => {
+    // Lógica para verificar el código
+    try {
+      const res = await fetch('/api/registerClients/verifyCodeEmail', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verificationCode: code })
+      });
+      const data = await res.json();
+      if (data.message && data.message.toLowerCase().includes('verificado')) {
+        // Intenta loguear automáticamente
+        // Puedes usar el mismo handleSubmit pero pasando los datos guardados
+        // O llamar a la función login del contexto
+        if (window && window.location) {
+          // Recarga para que el AuthContext detecte el login
+          window.location.reload();
+        }
+      }
+      return data;
+    } catch (err) {
+      return { message: 'Error verificando el código' };
+    }
+  };
+
+  // Handler para reenviar el código de verificación
+  const handleResendVerificationCode = async () => {
+    try {
+      const res = await fetch('/api/registerClients/resendCodeEmail', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return await res.json();
+    } catch (err) {
+      return { message: 'No se pudo reenviar el código.' };
+    }
+  };
+
+  if (showVerifyModal) {
+    return (
+      <VerifyAccountModal
+        open={showVerifyModal}
+        onClose={handleCloseVerify}
+        onVerify={handleVerifyAndLogin}
+        onResend={handleResendVerificationCode}
+        email={pendingVerificationEmail}
+        password={pendingVerificationPassword}
+      />
+    );
+  }
 
   if (!open && !show) return null;
 

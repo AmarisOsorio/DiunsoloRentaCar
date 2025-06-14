@@ -3,7 +3,7 @@
   min-width: 180px;
   max-width: 220px;
   transform: none;
-  border-radius: 8px 0 8px 8px; /* Esquina superior derecha sin borde redondeado */
+  border-radius: 8px 8px 8px 8px; /* Esquina superior derecha sin borde redondeado */
   background: #be4b49 !important;
   color: #fff !important;
   border: 2px solid #e53935 !important;
@@ -30,11 +30,21 @@
 
 @media (max-width: 768px) {
   .fb-error-tooltip.fb-error-tooltip-portal {
-    min-width: 90px;
+    min-width: 50px;
     max-width: 90vw;
     font-size: 0.93em;
     margin-right: 0;
     margin-left: 0 !important;
+    width: max-content;
+    box-sizing: border-box;
+    position: absolute;
+    left: 50% !important;
+    right: auto !important;
+    top: 100%; /* Pegado al input */
+    margin-top: 0;
+    margin-bottom: 0;
+    z-index: 3000 !important;
+    transform: translateX(-50%);
   }
   .fb-error-tooltip-arrow {
     display: none;
@@ -42,7 +52,70 @@
   .fb-error-tooltip-arrow-top {
     display: block;
     left: 50%;
-    top: -10px; /* Cambiado de -12px a -10px también en responsive */
+    top: -10px;
     transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 886px) and (min-width: 769px) {
+  /* Tooltips arriba para nombre y fecha */
+  .fb-error-tooltip.fb-error-tooltip-portal.top {
+    left: 50% !important;
+    right: auto !important;
+    top: auto;
+    bottom: 100%;
+    margin-bottom: 8px;
+    margin-top: 0;
+    transform: translateX(-50%);
+    width: max-content;
+    min-width: 120px;
+    max-width: 90vw;
+  }
+  .fb-error-tooltip-arrow {
+    display: none;
+  }
+  .fb-error-tooltip-arrow-top {
+    display: block;
+    left: 85%; /* Mueve la flecha hacia la derecha para inputs como fecha */
+    top: 100%;
+    bottom: auto;
+    transform: translateX(-50%) rotate(180deg); /* Apunta hacia abajo */
+    border-top: 10px solid #be4b49;
+    border-bottom: none;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    width: 0;
+    height: 0;
+  }
+
+  /* Tooltips a la derecha para contraseña y teléfono */
+  .fb-error-tooltip.fb-error-tooltip-portal.right {
+    left: 100% !important;
+    right: auto !important;
+    top: 50%;
+    bottom: auto;
+    margin-bottom: 0;
+    margin-top: 0;
+    transform: translateY(-50%);
+    width: max-content;
+    min-width: 120px;
+    max-width: 90vw;
+  }
+  .fb-error-tooltip-arrow {
+    display: block;
+    left: -10px;
+    right: 100%;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%) rotate(180deg); /* Apunta hacia la izquierda */
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 10px solid #be4b49;
+    border-left: none;
+    width: 0;
+    height: 0;
+  }
+  .fb-error-tooltip-arrow-top {
+    display: none;
   }
 }

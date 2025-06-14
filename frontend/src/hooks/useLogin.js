@@ -10,6 +10,9 @@ export default function useLogin(onClose) {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showLogged, setShowLogged] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
+  const [pendingVerificationPassword, setPendingVerificationPassword] = useState("");
 
   const handleEmailChange = (e) => setEmail(e.target.value);
   const handlePasswordChange = (e) => setPassword(e.target.value);
@@ -20,6 +23,13 @@ export default function useLogin(onClose) {
     setError('');
     try {
       const result = await login({ correo: email, contraseña: password });
+      if (result.needVerification) {
+        setShowVerifyModal(true);
+        setPendingVerificationEmail(email);
+        setPendingVerificationPassword(password);
+        setError(result.message || 'Tu cuenta no está verificada. Revisa tu correo.');
+        return;
+      }
       if (result.message !== 'login exitoso') {
         setError(result.message || 'Error al iniciar sesión');
       } else {
@@ -47,6 +57,10 @@ export default function useLogin(onClose) {
     handleSubmit,
     setError,
     SuccessScreen,
-    showSuccess: showLogged
+    showSuccess: showLogged,
+    showVerifyModal,
+    setShowVerifyModal,
+    pendingVerificationEmail,
+    pendingVerificationPassword
   };
 }

@@ -20,8 +20,8 @@ const useRegisterModal = () => {
     mode: 'onBlur',
     defaultValues: {
       nombre: '',
-      password: '',
-      confirmPassword: '',
+      contraseña: '', // changed from password
+      confirmarContraseña: '', // changed from confirmPassword
       telefono: '',
       email: '',
       licencia: null,
@@ -118,7 +118,7 @@ const useRegisterModal = () => {
 
   // Validación personalizada para confirmación de contraseña
   const validateConfirmPassword = (value) => {
-    if (value !== getValues('password')) return 'Las contraseñas no coinciden.';
+    if (value !== getValues('contraseña')) return 'Las contraseñas no coinciden.';
     return true;
   };
 
@@ -155,12 +155,12 @@ const useRegisterModal = () => {
       if (emailResult.exists) {
         // Si el correo existe, intentamos registrar para ver si está verificado o no
         const payload = {
-          nombre_completo: data.nombre,
+          nombreCompleto: data.nombre,
           correo: data.email,
-          contraseña: data.password,
+          contraseña: data.contraseña, // use ñ
           telefono: data.telefono,
-          fecha_de_nacimiento: data.nacimiento,
-          pasaporte_dui: data.pasaporte || undefined,
+          fechaDeNacimiento: data.nacimiento,
+          pasaporteDui: data.pasaporte || undefined,
           licencia: data.licencia || undefined
         };
         const result = await registerUser(payload);
@@ -215,12 +215,12 @@ const useRegisterModal = () => {
     }
     try {
       const payload = {
-        nombre_completo: data.nombre,
+        nombreCompleto: data.nombre,
         correo: data.email,
-        contraseña: data.password,
+        contraseña: data.contraseña, // use ñ
         telefono: data.telefono,
-        fecha_de_nacimiento: data.nacimiento,
-        pasaporte_dui: data.pasaporte || undefined,
+        fechaDeNacimiento: data.nacimiento,
+        pasaporteDui: data.pasaporte || undefined,
         licencia: data.licencia || undefined
       };
       const result = await registerUser(payload);
@@ -294,7 +294,9 @@ const useRegisterModal = () => {
     pasaportePreview,
     validateEdad,
     validateConfirmPassword,
-    errors // <-- exponer errors
+    errors, // <-- exponer errors
+    watch, // <-- return watch for RegisterModal.jsx
+    getValues // <-- add getValues for RegisterModal.jsx
   };
 };
 
