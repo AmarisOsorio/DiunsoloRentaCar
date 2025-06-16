@@ -59,6 +59,12 @@ const Navbar = () => {
   // Cerrar menú móvil al navegar
   const handleNavClick = () => setMobileMenuOpen(false);
 
+  // Cuando se cierra el modal de registro, también limpia el estado de éxito
+  const handleCloseRegister = () => {
+    setRegisterModalOpen(false);
+    // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
+  };
+
   return (
     <nav className="navbar">
       <img className="navbar-img" src={diunsoloImg} alt="Diunsolo Logo" style={{ marginLeft: 0 }} />
@@ -132,7 +138,7 @@ const Navbar = () => {
         onOpenRegister={handleOpenRegister}
         onOpenForgot={() => setForgotModalOpen(true)}
       />
-      <RegisterModal open={registerModalOpen} onClose={() => setRegisterModalOpen(false)} onSwitchToLogin={handleOpenLogin} />
+      <RegisterModal open={registerModalOpen} onClose={handleCloseRegister} onSwitchToLogin={handleOpenLogin} />
       <ForgotPasswordModal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} />
       <button
         className="navbar-hamburger"

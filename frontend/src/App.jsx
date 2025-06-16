@@ -18,6 +18,12 @@ function App() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
 
+  // Cuando se cierra el modal de registro, también limpia el estado de éxito
+  const handleCloseRegister = () => {
+    setShowRegisterModal(false);
+    // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
+  };
+
   return (
     <Router>
       <Navbar />
@@ -29,7 +35,7 @@ function App() {
           <Route path="/terminos" element={<TerminosCondiciones />} />
         </Routes>
         <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
-        <RegisterModal open={showRegisterModal} onClose={() => setShowRegisterModal(false)} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
+        <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
         <ForgotPasswordModal open={showForgotModal} onClose={() => setShowForgotModal(false)} />
       </main>
       <Footer />

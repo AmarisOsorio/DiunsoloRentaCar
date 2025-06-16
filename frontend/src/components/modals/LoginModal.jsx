@@ -5,6 +5,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useLogin from '../../hooks/useLogin.js';
 import TooltipPortal from './TooltipPortal.jsx';
 import VerifyAccountModal from './VerifyAccountModal.jsx';
+import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
 
 const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   const {
@@ -21,7 +22,10 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     showVerifyModal,
     setShowVerifyModal,
     pendingVerificationEmail,
-    pendingVerificationPassword
+    pendingVerificationPassword,
+    loading,
+    pendingShowVerify,
+    handleVerifyAndLogin // <-- Usar la función expuesta del hook
   } = useLogin(onClose);
   const [show, setShow] = React.useState(false);
   const [emailRef, setEmailRef] = React.useState(null);
@@ -38,6 +42,17 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
       return () => clearTimeout(timeout);
     }
   }, [open]);
+
+  // useEffect para redirección tras éxito
+  React.useEffect(() => {
+    if (SuccessScreen && showSuccess) {
+      const timeout = setTimeout(() => {
+        onClose && onClose();
+        window.location.href = '/';
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [SuccessScreen, showSuccess, onClose]);
 
   const handleOpenRegister = (e) => {
     e.preventDefault();
@@ -78,32 +93,6 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     onClose && onClose();
   };
 
-  // Handler para verificar y loguear automáticamente
-  const handleVerifyAndLogin = async (code) => {
-    // Lógica para verificar el código
-    try {
-      const res = await fetch('/api/registerClients/verifyCodeEmail', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verificationCode: code })
-      });
-      const data = await res.json();
-      if (data.message && data.message.toLowerCase().includes('verificado')) {
-        // Intenta loguear automáticamente
-        // Puedes usar el mismo handleSubmit pero pasando los datos guardados
-        // O llamar a la función login del contexto
-        if (window && window.location) {
-          // Recarga para que el AuthContext detecte el login
-          window.location.reload();
-        }
-      }
-      return data;
-    } catch (err) {
-      return { message: 'Error verificando el código' };
-    }
-  };
-
   // Handler para reenviar el código de verificación
   const handleResendVerificationCode = async () => {
     try {
@@ -118,17 +107,37 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     }
   };
 
+  // Escucha el evento para mostrar el modal de éxito tras verificación
+  React.useEffect(() => {
+    const handler = () => {
+      if (typeof setShowLogged === 'function') setShowLogged(true);
+    };
+    window.addEventListener('show-login-success', handler);
+    return () => window.removeEventListener('show-login-success', handler);
+  }, []);
+
+  // Mostrar modal de verificación si corresponde (tiene máxima prioridad)
   if (showVerifyModal) {
     return (
       <VerifyAccountModal
         open={showVerifyModal}
-        onClose={handleCloseVerify}
+        onClose={() => setShowVerifyModal(false)}
         onVerify={handleVerifyAndLogin}
         onResend={handleResendVerificationCode}
         email={pendingVerificationEmail}
         password={pendingVerificationPassword}
       />
     );
+  }
+
+  // Mostrar spinner de loading si está cargando o pendiente mostrar verify
+  if (loading || pendingShowVerify) {
+    return <LoadingModalBackdrop text="Iniciando sesión..." />;
+  }
+
+  // Mostrar pantalla de éxito si corresponde
+  if (SuccessScreen && showSuccess) {
+    return <SuccessScreen onClose={() => {}} />;
   }
 
   if (!open && !show) return null;
@@ -161,6 +170,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
                 ref={el => setEmailRef(el)}
                 onBlur={handleEmailBlur}
                 style={emailError ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
+                disabled={loading}
               />
               <TooltipPortal targetRef={{ current: emailRef }} visible={!!emailError || error === 'Usuario no encontrado'}>
                 {emailError || (error === 'Usuario no encontrado' ? error : '')}
@@ -178,11 +188,13 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
                   ref={el => setPasswordRef(el)}
                   onBlur={handlePasswordBlur}
                   style={passwordError || error === 'Contraseña inválida' ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
+                  disabled={loading}
                 />
                 <span
-                  onClick={toggleShowPassword}
+                  onClick={loading ? undefined : toggleShowPassword}
                   className="input-eye-icon"
                   title={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  style={loading ? { pointerEvents: 'none', opacity: 0.5 } : {}}
                 >
                   {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
@@ -194,7 +206,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
                 ¿Olvidaste tu contraseña?{' '}
                 <a href="#" className="login-modal-link" onClick={handleOpenForgot}>Recuperar contraseña</a>
               </div>
-              <button type="submit" className="login-modal-btn">Iniciar sesión</button>
+              <button type="submit" className="login-modal-btn" disabled={loading}>Iniciar sesión</button>
             </form>
           </div>
         </div>

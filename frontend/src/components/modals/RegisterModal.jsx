@@ -6,6 +6,7 @@ import TooltipPortal from './TooltipPortal';
 import useRegisterModal from '../../hooks/useRegisterModal.jsx';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { useAuth } from '../../context/AuthContext.jsx';
+import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
 
 const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
   const {
@@ -60,35 +61,34 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     handleOpenEffect(open);
   }, [open, handleOpenEffect, resendVerificationCode]);
 
-  // Si el modal no está abierto y no está en proceso de animación de cierre, devuelve null para no renderizar nada.
-  if (!open && !show) return null;
+  // useEffect para redirección tras éxito de registro
+  React.useEffect(() => {
+    if (registrationSuccessData) {
+      const timeout = setTimeout(() => {
+        onClose && onClose();
+        window.location.href = '/';
+      }, 2200); // 3 segundos
+      return () => clearTimeout(timeout);
+    }
+  }, [registrationSuccessData, onClose]);
 
-  // Mostrar animación de carga
-  if (loading) {
+  // Si hay éxito, mostrar solo el success check (el modal se cerrará tras 1.5s)
+  if (registrationSuccessData) {
     return (
       <div className="register-modal-backdrop modal-fade-in">
-        <div className="register-modal-content modal-slide-in" style={{ minHeight: 340, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="register-modal-loading-spinner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div className="spinner" style={{ width: 60, height: 60, border: '6px solid #e6f6fb', borderTop: '6px solid #009BDB', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <div style={{ marginTop: 18, color: '#1C318C', fontWeight: 500, fontSize: '1.1rem' }}>Creando tu cuenta...</div>
-          </div>
+        <div className="register-modal-content modal-slide-in">
+          <RegistrationSuccessAnimation userName={registrationSuccessData.nombre} onAnimationEnd={() => {}} />
         </div>
       </div>
     );
   }
 
-  // Mostrar animación de éxito
-  if (registrationSuccessData) {
-    return (
-      <div className="register-modal-backdrop modal-fade-in">
-        <div className="register-modal-content modal-slide-in">
-          <RegistrationSuccessAnimation userName={registrationSuccessData.nombre} onAnimationEnd={() => {
-            setRegistrationSuccessData(null);
-            setShowVerify(true);
-          }} />
-        </div>
-      </div>
-    );
+  // Si el modal no está abierto y no está en proceso de animación de cierre, devuelve null para no renderizar nada.
+  if (!open && !show) return null;
+
+  // Mostrar animación de carga
+  if (loading) {
+    return <LoadingModalBackdrop text="Creando tu cuenta..." />;
   }
 
   // Si está mostrando el modal de verificación, solo renderiza ese modal
