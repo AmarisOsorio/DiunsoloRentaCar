@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const requestPasswordRecovery = async (correo) => {
-    const res = await fetch(`${API_URL}/password-recovery/request`, {
+    const res = await fetch(`${API_URL}/passwordRecovery/request`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const verifyRecoveryCode = async (code) => {
-    const res = await fetch(`${API_URL}/password-recovery/verify`, {
+    const res = await fetch(`${API_URL}/passwordRecovery/verify`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const setNewPassword = async (newPassword) => {
-    const res = await fetch(`${API_URL}/password-recovery/new-password`, {
+    const res = await fetch(`${API_URL}/passwordRecovery/new-password`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

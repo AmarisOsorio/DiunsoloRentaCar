@@ -130,11 +130,6 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     );
   }
 
-  // Mostrar spinner de loading si está cargando o pendiente mostrar verify
-  if (loading || pendingShowVerify) {
-    return <LoadingModalBackdrop text="Iniciando sesión..." />;
-  }
-
   // Mostrar pantalla de éxito si corresponde
   if (SuccessScreen && showSuccess) {
     return <SuccessScreen onClose={() => {}} />;
@@ -210,6 +205,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
             </form>
           </div>
         </div>
+        {loading && <LoadingModalBackdrop text="Iniciando sesión..." />}
       </div>
     </>
   );

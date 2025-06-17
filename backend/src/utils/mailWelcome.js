@@ -51,7 +51,7 @@ async function sendWelcomeMail({ correo, nombre }) {
     attachments: [
       {
         filename: 'diunsolologo.png',
-        path: path.join(__dirname, '..', '..', '..', 'frontend', 'src', 'assets', 'diunsolologo.png'),
+        path: path.resolve(__dirname, '..', '..', '..', 'frontend', 'src', 'assets', 'diunsolologo.png'),
         cid: 'diunsolologo'
       }
     ]

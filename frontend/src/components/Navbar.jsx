@@ -136,10 +136,20 @@ const Navbar = () => {
         open={loginModalOpen} 
         onClose={() => setLoginModalOpen(false)} 
         onOpenRegister={handleOpenRegister}
-        onOpenForgot={() => setForgotModalOpen(true)}
+        onOpenForgot={() => {
+          setLoginModalOpen(false);
+          setForgotModalOpen(true);
+        }}
       />
       <RegisterModal open={registerModalOpen} onClose={handleCloseRegister} onSwitchToLogin={handleOpenLogin} />
-      <ForgotPasswordModal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} />
+      <ForgotPasswordModal 
+        open={forgotModalOpen} 
+        onClose={() => setForgotModalOpen(false)}
+        onBackToLogin={() => {
+          setForgotModalOpen(false);
+          setTimeout(() => setLoginModalOpen(true), 100); // Cambia a 100ms para abrir más rápido
+        }}
+      />
       <button
         className="navbar-hamburger"
         onClick={() => setMobileMenuOpen(v => !v)}
