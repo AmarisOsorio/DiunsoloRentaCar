@@ -137,7 +137,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
             {loading && canResend ? (
               <span className="spinner" style={{ marginRight: 6, verticalAlign: 'middle' }}></span>
             ) : null}
-            Reenviar
+            Reenviar Codigo
           </span>
         </div>
         {showToast && (

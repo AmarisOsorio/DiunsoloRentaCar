@@ -32,10 +32,18 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   const [passwordRef, setPasswordRef] = React.useState(null);
   const [emailError, setEmailError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
+  const [focusedField, setFocusedField] = React.useState(null);
+  const [hasTriedLogin, setHasTriedLogin] = React.useState(false);
+  const { setError } = useLogin(onClose); // <-- Extraer setError
 
   React.useEffect(() => {
     if (open) {
       setShow(true);
+      setEmailError('');
+      setPasswordError('');
+      setFocusedField(null);
+      setHasTriedLogin(false); // <-- Reset al abrir
+      setError && setError(''); // <-- Limpiar error global
     } else {
       // Espera la animación antes de desmontar
       const timeout = setTimeout(() => setShow(false), 300);
@@ -74,11 +82,17 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     return '';
   };
 
-  const handleEmailBlur = () => setEmailError(validateEmail(email));
-  const handlePasswordBlur = () => setPasswordError(validatePassword(password));
-
+  const handleEmailBlur = () => {
+    setEmailError(validateEmail(email));
+    setHasTriedLogin(true);
+  };
+  const handlePasswordBlur = () => {
+    setPasswordError(validatePassword(password));
+    setHasTriedLogin(true);
+  };
   const handleSubmitWithValidation = (e) => {
     e.preventDefault();
+    setHasTriedLogin(true);
     const emailErr = validateEmail(email);
     const passErr = validatePassword(password);
     setEmailError(emailErr);
@@ -155,21 +169,28 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
             </div>
             <form className="login-modal-form" onSubmit={handleSubmitWithValidation} autoComplete="off">
               <label htmlFor="login-email" className="login-modal-label">Correo electrónico</label>
-              <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                placeholder="Correo Electrónico"
-                autoComplete="email"
-                ref={el => setEmailRef(el)}
-                onBlur={handleEmailBlur}
-                style={emailError ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
-                disabled={loading}
-              />
-              <TooltipPortal targetRef={{ current: emailRef }} visible={!!emailError || error === 'Usuario no encontrado'}>
-                {emailError || (error === 'Usuario no encontrado' ? error : '')}
-              </TooltipPortal>
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  placeholder="Correo Electrónico"
+                  autoComplete="email"
+                  ref={el => setEmailRef(el)}
+                  onBlur={() => { handleEmailBlur(); setFocusedField(null); }}
+                  onFocus={() => setFocusedField('email')}
+                  className={emailError || error === 'Usuario no encontrado' ? 'input-error' : ''}
+                  style={emailError ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
+                  disabled={loading}
+                />
+                {(emailError || error === 'Usuario no encontrado') && (
+                  <span className="fb-error-icon">!</span>
+                )}
+                <TooltipPortal targetRef={{ current: emailRef }} visible={((hasTriedLogin || focusedField === 'email') && (!!emailError || error === 'Usuario no encontrado'))}>
+                  {emailError || (error === 'Usuario no encontrado' ? error : '')}
+                </TooltipPortal>
+              </div>
               <label htmlFor="login-password" className="login-modal-label">Contraseña</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -179,21 +200,25 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
                   onChange={setPassword}
                   placeholder="Contraseña"
                   autoComplete="current-password"
-                  className="login-modal-input"
+                  className={passwordError || error === 'Contraseña inválida' ? 'input-error input-error-has-icon' : ''}
                   ref={el => setPasswordRef(el)}
-                  onBlur={handlePasswordBlur}
+                  onBlur={() => { handlePasswordBlur(); setFocusedField(null); }}
+                  onFocus={() => setFocusedField('password')}
                   style={passwordError || error === 'Contraseña inválida' ? { borderColor: '#d8000c', background: '#fff0f0' } : {}}
                   disabled={loading}
                 />
                 <span
                   onClick={loading ? undefined : toggleShowPassword}
-                  className="input-eye-icon"
+                  className={`input-eye-icon${passwordError || error === 'Contraseña inválida' ? ' input-eye-icon-error' : ''}`}
                   title={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   style={loading ? { pointerEvents: 'none', opacity: 0.5 } : {}}
                 >
                   {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
-                <TooltipPortal targetRef={{ current: passwordRef }} visible={!!passwordError || error === 'Contraseña inválida'}>
+                {(passwordError || error === 'Contraseña inválida') && (
+                  <span className="fb-error-icon">!</span>
+                )}
+                <TooltipPortal targetRef={{ current: passwordRef }} visible={((hasTriedLogin || focusedField === 'password') && (!!passwordError || error === 'Contraseña inválida'))}>
                   {passwordError || (error === 'Contraseña inválida' ? error : '')}
                 </TooltipPortal>
               </div>
