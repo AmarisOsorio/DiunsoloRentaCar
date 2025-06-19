@@ -5,7 +5,15 @@ import { useForgotPasswordModal } from '../../hooks/useForgotPasswordModal';
 import { FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import SuccessCheckAnimation from '../SuccessCheckAnimation';
 
+/**
+ * Modal de recuperación de contraseña.
+ * Permite al usuario recuperar su cuenta en 3 pasos:
+ * 1. Ingresar correo
+ * 2. Ingresar código de verificación
+ * 3. Ingresar nueva contraseña
+ */
 const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
+  // Estado para mostrar/ocultar el modal y animaciones
   const [show, setShow] = useState(false);
   const [closing, setClosing] = useState(false);
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
@@ -15,9 +23,9 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const closeTimeout = useRef();
 
-  // Usar el hook centralizado y único
+  // Hook centralizado con toda la lógica de recuperación
   const {
-    step,
+    step, // Paso actual (1: correo, 2: código, 3: nueva contraseña)
     setStep,
     loading,
     message,
@@ -31,6 +39,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
     resetAll
   } = useForgotPasswordModal(onClose);
 
+  // Efecto para mostrar/ocultar el modal con animación
   useEffect(() => {
     if (open) {
       setShow(true);
@@ -47,13 +56,28 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
     return () => clearTimeout(closeTimeout.current);
   }, [open]);
 
-  // Handler para volver al login desde la flecha
+  // Cierra el modal al hacer click en el fondo
+  const handleBackdropClose = () => {
+    if (showSuccessAnim) return; // No cerrar si está la animación de éxito
+    setClosing(true);
+    closeTimeout.current = setTimeout(() => {
+      setShow(false);
+      setClosing(false);
+      setStep(1);
+      resetAll();
+      if (onClose) onClose();
+    }, 300);
+  };
+
+  // Cierra el modal y vuelve al login
   const handleBackToLogin = (e) => {
     e.stopPropagation();
     setClosing(true);
     closeTimeout.current = setTimeout(() => {
       setShow(false);
       setClosing(false);
+      setStep(1);
+      resetAll();
       if (onBackToLogin) {
         onBackToLogin();
       } else if (onClose) {
@@ -62,18 +86,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
     }, 300);
   };
 
-  // Handler para cerrar con el fondo
-  const handleBackdropClose = () => {
-    if (showSuccessAnim) return; // No cerrar mientras se muestra la animación
-    setClosing(true);
-    closeTimeout.current = setTimeout(() => {
-      setShow(false);
-      setClosing(false);
-      if (onClose) onClose();
-    }, 300);
-  };
-
-  // Handler para mostrar animación y luego ir al login
+  // Muestra animación de éxito y luego cierra el modal
   const handleShowSuccessAnim = (msg) => {
     setSuccessAnimMessage(msg);
     setShowSuccessAnim(true);
@@ -83,6 +96,8 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
       closeTimeout.current = setTimeout(() => {
         setShow(false);
         setClosing(false);
+        setStep(1);
+        resetAll();
         if (onBackToLogin) {
           onBackToLogin();
         } else if (onClose) {
@@ -92,46 +107,35 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
     }, 1800);
   };
 
+  // Si el modal no debe mostrarse, no renderiza nada
   if (!show) return null;
 
+  // Renderiza animación de éxito si corresponde
   if (showSuccessAnim) {
     return (
       <div className="forgot-password-modal-backdrop modal-fade-in">
-        <div className="forgot-password-modal-content forgot-password-modal-flex modal-slide-in" onClick={e => e.stopPropagation()}>
-          <div className="forgot-password-modal-right" style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%'}}>
-              <div className="login-modal-success-check-container">
-                <svg width="90" height="90" viewBox="0 0 90 90">
-                  <circle cx="45" cy="45" r="40" fill="#e6f9ed" stroke="#34c759" strokeWidth="5" />
-                  <polyline
-                    points="28,50 42,64 66,36"
-                    fill="none"
-                    stroke="#34c759"
-                    strokeWidth="7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <div className="login-modal-success-message">{successAnimMessage || "¡Contraseña cambiada con éxito!"}</div>
-              <div className="login-modal-success-subtitle">Ya puedes iniciar sesión con tu nueva contraseña.</div>
-            </div>
-          </div>
+        <div className="forgot-password-modal-content login-modal-content login-modal-loading-content modal-slide-in" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, minHeight: 0, boxShadow: '0 2px 16px rgba(0,0,0,0.2)'}} onClick={e => e.stopPropagation()}>
+          <SuccessCheckAnimation
+            message={successAnimMessage || "¡Contraseña cambiada con éxito!"}
+            subtitle="Ya puedes iniciar sesión con tu nueva contraseña."
+          />
         </div>
       </div> 
     );
   }
 
+  // Render principal del modal
   return (
     <div className={`forgot-password-modal-backdrop${open && !closing ? ' modal-fade-in' : ' modal-fade-out'}`} onClick={handleBackdropClose}>
       <div className={`forgot-password-modal-content forgot-password-modal-flex${open && !closing ? ' modal-slide-in' : ' modal-slide-out'}`} onClick={e => e.stopPropagation()}>
-        {/* Imagen y overlay a la izquierda */}
+        {/* Lado izquierdo: imagen y overlay */}
         <div className="forgot-password-modal-left">
           <img src={hiluxImg} alt="Toyota Hilux" className="forgot-password-modal-img-bg" />
           <div className="forgot-password-modal-overlay" />
         </div>
-        {/* Formulario a la derecha */}
+        {/* Lado derecho: formulario y pasos */}
         <div className="forgot-password-modal-right">
+          {/* Botón para volver al login */}
           <button
             className="forgot-password-modal-back-login forgot-password-modal-back-login--right"
             onClick={handleBackToLogin}
@@ -167,33 +171,19 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
             <span className={`forgot-password-step${step >= 3 ? ' active' : ''}`}>3</span>
           </div>
           <div className="forgot-password-modal-desc">Recupera tu cuenta en 3 pasos</div>
-          {/* Mensaje solo visible en el paso 2 */}
+
+          {/* Paso 2: Código de verificación */}
           {step === 2 && (
             <form className="forgot-password-modal-form" data-step={step} onSubmit={codeForm.handleSubmit(handleCode)}>
-              <div style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+              <div className="forgot-password-modal-code-input-wrapper">
                 <label className="forgot-password-modal-label forgot-password-modal-label-bg" htmlFor="code">Código de verificación</label>
                 <input
-                  className="forgot-password-modal-input"
+                  className="forgot-password-modal-input forgot-password-modal-input-code"
                   id="code"
                   name="code"
                   type="text"
                   pattern="[0-9]*"
                   maxLength={5}
-                  style={{
-                    width: '180px',
-                    letterSpacing: '0.5em',
-                    fontSize: '1.5rem',
-                    textAlign: 'center',
-                    fontWeight: 600,
-                    border: '2px solid #009BDB',
-                    borderRadius: '8px',
-                    background: '#e6f6fb',
-                    marginTop: 0,
-                    display: 'block',
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                    paddingRight: 0
-                  }}
                   {...codeForm.register('code', {
                     required: true,
                     pattern: /^[0-9]{5}$/,
@@ -216,6 +206,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                   Reenviar código
                 </button>
               </div>
+              {/* Mensaje de éxito o error del backend */}
               {message && (
                 <div className={`forgot-password-modal-success-message${message.toLowerCase().includes('inválido') || message.toLowerCase().includes('incorrecto') ? ' error' : ''}`}>{message}</div>
               )}
@@ -224,30 +215,28 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
               </div>
             </form>
           )}
+
+          {/* Paso 3: Nueva contraseña */}
           {step === 3 && (
             <form className="forgot-password-modal-form" data-step={step} onSubmit={newPasswordForm.handleSubmit(async (data) => {
               setNewPasswordError("");
-              // Validación: mínimo 6 caracteres
-              if (data.newPassword.length < 6) {
-                setNewPasswordError('La nueva contraseña debe tener al menos 6 caracteres.');
+              // Validación manual de mínimo 6 caracteres
+              if (!data.newPassword || data.newPassword.length < 6) {
                 newPasswordForm.setError('newPassword', { type: 'manual', message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
                 return;
               }
-              // Validación: no igual a la anterior
-              if (data.oldPassword && data.newPassword === data.oldPassword) {
-                setNewPasswordError('La nueva contraseña no puede ser igual a la anterior.');
-                newPasswordForm.setError('newPassword', { type: 'manual', message: 'La nueva contraseña no puede ser igual a la anterior.' });
-                return;
-              }
-              // Validación: confirmación
+              // Validación de confirmación de contraseña
               if (data.newPassword !== data.confirmPassword) {
                 setNewPasswordError('Las contraseñas no coinciden.');
                 newPasswordForm.setError('confirmPassword', { type: 'manual', message: 'Las contraseñas no coinciden.' });
                 return;
               }
+              // Solo si pasa todas las validaciones, llama al backend
               const result = await handleNewPassword(data);
               if (result && result.success) {
                 handleShowSuccessAnim('¡Contraseña cambiada con éxito!');
+              } else if (result && result.message) {
+                setNewPasswordError(result.message);
               }
             })}>
               <div className="input-eye-wrapper">
@@ -258,7 +247,16 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                     id="newPassword"
                     name="newPassword"
                     type={showNewPassword ? 'text' : 'password'}
-                    {...newPasswordForm.register('newPassword', { required: true })}
+                    {...newPasswordForm.register('newPassword', {
+                      required: 'La nueva contraseña es obligatoria.',
+                      minLength: { value: 6, message: 'La nueva contraseña debe tener al menos 6 caracteres.' },
+                      onChange: (e) => {
+                        setNewPasswordError("");
+                        if (newPasswordForm.formState.errors.newPassword) {
+                          newPasswordForm.clearErrors('newPassword');
+                        }
+                      }
+                    })}
                   />
                   <span
                     onClick={() => setShowNewPassword(v => !v)}
@@ -275,7 +273,15 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    {...newPasswordForm.register('confirmPassword', { required: true })}
+                    {...newPasswordForm.register('confirmPassword', {
+                      required: 'La confirmación es obligatoria.',
+                      onChange: () => {
+                        setNewPasswordError("");
+                        if (newPasswordForm.formState.errors.confirmPassword) {
+                          newPasswordForm.clearErrors('confirmPassword');
+                        }
+                      }
+                    })}
                   />
                   <span
                     onClick={() => setShowConfirmPassword(v => !v)}
@@ -285,15 +291,22 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                     {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
-                {newPasswordError && (
+                {/* Mostrar solo un error: primero RHF, luego manual/backend */}
+                {newPasswordForm.formState.errors.newPassword ? (
+                  <div className="forgot-password-modal-input-error">{newPasswordForm.formState.errors.newPassword.message}</div>
+                ) : newPasswordForm.formState.errors.confirmPassword ? (
+                  <div className="forgot-password-modal-input-error">{newPasswordForm.formState.errors.confirmPassword.message}</div>
+                ) : newPasswordError ? (
                   <div className="forgot-password-modal-input-error">{newPasswordError}</div>
-                )}
+                ) : null}
               </div>
               <div className="forgot-password-modal-actions">
                 <button type="submit" className="forgot-password-modal-btn" disabled={loading}>{loading ? 'Cambiando...' : 'Cambiar contraseña'}</button>
               </div>
             </form>
           )}
+
+          {/* Paso 1: Correo electrónico */}
           {step === 1 && (
             <form className="forgot-password-modal-form" data-step={step} onSubmit={correoForm.handleSubmit(handleCorreo)}>
               <div style={{width: '100%'}}>
