@@ -291,7 +291,7 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
           </div>
 
           <div className="form-group-half-width">
-            <label htmlFor="licencia" className="register-modal-label">Licencia (foto)</label>
+            <label htmlFor="licencia" className="register-modal-label">Licencia (Opcional)</label>
             <input id="licencia" name="licencia" type="file" accept="image/*" onChange={handleChange} />
             {licenciaPreview && (
               <img src={licenciaPreview} alt="Previsualización de Licencia" className="register-modal-image-preview" />
@@ -299,7 +299,7 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
           </div>
 
           <div className="form-group-half-width">
-            <label htmlFor="pasaporte" className="register-modal-label">Pasaporte/DUI (foto)</label>
+            <label htmlFor="pasaporte" className="register-modal-label">Pasaporte/DUI (Opcional)</label>
             <input id="pasaporte" name="pasaporte" type="file" accept="image/*" onChange={handleChange} />
             {pasaportePreview && (
               <img src={pasaportePreview} alt="Previsualización de Pasaporte/DUI" className="register-modal-image-preview" />
