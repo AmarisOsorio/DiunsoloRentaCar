@@ -138,15 +138,18 @@ import {Schema, model} from "mongoose";
 //Schema
 const contratosSchema = new Schema({
     reservationId: {
-        type: String, 
+        type: Schema.Types.ObjectId,
+        ref:"Reservas", 
         required: true
     },
     clientID: {
-        type: String, 
+        type: Schema.Types.ObjectId, 
+        ref: "Clientes",
         required: true
     },
     carID: {
-        type: String, 
+        type: Schema.Types.ObjectId, 
+        ref: "Vehiculos",
         required: true
     },
     estado: {
