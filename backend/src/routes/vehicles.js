@@ -10,13 +10,11 @@ const upload = multer({ dest: "uploads/" });
 //Routes
 router.route("/")
   .get(vehiclesController.getVehicles)
-  .post(vehiclesController.addVehicle); 
+  .post(upload.array("imagenes"), vehiclesController.addVehicle); 
 
 router.route("/:id")
   .get(vehiclesController.getVehicleById)
   .put(vehiclesController.updateVehicle)
   .delete(vehiclesController.deleteVehicle);
-
-router.post("/vehiculos", upload.array("imagenes"), vehiclesController.addVehicle);
 
 export default router;
