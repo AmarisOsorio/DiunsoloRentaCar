@@ -3,7 +3,7 @@ import brandsModel from "../models/Marcas.js";
 import { v2 as cloudinary } from "cloudinary";
 import { config as appConfig } from "../config.js";
 
-// Configura Cloudinary (puedes mover esto a un archivo de configuración si ya lo tienes)
+//Cloudinary Config
 cloudinary.config({
   cloud_name: appConfig.cloudinary.cloudinary_name,
   api_key: appConfig.cloudinary.cloudinary_api_key,
