@@ -1,33 +1,48 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import './styles/Catalogo.css';
 import { useAuth } from '../context/AuthContext.jsx';
+import catalogBG from '../assets/catalogBG.png';
 
 const Catalogo = () => {
-  const [show, setShow] = useState(false);
+  const [marcas, setMarcas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  // Mismo patrón que en el modal: función para cerrar la animación
-  const handleAccountVerifiedClose = async () => {
-    window.location.replace('/');
-  };
+  useEffect(() => {
+    fetch('/api/brands')
+      .then(res => res.json())
+      .then(data => {
+        setMarcas(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="marcas-loading">Cargando marcas...</div>;
 
   return (
-    <section style={{ padding: '2rem' }}>
-      <h2>Catálogo</h2>
-      <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f0f4fa', borderRadius: 8 }}>
-        {user ? (
-          <>
-            <strong>Sesión iniciada como:</strong> {user.correo || user.email || JSON.stringify(user)}
-          </>
-        ) : (
-          <span style={{ color: '#b00' }}>No has iniciado sesión</span>
-        )}
+    <>
+      <div
+        className="catalogo-header"
+        style={{ backgroundImage: `url(${catalogBG})` }}
+      >
+        <div className="catalogo-header-overlay">
+          <h1>Catálogo</h1>
+          <p>Explora nuestra variedad de autos disponibles para renta.</p>
+        </div>
       </div>
-      <p>Próximamente: Explora nuestra flota de vehículos.</p>
-      <button onClick={() => setShow(true)} style={{ padding: '12px 24px', fontSize: 18, background: '#4BB543', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', marginTop: 24 }}>
-        Probar animación de cuenta verificada
-      </button>
-      {show && <AccountVerifiedScreen onClose={handleAccountVerifiedClose} />}
-    </section>
+      <section style={{ padding: '2rem' }}>
+        <h2>Catálogo</h2>
+        <div className="marcas-grid">
+          {marcas.map(marca => (
+            <div className="marca-card" key={marca._id}>
+              <img src={marca.logo} alt={marca.nombreMarca} className="marca-logo" />
+              <div className="marca-nombre">{marca.nombreMarca}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
   );
 };
 
