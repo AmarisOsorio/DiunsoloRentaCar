@@ -2,91 +2,38 @@
 import React from 'react';
 import diunsolologo from '../assets/diunsolologo.png';
 import { Link } from 'react-router-dom';
+import './styles/Footer.css';
 
 const Footer = () => (
-  <footer style={{
-    background: '#05227b',
-    color: '#fff',
-    padding: '2.5rem 1rem 1.5rem 1rem',
-    textAlign: 'center',
-    fontFamily: 'inherit'
-  }}>
-    <div style={{ marginBottom: 18 }}>
+  <footer className="footer">
+    <div className="footer-logo">
       <img
         src={diunsolologo}
         alt="DiunsoloRentaCar"
-        style={{ height: 90, width: 240, marginBottom: 10 }}
+        className="footer-logo-img"
       />
     </div>
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '4rem',
-      marginBottom: 18,
-      flexWrap: 'wrap'
-    }}>
+    <div className="footer-links-row">
       <div>
-        <a
-          href="/contacto"
-          style={{
-            fontSize: 20,
-            fontWeight: 400,
-            marginBottom: 8,
-            color: "#fff",
-            textDecoration: "none",
-            transition: "color 0.2s"
-          }}
-        >
-          Contáctanos
-        </a>
+        <a href="/contacto" className="footer-link">Contáctanos</a>
       </div>
       <div>
-        <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 8 }}>Desarrolladores</div>
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: '#fff' }}>
-            <i className="fab fa-facebook-f" style={{ fontSize: 22 }}></i>
-          </a>
-          <a href="https://wa.me/50300000000" target="_blank" rel="noopener noreferrer" style={{ color: '#fff' }}>
-            <i className="fab fa-whatsapp" style={{ fontSize: 22 }}></i>
-          </a>
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: '#fff' }}>
-            <i className="fab fa-instagram" style={{ fontSize: 22 }}></i>
-          </a>
-          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ color: '#fff' }}>
-            <i className="fab fa-youtube" style={{ fontSize: 22 }}></i>
-          </a>
+        <div className="footer-dev-title">Desarrolladores</div>
+        <div className="footer-social-row">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="footer-social"><i className="fab fa-facebook-f"></i></a>
+          <a href="https://wa.me/50300000000" target="_blank" rel="noopener noreferrer" className="footer-social"><i className="fab fa-whatsapp"></i></a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="footer-social"><i className="fab fa-instagram"></i></a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="footer-social"><i className="fab fa-youtube"></i></a>
         </div>
       </div>
       <div>
-        <Link
-          to="/terminos"
-          style={{
-            fontSize: 20,
-            fontWeight: 400,
-            marginBottom: 8,
-            color: "#fff",
-            textDecoration: "none",
-            transition: "color 0.2s"
-          }}
-        >
-          Términos y condiciones
-        </Link>
+        <Link to="/terminos" className="footer-link">Términos y condiciones</Link>
       </div>
     </div>
-    <div style={{
-      color: '#bfc8e6',
-      fontSize: 15,
-      maxWidth: 700,
-      margin: '18px auto 0 auto',
-      fontWeight: 400
-    }}>
-      Somos una empresa 100% salvadoreña con servicio personalizado en <span style={{ fontWeight: 600, color: '#fff' }}>renta de vehículos a extranjeros y nacionales</span>. Nuestro servicio es calidad y profesionalismo.
+    <div className="footer-desc">
+      Somos una empresa 100% salvadoreña con servicio personalizado en <span className="footer-desc-bold">renta de vehículos a extranjeros y nacionales</span>. Nuestro servicio es calidad y profesionalismo.
     </div>
-    <div style={{
-      color: '#bfc8e6',
-      fontSize: 14,
-      marginTop: 18
-    }}>
+    <div className="footer-copyright">
       © {new Date().getFullYear()} DiunsoloRentaCar. Todos los derechos reservados.
     </div>
   </footer>

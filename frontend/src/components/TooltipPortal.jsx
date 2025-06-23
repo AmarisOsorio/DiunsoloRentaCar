@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import '../styles/modals/TooltipPortal.css';
+import './styles/TooltipPortal.css';
 
 const TOOLTIP_WIDTH = 180;
 const TOOLTIP_GAP = 10;

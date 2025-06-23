@@ -1,26 +1,57 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './styles/SuccessCheckAnimation.css';
 
-const SuccessCheckAnimation = ({ message, subtitle, nextAction }) => (
-  <div className="success-check-anim-container">
-    <div className="success-check-anim">
-      <svg width="90" height="90" viewBox="0 0 90 90">
-        <circle cx="45" cy="45" r="40" fill="#e6f9ed" stroke="#34c759" strokeWidth="5" />
-        <polyline
-          points="28,50 42,64 66,36"
-          fill="none"
-          stroke="#34c759"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="success-check-tick-path"
-        />
-      </svg>
+const PARTICLE_COUNT = 18;
+function randomBetween(a, b) {
+  return Math.random() * (b - a) + a;
+}
+const Particle = ({ idx }) => {
+  const angle = (idx / PARTICLE_COUNT) * 2 * Math.PI;
+  const distance = randomBetween(48, 70);
+  const style = {
+    left: `calc(50% + ${Math.cos(angle) * distance}px)` ,
+    top: `calc(50% + ${Math.sin(angle) * distance}px)` ,
+    animationDelay: `${randomBetween(0, 0.3)}s`,
+    '--particle-color': ['#4BB543', '#A7E9FF', '#B4FFB4', '#FFD700'][idx % 4],
+  };
+  return <div className="success-check-particle" style={style} />;
+};
+
+const SuccessCheckAnimation = ({ message = '¡Éxito!', subtitle, onClose, duration = 1800, showClose = false }) => {
+  const overlayRef = useRef();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (overlayRef.current) {
+        overlayRef.current.classList.add('fade-out');
+      }
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 700);
+    }, duration);
+    return () => clearTimeout(timeout);
+  }, [onClose, duration]);
+
+  return (
+    <div className="success-check-overlay" ref={overlayRef}>
+      <div className="success-check-container">
+        {showClose && (
+          <button className="success-check-close" onClick={onClose}>&times;</button>
+        )}
+        <div className="success-check-icon">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="40" fill="#1C318C"/>
+            <path d="M24 42L36 54L56 34" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <div className="success-check-particles">
+            {Array.from({ length: PARTICLE_COUNT }).map((_, i) => <Particle key={i} idx={i} />)}
+          </div>
+        </div>
+        <h2 className="success-check-title">{message}</h2>
+        {subtitle && <p className="success-check-subtitle">{subtitle}</p>}
+      </div>
     </div>
-    <div className="success-check-message">{message}</div>
-    {subtitle && <div className="success-check-subtitle">{subtitle}</div>}
-    {nextAction && <div className="success-check-next-action">{nextAction}</div>}
-  </div>
-);
+  );
+};
 
 export default SuccessCheckAnimation;

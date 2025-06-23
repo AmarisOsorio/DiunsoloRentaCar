@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import AccountLogedScreen from '../components/AccountLogedScreen.jsx';
 
 export default function useLogin(onClose) {
   const { login } = useAuth();
@@ -87,8 +86,6 @@ export default function useLogin(onClose) {
     }
   };
 
-  const SuccessScreen = showLogged ? AccountLogedScreen : null;
-
   return {
     email,
     password,
@@ -99,7 +96,6 @@ export default function useLogin(onClose) {
     toggleShowPassword,
     handleSubmit,
     setError,
-    SuccessScreen,
     showSuccess: showLogged,
     showVerifyModal,
     setShowVerifyModal,

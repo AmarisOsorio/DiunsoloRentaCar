@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
         const normalizedType = data.userType.toLowerCase();
         setUserType(normalizedType);
         setIsAuthenticated(true);
+        window.dispatchEvent(new Event('auth-changed'));
         return { ...data, message: data.message || 'login exitoso' };
       } else if (data.needVerification) {
         setUserType(null);
@@ -117,6 +118,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     localStorage.removeItem('userType');
     localStorage.removeItem('isAuthenticated');
+    window.dispatchEvent(new Event('auth-changed'));
   };
 
   const resendVerificationCode = async () => {

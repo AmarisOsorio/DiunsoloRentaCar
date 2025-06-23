@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import AccountVerifiedScreen from '../components/AccountVerifiedScreen';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const Catalogo = () => {

@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import '../styles/modals/VerifyAccountModal.css';
 import { FaEnvelope } from 'react-icons/fa';
 import useVerifyAccountModal from '../../hooks/useVerifyAccountModal';
-import AccountVerifiedScreen from '../AccountVerifiedScreen.jsx'; // Se queda la importación de Eduardo
+import SuccessCheckAnimation from '../SuccessCheckAnimation.jsx';
 
 const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password, onLoginAfterVerify }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
-  const [showAccountVerified, setShowAccountVerified] = useState(false); // Se queda el estado de Eduardo
+  const [showAccountVerified, setShowAccountVerified] = useState(false);
 
   const {
-    code: codeArr, // Se queda la desestructuración de Eduardo
+    code: codeArr,
     handleInput,
     handlePaste,
     handleSubmit: originalHandleSubmit,
@@ -41,12 +41,6 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
     }
   });
 
-  // Lógica del useEffect de Eduardo para el cierre del modal y redirección
-  const handleAccountVerifiedClose = () => {
-    setShowAccountVerified(false);
-    if (onClose) onClose();
-  };
-
   React.useEffect(() => {
     if (isVerified) {
       setShowAccountVerified(true);
@@ -62,11 +56,23 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    originalHandleSubmit(); // Se mantiene el handleSubmit original
+    originalHandleSubmit();
   };
 
   // Se usa la condición de renderizado de Eduardo
   if (!open && !showAccountVerified) return null;
+
+  // Usar SuccessCheckAnimation para éxito de verificación
+  if (showAccountVerified) {
+    return (
+      <SuccessCheckAnimation
+        message="¡Cuenta verificada!"
+        subtitle="Tu cuenta ha sido verificada exitosamente. Ya puedes iniciar sesión."
+        onClose={onClose}
+        duration={2000}
+      />
+    );
+  }
 
   return (
     <div className="register-modal-backdrop modal-fade-in" onClick={onClose}>
@@ -78,7 +84,6 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
         >
           &times;
         </button>
-        {showAccountVerified && <AccountVerifiedScreen onClose={handleAccountVerifiedClose} />}
         {!showAccountVerified && <>
         <div className="register-verify-icon" aria-hidden="true">
           <FaEnvelope />

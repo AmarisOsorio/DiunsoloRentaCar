@@ -7,6 +7,9 @@ import LoginModal from './modals/LoginModal';
 import RegisterModal from './modals/RegisterModal';
 import ForgotPasswordModal from './modals/ForgotPasswordModal';
 import { useNavbar } from '../hooks/useNavbar.jsx';
+import { useAuth } from '../context/AuthContext';
+import Submenu from './submenu';
+import { FaChevronDown } from 'react-icons/fa';
 
 const languages = [
   { value: 'es', label: 'Español' },
@@ -29,12 +32,28 @@ const Navbar = () => {
     handleLangBlur,
     handleLangSelect,
   } = useNavbar(navLinks);
+  const { isAuthenticated } = useAuth();
+  const [rerenderFlag, setRerenderFlag] = useState(false);
 
   // Controlar ambos modales aquí
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [submenuOpen, setSubmenuOpen] = useState(false);
+
+  // Forzar re-render cuando cambia el estado de autenticación
+  useEffect(() => {
+    // Forzar lectura de localStorage si el contexto no refleja el login
+    const isReallyAuthenticated = isAuthenticated || localStorage.getItem('isAuthenticated') === 'true';
+
+    const handler = () => {
+      // Cambia el estado local para forzar re-render
+      setRerenderFlag(f => !f);
+    };
+    window.addEventListener('auth-changed', handler);
+    return () => window.removeEventListener('auth-changed', handler);
+  }, [isAuthenticated]);
 
   // Cerrar menú móvil si cambia a vista desktop
   useEffect(() => {
@@ -46,6 +65,25 @@ const Navbar = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [mobileMenuOpen]);
+
+  // Cerrar el submenú al hacer click fuera
+  useEffect(() => {
+    if (!submenuOpen) return;
+    let closing = false;
+    const handleClickOutside = (e) => {
+      const submenu = document.getElementById('navbar-submenu');
+      const btn = document.getElementById('navbar-profile-btn');
+      if (!closing && submenu && !submenu.contains(e.target) && btn && !btn.contains(e.target)) {
+        closing = true;
+        // Animación de pliegue antes de cerrar
+        const event = new Event('submenu-close');
+        window.dispatchEvent(event);
+        setTimeout(() => setSubmenuOpen(false), 300); // Espera la animación (ligeramente más que el CSS)
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [submenuOpen]);
 
   const handleOpenRegister = () => {
     setLoginModalOpen(false);
@@ -64,6 +102,15 @@ const Navbar = () => {
     setRegisterModalOpen(false);
     // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
   };
+
+  React.useEffect(() => {
+    if (loginModalOpen && isAuthenticated) {
+      setLoginModalOpen(false);
+    }
+  }, [isAuthenticated]);
+
+  // Forzar lectura de localStorage si el contexto no refleja el login
+  const isReallyAuthenticated = isAuthenticated || localStorage.getItem('isAuthenticated') === 'true';
 
   return (
     <nav className="navbar">
@@ -105,16 +152,40 @@ const Navbar = () => {
               onBlur={handleLangBlur}
               onBtnClick={handleLangBtnClick}
             />
-            <button
-              className="login-btn"
-              onClick={() => {
-                setLoginModalOpen(true);
-                setMobileMenuOpen(false); // Cierra el menú móvil al abrir login
-              }}
-              style={{ width: '100%', marginTop: '0.5rem' }}
-            >
-              Iniciar sesión
-            </button>
+            {isReallyAuthenticated ? (
+              <div style={{ position: 'relative', width: '100%' }}>
+                <button
+                  id="navbar-profile-btn"
+                  className="login-btn navbar-profile-btn"
+                  onClick={() => setSubmenuOpen(v => !v)}
+                  aria-haspopup="true"
+                  aria-expanded={submenuOpen}
+                >
+                  <span className="navbar-profile-content">
+                    Mi perfil
+                    <span className={`navbar-profile-arrow${submenuOpen ? ' open' : ''}`} aria-hidden="true">
+                      <FaChevronDown />
+                    </span>
+                  </span>
+                </button>
+                {submenuOpen && (
+                  <div id="navbar-submenu" style={{ position: 'absolute', left: 0, right: 0, zIndex: 2000 }}>
+                    <Submenu onClose={() => setSubmenuOpen(false)} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                className="login-btn"
+                onClick={() => {
+                  setLoginModalOpen(true);
+                  setMobileMenuOpen(false); // Cierra el menú móvil al abrir login
+                }}
+                style={{ width: '100%', marginTop: '0.5rem' }}
+              >
+                Iniciar sesión
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -129,7 +200,31 @@ const Navbar = () => {
             onBlur={handleLangBlur}
             onBtnClick={handleLangBtnClick}
           />
-          <button className="login-btn" onClick={() => setLoginModalOpen(true)}>Iniciar sesión</button>
+          {isReallyAuthenticated ? (
+            <div style={{ position: 'relative' }}>
+              <button
+                id="navbar-profile-btn"
+                className="login-btn navbar-profile-btn"
+                onClick={() => setSubmenuOpen(v => !v)}
+                aria-haspopup="true"
+                aria-expanded={submenuOpen}
+              >
+                <span className="navbar-profile-content">
+                  Mi perfil
+                  <span className={`navbar-profile-arrow${submenuOpen ? ' open' : ''}`} aria-hidden="true">
+                    <FaChevronDown />
+                  </span>
+                </span>
+              </button>
+              {submenuOpen && (
+                <div id="navbar-submenu" style={{ position: 'absolute', right: 0, top: '110%', zIndex: 2000 }}>
+                  <Submenu onClose={() => setSubmenuOpen(false)} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <button className="login-btn" onClick={() => setLoginModalOpen(true)}>Iniciar sesión</button>
+          )}
         </span>
       </div>
       <LoginModal 

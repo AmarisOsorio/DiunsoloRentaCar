@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import '../styles/modals/RegisterModal.css';
 import VerifyAccountModal from './VerifyAccountModal';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import TooltipPortal from './TooltipPortal';
+import TooltipPortal from '../TooltipPortal.jsx';
 import useRegisterModal from '../../hooks/useRegisterModal.jsx';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { useAuth } from '../../context/AuthContext.jsx';

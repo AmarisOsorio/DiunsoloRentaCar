@@ -3,9 +3,10 @@ import '../styles/modals/LoginModal.css';
 import LoginImg from '../../assets/imgLogin.jpg';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useLogin from '../../hooks/useLogin.js';
-import TooltipPortal from './TooltipPortal.jsx';
+import TooltipPortal from '../TooltipPortal.jsx';
 import VerifyAccountModal from './VerifyAccountModal.jsx';
 import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
+import SuccessCheckAnimation from '../SuccessCheckAnimation.jsx';
 
 const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   const {
@@ -56,6 +57,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     if (SuccessScreen && showSuccess) {
       const timeout = setTimeout(() => {
         onClose && onClose();
+        window.dispatchEvent(new Event('auth-changed'));
         window.location.href = '/';
       }, 1500);
       return () => clearTimeout(timeout);
@@ -145,8 +147,15 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   }
 
   // Mostrar pantalla de éxito si corresponde
-  if (SuccessScreen && showSuccess) {
-    return <SuccessScreen onClose={() => {}} />;
+  if (showSuccess) {
+    return (
+      <SuccessCheckAnimation
+        message="¡Sesión Iniciada!"
+        subtitle="Bienvenido de nuevo a Diunsolo RentaCar. Has iniciado sesión exitosamente."
+        onClose={onClose}
+        duration={1500}
+      />
+    );
   }
 
   if (!open && !show) return null;

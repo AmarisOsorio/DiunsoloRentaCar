@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/modals/ForgotPasswordModal.css';
 import hiluxImg from '../../assets/ForgotPass.jpg';
-import { useForgotPasswordModal } from '../../hooks/useForgotPasswordModal';
 import { FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import SuccessCheckAnimation from '../SuccessCheckAnimation';
 
@@ -22,39 +21,6 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const closeTimeout = useRef();
-
-  // Hook centralizado con toda la lógica de recuperación
-  const {
-    step, // Paso actual (1: correo, 2: código, 3: nueva contraseña)
-    setStep,
-    loading,
-    message,
-    handleCorreo,
-    handleCode,
-    handleNewPassword,
-    handleReenviarCodigo,
-    correoForm,
-    codeForm,
-    newPasswordForm,
-    resetAll
-  } = useForgotPasswordModal(onClose);
-
-  // Efecto para mostrar/ocultar el modal con animación
-  useEffect(() => {
-    if (open) {
-      setShow(true);
-      setClosing(false);
-    } else if (show) {
-      setClosing(true);
-      closeTimeout.current = setTimeout(() => {
-        setShow(false);
-        setClosing(false);
-        setStep(1); // Siempre vuelve al paso 1 al cerrar
-        resetAll();
-      }, 300);
-    }
-    return () => clearTimeout(closeTimeout.current);
-  }, [open]);
 
   // Cierra el modal al hacer click en el fondo
   const handleBackdropClose = () => {
