@@ -1,20 +1,23 @@
 /*
     Fields:
-        imagenes (array[string: URL]),
-        nombre_vehiculo (string),
-        precio_por_dia (number),
-        placa (string),
-        id_marca (string),
-        clase (string),
-        color (string),
-        año (number),
-        capacidad (number),
-        modelo (string),
-        numero_motor (string),
-        numero_chasis_grabado (string),
-        numero_vin_chasis (string),
-        contratoArrendamientoPDF (string: URL),
-        estado (string: "Disponible,Reservado,Mantenimiento")
+        imagenes
+        nombreVehiculo
+        precioPorDia
+        placa
+        idMarca
+        clase
+        color
+        anio
+        capacidad
+        modelo
+        numeroMotor
+        numeroChasisGrabado
+        numeroVinChasis
+        contratoArrendamientoPdf
+        estado
+            - Disponible
+            - Reservado
+            - Mantenimiento
 */
 
 //Imports

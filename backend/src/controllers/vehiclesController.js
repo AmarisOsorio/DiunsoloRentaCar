@@ -21,6 +21,18 @@ vehiclesController.getVehicles = async (req, res) => {
   }
 };
 
+//Select - Max 3
+vehiclesController.getHomeVehicles = async (req, res) => {
+  try {
+    const vehicles = await vehiclesModel.find().limit(3);
+    res.json(vehicles);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener vehículos: ", error });
+    console.log("Error al obtener vehículos:", error);
+  }
+};
+
+
 //Select - Get [By ID]
 vehiclesController.getVehicleById = async (req, res) => {
   try {
