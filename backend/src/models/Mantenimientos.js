@@ -13,15 +13,11 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const mantenimientosSchema = new Schema({
-    /*idVehiculo: {
+    idVehiculo: {
             type:Schema.Types.ObjectId,
             ref: "Vehiculos",
             require:true,
-    },*/
-    idVehiculo: {
-        type:String,
-        require:true,
-},
+    },
     tipoMantenimiento: {
         type: String,
         required: true

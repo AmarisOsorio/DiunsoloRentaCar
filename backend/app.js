@@ -9,7 +9,7 @@ import mantenimientosRoutes from "./src/routes/mantenimientos.js";
 import sendWelcome from "./src/routes/sendWelcome.js";
 import uploadImageRoutes from "./src/routes/uploadImage.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
-
+import reservasRoutes from "./src/routes/reservas.js";
 import contactRoutes from "./src/routes/contact.js";
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -42,6 +42,6 @@ app.use("/api/vehicles", vehiclesRoutes);
 
 
 
-
+app.use("/api/reservas", reservasRoutes);
 app.use("/api/mantenimientos", mantenimientosRoutes); 
 export default app;
