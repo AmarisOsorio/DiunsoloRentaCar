@@ -1,14 +1,20 @@
-import React from 'react';
-import CatalogoMarcas from './CatalogoMarcas';
-// ...otros imports...
+import { useEffect, useState } from 'react';
 
-const Catalogo = () => {
-  return (
-    <section style={{ padding: '2rem' }}>
-      <h2>Catálogo</h2>
-      <CatalogoMarcas />
-    </section>
-  );
+const useCatalogo = () => {
+  const [vehiculos, setVehiculos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/vehicles')
+      .then(res => res.json())
+      .then(data => {
+        setVehiculos(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  return { vehiculos, loading };
 };
 
-export default Catalogo;
+export default useCatalogo;

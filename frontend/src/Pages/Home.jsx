@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/Home.css';
 import ServicesCard from '../components/ServicesCard';
 import VehiculoCardHome from '../components/VehiculoCard';
-import useHomeVehiculos from '../hooks/Home';
+import useHomeVehiculos from '../hooks/pages/Home';
 import Rapido from '../assets/FlashOn.png'
 import Seguro from '../assets/Protect.png'
 import Aeropuerto from '../assets/AirplaneTakeOff.png'

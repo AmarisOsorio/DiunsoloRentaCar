@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import './styles/Catalogo.css';
-import { useAuth } from '../context/AuthContext.jsx';
+import VehiculoCard from '../components/VehiculoCard';
 import catalogBG from '../assets/catalogBG.png';
-import useCatalogo from '../hooks/Catalogo';
+import useCatalogo from '../hooks//pages/Catalogo';
 
 const Catalogo = () => {
   const { vehiculos, loading } = useCatalogo();
@@ -25,22 +25,12 @@ const Catalogo = () => {
         <div className="vehiculos-grid">
           {Array.isArray(vehiculos) && vehiculos.length > 0 ? (
             vehiculos.map(vehiculo => (
-              <div className="vehiculo-card" key={vehiculo._id}>
-                <img
-                  src={vehiculo.imagenes && vehiculo.imagenes.length > 0 ? vehiculo.imagenes[0] : '/no-image.png'}
-                  alt={vehiculo.nombreVehiculo || 'Vehículo'}
-                  className="vehiculo-img"
-                />
-                <div className="vehiculo-card-body">
-                  <div className="vehiculo-nombre">{vehiculo.nombreVehiculo}</div>
-                  <div className="vehiculo-clase-anio">{vehiculo.clase} {vehiculo.anio}</div>
-                  <div className={`vehiculo-estado ${vehiculo.estado === 'Disponible' ? 'disponible' : vehiculo.estado === 'Reservado' ? 'reservado' : 'mantenimiento'}`}>
-                    <span className="estado-dot"></span>
-                    {vehiculo.estado}
-                  </div>
-                  <button className="vehiculo-vermas">Ver más</button>
-                </div>
-              </div>
+              <VehiculoCard 
+                key={vehiculo._id} 
+                vehiculo={vehiculo} 
+                variant="catalogo"
+                showPrice={false}
+              />
             ))
           ) : (
             <div>No hay vehículos disponibles.</div>
