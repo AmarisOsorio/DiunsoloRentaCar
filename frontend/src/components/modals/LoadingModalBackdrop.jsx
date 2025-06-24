@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/LoadingModalSpinner.css';
+import '../styles/modals/LoadingModalSpinner.css';
 
 const LoadingModalBackdrop = ({ text = 'Cargando...' }) => (
   <div className="loading-modal-backdrop modal-fade-in">

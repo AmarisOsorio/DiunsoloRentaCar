@@ -2,14 +2,13 @@ import React from 'react';
 import '../styles/modals/LoginModal.css';
 import LoginImg from '../../assets/imgLogin.jpg';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import useLogin from '../../hooks/useLogin.js';
+import useLogin from '../../hooks/components/modals/useLogin.js';
 import TooltipPortal from '../TooltipPortal.jsx';
 import VerifyAccountModal from './VerifyAccountModal.jsx';
 import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
-import SuccessCheckAnimation from '../SuccessCheckAnimation.jsx';
+import SuccessCheckAnimation from './SuccessCheckAnimation.jsx';
 
-const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
-  const {
+const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const {
     email,
     password,
     error,
@@ -26,16 +25,15 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
     pendingVerificationPassword,
     loading,
     pendingShowVerify,
-    handleVerifyAndLogin // <-- Usar la función expuesta del hook
+    handleVerifyAndLogin,
+    setError // <-- Agregar setError aquí
   } = useLogin(onClose);
   const [show, setShow] = React.useState(false);
   const [emailRef, setEmailRef] = React.useState(null);
-  const [passwordRef, setPasswordRef] = React.useState(null);
-  const [emailError, setEmailError] = React.useState('');
+  const [passwordRef, setPasswordRef] = React.useState(null);  const [emailError, setEmailError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
   const [focusedField, setFocusedField] = React.useState(null);
   const [hasTriedLogin, setHasTriedLogin] = React.useState(false);
-  const { setError } = useLogin(onClose); // <-- Extraer setError
 
   React.useEffect(() => {
     if (open) {
@@ -67,10 +65,12 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
   const handleOpenRegister = (e) => {
     e.preventDefault();
     onOpenRegister && onOpenRegister();
-  };
-  const handleOpenForgot = (e) => {
+  };  const handleOpenForgot = (e) => {
     e.preventDefault();
-    onOpenForgot && onOpenForgot();
+    e.stopPropagation();
+    if (onOpenForgot) {
+      onOpenForgot();
+    }
   };
 
   const validateEmail = (value) => {
@@ -145,13 +145,12 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
       />
     );
   }
-
   // Mostrar pantalla de éxito si corresponde
   if (showSuccess) {
     return (
       <SuccessCheckAnimation
         message="¡Sesión Iniciada!"
-        subtitle="Bienvenido de nuevo a Diunsolo RentaCar. Has iniciado sesión exitosamente."
+        subtitle="Iniciando sesión ..."
         onClose={onClose}
         duration={1500}
       />
@@ -175,8 +174,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
             <div className="login-modal-register">
               ¿Aún no tienes cuenta?{' '}
               <a href="#" className="login-modal-link" onClick={handleOpenRegister}>Regístrate</a>.
-            </div>
-            <form className="login-modal-form" onSubmit={handleSubmitWithValidation} autoComplete="off">
+            </div>            <form className="login-modal-form" onSubmit={handleSubmitWithValidation} autoComplete="off">
               <label htmlFor="login-email" className="login-modal-label">Correo electrónico</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -231,12 +229,27 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
                   {passwordError || (error === 'Contraseña inválida' ? error : '')}
                 </TooltipPortal>
               </div>
-              <div className="login-modal-forgot">
-                ¿Olvidaste tu contraseña?{' '}
-                <a href="#" className="login-modal-link" onClick={handleOpenForgot}>Recuperar contraseña</a>
-              </div>
               <button type="submit" className="login-modal-btn" disabled={loading}>Iniciar sesión</button>
             </form>
+            <div className="login-modal-forgot">
+              ¿Olvidaste tu contraseña?{' '}
+              <button 
+                type="button"
+                className="login-modal-link-btn" 
+                onClick={handleOpenForgot}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: '#009BDB', 
+                  textDecoration: 'underline', 
+                  cursor: 'pointer',
+                  font: 'inherit',
+                  padding: 0
+                }}
+              >
+                Recuperar contraseña
+              </button>
+            </div>
           </div>
         </div>
         {loading && <LoadingModalBackdrop text="Iniciando sesión..." />}

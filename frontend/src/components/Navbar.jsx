@@ -6,7 +6,7 @@ import LangDropdown from './LangDropdown';
 import LoginModal from './modals/LoginModal';
 import RegisterModal from './modals/RegisterModal';
 import ForgotPasswordModal from './modals/ForgotPasswordModal';
-import { useNavbar } from '../hooks/useNavbar.jsx';
+import { useNavbar } from '../hooks/components/useNavbar.jsx';
 import { useAuth } from '../context/AuthContext';
 import Submenu from './submenu';
 import { FaChevronDown } from 'react-icons/fa';

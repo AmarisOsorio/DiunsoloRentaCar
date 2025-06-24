@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import '../styles/modals/VerifyAccountModal.css';
 import { FaEnvelope } from 'react-icons/fa';
-import useVerifyAccountModal from '../../hooks/useVerifyAccountModal';
-import SuccessCheckAnimation from '../SuccessCheckAnimation.jsx';
+import useVerifyAccountModal from '../../hooks/components/modals/useVerifyAccountModal.jsx';
+import SuccessCheckAnimation from './SuccessCheckAnimation.jsx';
 
 const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password, onLoginAfterVerify }) => {
   const [showToast, setShowToast] = useState(false);
@@ -40,15 +40,13 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
       setTimeout(() => setShowToast(false), 3500);
     }
   });
-
   React.useEffect(() => {
     if (isVerified) {
       setShowAccountVerified(true);
-      // Cierra el modal automáticamente después de 2s
+      // El login automático se maneja desde useRegisterModal
       const timeout = setTimeout(() => {
         setShowAccountVerified(false);
         if (onClose) onClose();
-        window.location.href = '/'; // Redirige a inicio después de verificación
       }, 2000);
       return () => clearTimeout(timeout);
     }
@@ -61,13 +59,12 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
 
   // Se usa la condición de renderizado de Eduardo
   if (!open && !showAccountVerified) return null;
-
   // Usar SuccessCheckAnimation para éxito de verificación
   if (showAccountVerified) {
     return (
       <SuccessCheckAnimation
         message="¡Cuenta verificada!"
-        subtitle="Tu cuenta ha sido verificada exitosamente. Ya puedes iniciar sesión."
+        subtitle="Iniciando sesión automáticamente..."
         onClose={onClose}
         duration={2000}
       />

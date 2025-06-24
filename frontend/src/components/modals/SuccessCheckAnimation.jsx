@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import './styles/SuccessCheckAnimation.css';
+import '../styles/modals/SuccessCheckAnimation.css';
 
 const PARTICLE_COUNT = 18;
 function randomBetween(a, b) {
@@ -7,7 +7,7 @@ function randomBetween(a, b) {
 }
 const Particle = ({ idx }) => {
   const angle = (idx / PARTICLE_COUNT) * 2 * Math.PI;
-  const distance = randomBetween(48, 70);
+  const distance = randomBetween(55, 70);
   const style = {
     left: `calc(50% + ${Math.cos(angle) * distance}px)` ,
     top: `calc(50% + ${Math.sin(angle) * distance}px)` ,
@@ -37,11 +37,10 @@ const SuccessCheckAnimation = ({ message = '¡Éxito!', subtitle, onClose, durat
       <div className="success-check-container">
         {showClose && (
           <button className="success-check-close" onClick={onClose}>&times;</button>
-        )}
-        <div className="success-check-icon">
-          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="40" cy="40" r="40" fill="#1C318C"/>
-            <path d="M24 42L36 54L56 34" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+        )}        <div className="success-check-icon">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="50" fill="#1C318C"/>
+            <path d="M30 52L45 67L70 42" stroke="#fff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <div className="success-check-particles">
             {Array.from({ length: PARTICLE_COUNT }).map((_, i) => <Particle key={i} idx={i} />)}

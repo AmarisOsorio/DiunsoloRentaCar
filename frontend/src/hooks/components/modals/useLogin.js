@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../../../context/AuthContext.jsx';
 
 export default function useLogin(onClose) {
   const { login } = useAuth();
@@ -59,8 +59,7 @@ export default function useLogin(onClose) {
       setLoading(false); // Desactiva loading después de mostrar el modal de verificación
     }
   }, [pendingShowVerify]);
-
-  // Nueva función: verificar código y mostrar success
+  // Nueva función: verificar código y hacer login automático
   const handleVerifyAndLogin = async (code) => {
     try {
       const res = await fetch('/api/registerClients/verifyCodeEmail', {
@@ -72,13 +71,42 @@ export default function useLogin(onClose) {
       const data = await res.json();
       if (data.message && data.message.toLowerCase().includes('verificado')) {
         setShowVerifyModal(false); // Cierra el modal de verificación
-        setShowLogged(true); // Muestra el modal de éxito
-        setTimeout(() => {
-          setShowLogged(false);
-          if (typeof window !== 'undefined') {
-            window.location.href = '/';
+        
+        try {
+          // Intentar iniciar sesión automáticamente con las credenciales guardadas
+          const loginResult = await login({ 
+            correo: pendingVerificationEmail, 
+            contraseña: pendingVerificationPassword 
+          });
+          
+          if (loginResult.message === 'login exitoso') {
+            setShowLogged(true); // Muestra el modal de éxito
+            setTimeout(() => {
+              setShowLogged(false);
+              if (typeof window !== 'undefined') {
+                window.location.href = '/';
+              }
+            }, 1500); // 1.5 segundos de éxito
+          } else {
+            // Si por alguna razón el login automático falla, mostrar mensaje normal
+            setShowLogged(true);
+            setTimeout(() => {
+              setShowLogged(false);
+              if (typeof window !== 'undefined') {
+                window.location.href = '/';
+              }
+            }, 1500);
           }
-        }, 3500); // 3.5 segundos de éxito
+        } catch (loginError) {
+          // Si hay error en el login automático, mostrar éxito de verificación
+          setShowLogged(true);
+          setTimeout(() => {
+            setShowLogged(false);
+            if (typeof window !== 'undefined') {
+              window.location.href = '/';
+            }
+          }, 1500);
+        }
       }
       return data;
     } catch (err) {

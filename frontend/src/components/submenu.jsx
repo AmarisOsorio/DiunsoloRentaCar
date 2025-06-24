@@ -35,8 +35,7 @@ const Submenu = ({ onClose }) => {
 
     return (
   <>
-    <div className={`bloque submenu-anim${animState === 'in' ? '-in' : '-out'}`}>
-      <a href="/Perfil" className="submenu-item">
+    <div className={`bloque submenu-anim${animState === 'in' ? '-in' : '-out'}`}>      <a href="/perfil" className="submenu-item">
         <i className="fa-solid fa-circle-user user-pic"></i>
         <span className="submenu-label">Mi perfil</span>
       </a>

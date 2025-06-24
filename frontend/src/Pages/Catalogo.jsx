@@ -2,23 +2,12 @@ import React, { useEffect, useState } from 'react';
 import './styles/Catalogo.css';
 import { useAuth } from '../context/AuthContext.jsx';
 import catalogBG from '../assets/catalogBG.png';
+import useCatalogo from '../hooks/Catalogo';
 
 const Catalogo = () => {
-  const [marcas, setMarcas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { vehiculos, loading } = useCatalogo();
 
-  useEffect(() => {
-    fetch('/api/brands')
-      .then(res => res.json())
-      .then(data => {
-        setMarcas(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="marcas-loading">Cargando marcas...</div>;
+  if (loading) return <div className="marcas-loading">Cargando vehículos...</div>;
 
   return (
     <>
@@ -32,14 +21,30 @@ const Catalogo = () => {
         </div>
       </div>
       <section style={{ padding: '2rem' }}>
-        <h2>Catálogo</h2>
-        <div className="marcas-grid">
-          {marcas.map(marca => (
-            <div className="marca-card" key={marca._id}>
-              <img src={marca.logo} alt={marca.nombreMarca} className="marca-logo" />
-              <div className="marca-nombre">{marca.nombreMarca}</div>
-            </div>
-          ))}
+        <h2>Vehículos</h2>
+        <div className="vehiculos-grid">
+          {Array.isArray(vehiculos) && vehiculos.length > 0 ? (
+            vehiculos.map(vehiculo => (
+              <div className="vehiculo-card" key={vehiculo._id}>
+                <img
+                  src={vehiculo.imagenes && vehiculo.imagenes.length > 0 ? vehiculo.imagenes[0] : '/no-image.png'}
+                  alt={vehiculo.nombreVehiculo || 'Vehículo'}
+                  className="vehiculo-img"
+                />
+                <div className="vehiculo-card-body">
+                  <div className="vehiculo-nombre">{vehiculo.nombreVehiculo}</div>
+                  <div className="vehiculo-clase-anio">{vehiculo.clase} {vehiculo.anio}</div>
+                  <div className={`vehiculo-estado ${vehiculo.estado === 'Disponible' ? 'disponible' : vehiculo.estado === 'Reservado' ? 'reservado' : 'mantenimiento'}`}>
+                    <span className="estado-dot"></span>
+                    {vehiculo.estado}
+                  </div>
+                  <button className="vehiculo-vermas">Ver más</button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div>No hay vehículos disponibles.</div>
+          )}
         </div>
       </section>
     </>

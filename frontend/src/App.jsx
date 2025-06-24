@@ -8,6 +8,7 @@ import Home from './Pages/Home';
 import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
 import TerminosCondiciones from './Pages/TerminosCondiciones';
+import Perfil from './Pages/Perfil';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
 import RegisterModal from './components/modals/RegisterModal';
@@ -29,12 +30,12 @@ function App() {
     <AuthProvider>
       <Router>
         <Navbar />
-        <main>
-          <Routes>
+        <main>          <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/catalogo" element={<Catalogo />} />
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/terminos" element={<TerminosCondiciones />} />
+            <Route path="/perfil" element={<Perfil />} />
           </Routes>
           <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
           <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />

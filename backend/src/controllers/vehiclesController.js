@@ -1,5 +1,13 @@
 //Imports
 import vehiclesModel from "../models/Vehiculos.js";
+import { v2 as cloudinary } from 'cloudinary';
+
+//Cloudinary Config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const vehiclesController = {};
 
@@ -30,12 +38,30 @@ vehiclesController.getVehicleById = async (req, res) => {
 vehiclesController.addVehicle = async (req, res) => {
   try {
     let imagenes = [];
+
+    // Si llegan archivos, súbelos a Cloudinary
     if (req.files && req.files.length > 0) {
-    // Guarda la ruta pública de cada imagen subida
-      imagenes = req.files.map(file => `/uploads/${file.filename}`);
-    } else if (req.body.imagenes) {
-      imagenes = Array.isArray(req.body.imagenes) ? req.body.imagenes : [req.body.imagenes];
+      const uploadPromises = req.files.map(file =>
+        cloudinary.uploader.upload(file.path, { folder: 'vehiculos' })
+      );
+      const uploadResults = await Promise.all(uploadPromises);
+      imagenes = uploadResults.map(result => result.secure_url);
+    } 
+    // Si llegan imagenes en el body (como string o array de URLs)
+    else if (req.body && req.body.imagenes) {
+      if (Array.isArray(req.body.imagenes)) {
+        imagenes = req.body.imagenes;
+      } else if (typeof req.body.imagenes === 'string') {
+        try {
+          const parsed = JSON.parse(req.body.imagenes);
+          imagenes = Array.isArray(parsed) ? parsed : [req.body.imagenes];
+        } catch {
+          imagenes = [req.body.imagenes];
+        }
+      }
     }
+
+    if (!Array.isArray(imagenes)) imagenes = [];
 
     const {
       nombreVehiculo,
@@ -76,6 +102,7 @@ vehiclesController.addVehicle = async (req, res) => {
     res.status(201).json({ message: "Vehículo agregado exitosamente" });
   } catch (error) {
     res.status(400).json({ message: "Error al agregar vehículo: ", error });
+    console.log("Error al agregar vehículo:", error);
   }
 };
 

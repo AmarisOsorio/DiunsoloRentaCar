@@ -3,13 +3,13 @@ import '../styles/modals/RegisterModal.css';
 import VerifyAccountModal from './VerifyAccountModal';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import TooltipPortal from '../TooltipPortal.jsx';
-import useRegisterModal from '../../hooks/useRegisterModal.jsx';
+import useRegisterModal from '../../hooks/components/modals/useRegisterModal.jsx';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { useAuth } from '../../context/AuthContext.jsx';
 import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
+import ImageViewSelector from '../ImageViewSelector.jsx';
 
-const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
-  const {
+const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {  const {
     register,
     handleSubmit,
     onSubmit,
@@ -31,22 +31,34 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     loading,
     registrationSuccessData,
     setRegistrationSuccessData,
-    getValues,
-    licenciaPreview,
-    pasaportePreview,
+    getValues,    licenciaFrentePreview,
+    licenciaReversoPreview,
+    pasaporteFrentePreview,
+    pasaporteReversoPreview,
+    setLicenciaFrentePreview,
+    setLicenciaReversoPreview,
+    setPasaporteFrentePreview,
+    setPasaporteReversoPreview,
     validateEdad,
     validateConfirmPassword,
     errors,
-    watch
+    watch,
+    setValue
   } = useRegisterModal();
   const { resendVerificationCode } = useAuth();
-
   // Refs solo para tooltips (no para RHF)
-  const nombreInputRef = useRef(null);
+  const nombresInputRef = useRef(null);
+  const apellidosInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const confirmPasswordInputRef = useRef(null);
   const telefonoInputRef = useRef(null);
   const emailInputRef = useRef(null);
+  
+  // Refs para los inputs de archivos
+  const licenciaFrenteInputRef = useRef(null);
+  const licenciaReversoInputRef = useRef(null);
+  const pasaporteFrenteInputRef = useRef(null);
+  const pasaporteReversoInputRef = useRef(null);
 
   // Callback ref para no romper RHF
   const setInputRef = (rhfRef, tooltipRef) => (el) => {
@@ -60,24 +72,23 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
     }
     handleOpenEffect(open);
   }, [open, handleOpenEffect, resendVerificationCode]);
-
-  // useEffect para redirección tras éxito de registro
+  // useEffect para mostrar modal de verificación tras éxito de registro
   React.useEffect(() => {
-    if (registrationSuccessData) {
-      const timeout = setTimeout(() => {
-        onClose && onClose();
-        window.location.href = '/';
-      }, 2200); // 3 segundos
-      return () => clearTimeout(timeout);
-    }
+    // No necesitamos hacer nada aquí ahora, la transición se maneja en onAnimationEnd
   }, [registrationSuccessData, onClose]);
-
-  // Si hay éxito, mostrar solo el success check (el modal se cerrará tras 1.5s)
+  // Si hay éxito, mostrar solo el success check y luego el modal de verificación
   if (registrationSuccessData) {
     return (
       <div className="register-modal-backdrop modal-fade-in">
         <div className="register-modal-content modal-slide-in">
-          <RegistrationSuccessAnimation userName={registrationSuccessData.nombre} onAnimationEnd={() => {}} />
+          <RegistrationSuccessAnimation 
+            userName={registrationSuccessData.nombre} 
+            onAnimationEnd={() => {
+              // Después de la animación, mostrar el modal de verificación
+              setRegistrationSuccessData(null);
+              setShowVerify(true);
+            }} 
+          />
         </div>
       </div>
     );
@@ -119,36 +130,66 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
         <div className="register-modal-login">
           ¿Ya tienes cuenta?{' '}
           <a href="#" className="register-modal-link" onClick={e => { e.preventDefault(); onSwitchToLogin && onSwitchToLogin(); }}>Iniciar sesión</a>
-        </div>
-        <form className="register-modal-form" onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-group-full-width" style={{ position: 'relative' }}>
-            <label htmlFor="nombre" className="register-modal-label">Nombre</label>
+        </div>        <form className="register-modal-form" onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-group-half-width" style={{ position: 'relative' }}>
+            <label htmlFor="nombres" className="register-modal-label">Nombres</label>
             <div style={{ position: 'relative' }}>
               <input
-                {...register('nombre', {
-                  required: 'El nombre es obligatorio',
+                {...register('nombres', {
+                  required: 'Los nombres son obligatorios',
                   pattern: {
                     value: /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/,
                     message: 'Solo letras y espacios'
                   }
                 })}
-                id="nombre"
-                name="nombre"
+                id="nombres"
+                name="nombres"
                 type="text"
-                className={(errors.nombre || (registerError && registerError.toLowerCase().includes('nombre'))) ? 'input-error' : ''}
-                onFocus={() => setFocusedField('nombre')}
+                className={(errors.nombres || (registerError && registerError.toLowerCase().includes('nombres'))) ? 'input-error' : ''}
+                onFocus={() => setFocusedField('nombres')}
                 onBlur={() => setFocusedField(null)}
-                ref={setInputRef(register('nombre').ref, nombreInputRef)}
+                ref={setInputRef(register('nombres').ref, nombresInputRef)}
                 onInput={e => {
                   e.target.value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
                 }}
               />
-              {(errors.nombre || (registerError && registerError.toLowerCase().includes('nombre'))) && (
+              {(errors.nombres || (registerError && registerError.toLowerCase().includes('nombres'))) && (
                 <span className="fb-error-icon">!</span>
               )}
             </div>
-            <TooltipPortal targetRef={nombreInputRef} visible={(errors.nombre || (registerError && registerError.toLowerCase().includes('nombre'))) && focusedField === 'nombre'}>
-              {errors.nombre?.message || registerError}
+            <TooltipPortal targetRef={nombresInputRef} visible={(errors.nombres || (registerError && registerError.toLowerCase().includes('nombres'))) && focusedField === 'nombres'}>
+              {errors.nombres?.message || registerError}
+            </TooltipPortal>
+          </div>
+
+          <div className="form-group-half-width" style={{ position: 'relative' }}>
+            <label htmlFor="apellidos" className="register-modal-label">Apellidos</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                {...register('apellidos', {
+                  required: 'Los apellidos son obligatorios',
+                  pattern: {
+                    value: /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/,
+                    message: 'Solo letras y espacios'
+                  }
+                })}
+                id="apellidos"
+                name="apellidos"
+                type="text"
+                className={(errors.apellidos || (registerError && registerError.toLowerCase().includes('apellidos'))) ? 'input-error' : ''}
+                onFocus={() => setFocusedField('apellidos')}
+                onBlur={() => setFocusedField(null)}
+                ref={setInputRef(register('apellidos').ref, apellidosInputRef)}
+                onInput={e => {
+                  e.target.value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+                }}
+              />
+              {(errors.apellidos || (registerError && registerError.toLowerCase().includes('apellidos'))) && (
+                <span className="fb-error-icon">!</span>
+              )}
+            </div>
+            <TooltipPortal targetRef={apellidosInputRef} visible={(errors.apellidos || (registerError && registerError.toLowerCase().includes('apellidos'))) && focusedField === 'apellidos'}>
+              {errors.apellidos?.message || registerError}
             </TooltipPortal>
           </div>
 
@@ -288,22 +329,60 @@ const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
             <TooltipPortal targetRef={emailInputRef} visible={(errors.email || (registerError && registerError.toLowerCase().includes('correo'))) && focusedField === 'email'}>
               {errors.email?.message || registerError}
             </TooltipPortal>
+          </div>          <div className="form-group-full-width">
+            <ImageViewSelector
+              title="Licencia (opcional)"
+              frontImage={licenciaFrentePreview}
+              backImage={licenciaReversoPreview}
+              onFrontChange={(e) => {
+                e.target.name = 'licenciaFrente';
+                handleChange(e);
+              }}
+              onBackChange={(e) => {
+                e.target.name = 'licenciaReverso';
+                handleChange(e);
+              }}
+              onFrontRemove={() => {
+                setValue('licenciaFrente', null);
+                setLicenciaFrentePreview && setLicenciaFrentePreview(null);
+              }}
+              onBackRemove={() => {
+                setValue('licenciaReverso', null);
+                setLicenciaReversoPreview && setLicenciaReversoPreview(null);
+              }}
+              frontInputRef={licenciaFrenteInputRef}
+              backInputRef={licenciaReversoInputRef}
+              frontId="licenciaFrente"
+              backId="licenciaReverso"
+            />
           </div>
 
-          <div className="form-group-half-width">
-            <label htmlFor="licencia" className="register-modal-label">Licencia (Opcional)</label>
-            <input id="licencia" name="licencia" type="file" accept="image/*" onChange={handleChange} />
-            {licenciaPreview && (
-              <img src={licenciaPreview} alt="Previsualización de Licencia" className="register-modal-image-preview" />
-            )}
-          </div>
-
-          <div className="form-group-half-width">
-            <label htmlFor="pasaporte" className="register-modal-label">Pasaporte/DUI (Opcional)</label>
-            <input id="pasaporte" name="pasaporte" type="file" accept="image/*" onChange={handleChange} />
-            {pasaportePreview && (
-              <img src={pasaportePreview} alt="Previsualización de Pasaporte/DUI" className="register-modal-image-preview" />
-            )}
+          <div className="form-group-full-width">
+            <ImageViewSelector
+              title="Pasaporte/DUI (opcional)"
+              frontImage={pasaporteFrentePreview}
+              backImage={pasaporteReversoPreview}
+              onFrontChange={(e) => {
+                e.target.name = 'pasaporteFrente';
+                handleChange(e);
+              }}
+              onBackChange={(e) => {
+                e.target.name = 'pasaporteReverso';
+                handleChange(e);
+              }}
+              onFrontRemove={() => {
+                setValue('pasaporteFrente', null);
+                setPasaporteFrentePreview && setPasaporteFrentePreview(null);
+              }}
+              onBackRemove={() => {
+                setValue('pasaporteReverso', null);
+                setPasaporteReversoPreview && setPasaporteReversoPreview(null);
+              }}
+              frontInputRef={pasaporteFrenteInputRef}
+              backInputRef={pasaporteReversoInputRef}
+              frontId="pasaporteFrente"
+              backId="pasaporteReverso"
+            />
           </div>
 
           <div className="form-group-full-width" style={{ position: 'relative' }}>

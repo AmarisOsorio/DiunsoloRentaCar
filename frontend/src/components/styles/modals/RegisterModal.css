@@ -11,7 +11,7 @@
   background: #fff;
   border-radius: 10px;
   min-width: 340px;
-  max-width: 570px; /* Fijar un ancho máximo consistente */
+  max-width: 500px; /* Fijar un ancho máximo consistente */
   padding: 1.2rem 2rem 1.2rem 2rem;
   position: relative;
   box-shadow: 0 2px 16px rgba(0,0,0,0.2);
