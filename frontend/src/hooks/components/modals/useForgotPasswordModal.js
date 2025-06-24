@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../../../context/AuthContext.jsx';
 
 /**
  * Hook personalizado para manejar el flujo de recuperación de contraseña.

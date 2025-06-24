@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../../../context/AuthContext.jsx';
 import { useForm } from 'react-hook-form';
 
 const useRegisterModal = () => {
-  const { register: registerUser, verifyAccount } = useAuth();
+  const { register: registerUser, verifyAccount, login } = useAuth();
 
   // React Hook Form
   const {
@@ -19,13 +19,16 @@ const useRegisterModal = () => {
   } = useForm({
     mode: 'onBlur',
     defaultValues: {
-      nombre: '',
+      nombres: '',
+      apellidos: '',
       contraseña: '', // changed from password
       confirmarContraseña: '', // changed from confirmPassword
       telefono: '',
       email: '',
-      licencia: null,
-      pasaporte: null,
+      licenciaFrente: null,
+      licenciaReverso: null,
+      pasaporteFrente: null,
+      pasaporteReverso: null,
       nacimiento: '',
     }
   });
@@ -37,10 +40,11 @@ const useRegisterModal = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [registrationSuccessData, setRegistrationSuccessData] = useState(null);
-  const [licenciaPreview, setLicenciaPreview] = useState(null);
-  const [pasaportePreview, setPasaportePreview] = useState(null);
+  const [loading, setLoading] = useState(false);  const [registrationSuccessData, setRegistrationSuccessData] = useState(null);
+  const [licenciaFrentePreview, setLicenciaFrentePreview] = useState(null);
+  const [licenciaReversoPreview, setLicenciaReversoPreview] = useState(null);
+  const [pasaporteFrentePreview, setPasaporteFrentePreview] = useState(null);
+  const [pasaporteReversoPreview, setPasaporteReversoPreview] = useState(null);
 
   const nombreRef = useRef();
   const passwordRef = useRef();
@@ -57,7 +61,6 @@ const useRegisterModal = () => {
       return () => clearTimeout(timeout);
     }
   };
-
   // Handles changes to form input fields, including file inputs.
   const handleChange = async e => {
     const { name, value, files } = e.target;
@@ -73,22 +76,62 @@ const useRegisterModal = () => {
         const data = await res.json();
         if (data.url) {
           setValue(name, data.url);
-          if (name === 'licencia') setLicenciaPreview(URL.createObjectURL(files[0]));
-          if (name === 'pasaporte') setPasaportePreview(URL.createObjectURL(files[0]));
+          // Actualizar preview correspondiente
+          const previewUrl = URL.createObjectURL(files[0]);
+          switch(name) {
+            case 'licenciaFrente':
+              setLicenciaFrentePreview(previewUrl);
+              break;
+            case 'licenciaReverso':
+              setLicenciaReversoPreview(previewUrl);
+              break;
+            case 'pasaporteFrente':
+              setPasaporteFrentePreview(previewUrl);
+              break;
+            case 'pasaporteReverso':
+              setPasaporteReversoPreview(previewUrl);
+              break;
+          }
         } else {
           setRegisterError("Error subiendo la imagen.");
         }
       } catch (err) {
         setRegisterError("Error subiendo la imagen.");
       }
-    } else if (name === 'licencia' || name === 'pasaporte') {
+    } else if (name === 'licenciaFrente' || name === 'licenciaReverso' || name === 'pasaporteFrente' || name === 'pasaporteReverso') {
       setValue(name, null);
-      if (name === 'licencia') setLicenciaPreview(null);
-      if (name === 'pasaporte') setPasaportePreview(null);
+      // Limpiar preview correspondiente
+      switch(name) {
+        case 'licenciaFrente':
+          setLicenciaFrentePreview(null);
+          break;
+        case 'licenciaReverso':
+          setLicenciaReversoPreview(null);
+          break;
+        case 'pasaporteFrente':
+          setPasaporteFrentePreview(null);
+          break;
+        case 'pasaporteReverso':
+          setPasaporteReversoPreview(null);
+          break;
+      }
     } else {
       setValue(name, null);
-      if (name === 'licencia') setLicenciaPreview(null);
-      if (name === 'pasaporte') setPasaportePreview(null);
+      // Limpiar todos los previews si es necesario
+      switch(name) {
+        case 'licenciaFrente':
+          setLicenciaFrentePreview(null);
+          break;
+        case 'licenciaReverso':
+          setLicenciaReversoPreview(null);
+          break;
+        case 'pasaporteFrente':
+          setPasaporteFrentePreview(null);
+          break;
+        case 'pasaporteReverso':
+          setPasaporteReversoPreview(null);
+          break;
+      }
     }
   };
 
@@ -152,16 +195,17 @@ const useRegisterModal = () => {
         return;
       }
       const emailResult = await response.json();
-      if (emailResult.exists) {
-        // Si el correo existe, intentamos registrar para ver si está verificado o no
+      if (emailResult.exists) {        // Si el correo existe, intentamos registrar para ver si está verificado o no
         const payload = {
-          nombreCompleto: data.nombre,
+          nombreCompleto: `${data.nombres} ${data.apellidos}`,
           correo: data.email,
           contraseña: data.contraseña, // use ñ
           telefono: data.telefono,
           fechaDeNacimiento: data.nacimiento,
-          pasaporteDui: data.pasaporte || undefined,
-          licencia: data.licencia || undefined
+          pasaporteFrenteDui: data.pasaporteFrente || undefined,
+          pasaporteReversoDui: data.pasaporteReverso || undefined,
+          licenciaFrente: data.licenciaFrente || undefined,
+          licenciaReverso: data.licenciaReverso || undefined
         };
         const result = await registerUser(payload);
         if (result.message && result.message.toLowerCase().includes('datos actualizados') && result.isVerified === false) {
@@ -212,20 +256,20 @@ const useRegisterModal = () => {
       setRegisterError("No se pudo verificar el correo. Intenta más tarde.");
       setLoading(false);
       return;
-    }
-    try {
+    }    try {
       const payload = {
-        nombreCompleto: data.nombre,
+        nombreCompleto: `${data.nombres} ${data.apellidos}`,
         correo: data.email,
         contraseña: data.contraseña, // use ñ
         telefono: data.telefono,
         fechaDeNacimiento: data.nacimiento,
-        pasaporteDui: data.pasaporte || undefined,
-        licencia: data.licencia || undefined
+        pasaporteFrenteDui: data.pasaporteFrente || undefined,
+        pasaporteReversoDui: data.pasaporteReverso || undefined,
+        licenciaFrente: data.licenciaFrente || undefined,
+        licenciaReverso: data.licenciaReverso || undefined
       };
-      const result = await registerUser(payload);
-      if (result.message && result.message.includes('verifica tu correo')) {
-        setRegistrationSuccessData({ nombre: data.nombre });
+      const result = await registerUser(payload);      if (result.message && result.message.includes('verifica tu correo')) {
+        setRegistrationSuccessData({ nombre: `${data.nombres} ${data.apellidos}` });
         setRegisterSuccess(result.message);
       } else if (result.message && result.message.toLowerCase().includes('client already exists')) {
         setRegisterError('La cuenta ya está registrada pero no verificada. Se ha enviado un nuevo código de verificación.');
@@ -242,12 +286,31 @@ const useRegisterModal = () => {
       setRegisterError("Error de red o servidor");
     }
     setLoading(false);
-  };
-
-  const handleVerify = async (code) => {
+  };  const handleVerify = async (code) => {
     const result = await verifyAccount(code);
     if (result.message && result.message.includes('exitosamente')) {
-      setRegisterSuccess('¡Cuenta verificada! Ya puedes iniciar sesión.');
+      setRegisterSuccess('¡Cuenta verificada! Iniciando sesión...');
+        try {
+        // Obtener las credenciales del formulario
+        const email = getValues('email');
+        const password = getValues('contraseña');
+        
+        // Intentar iniciar sesión automáticamente usando el contexto
+        const loginResult = await login({ correo: email, contraseña: password });
+        
+        if (loginResult.userType && !loginResult.needVerification) {
+          // Login exitoso - redirigir después de un breve delay
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1500);
+        } else {
+          // Si por alguna razón el login automático falla, mostrar mensaje normal
+          setRegisterSuccess('¡Cuenta verificada! Ya puedes iniciar sesión.');
+        }
+      } catch (loginError) {
+        // Si hay error en el login automático, solo mostrar mensaje de verificación exitosa
+        setRegisterSuccess('¡Cuenta verificada! Ya puedes iniciar sesión.');
+      }
     }
     return result;
   };
@@ -258,7 +321,6 @@ const useRegisterModal = () => {
       setFocusedField(null);
     }
   };
-
   return {
     register,
     handleChange,
@@ -286,17 +348,22 @@ const useRegisterModal = () => {
     handleVerify,
     handlePhoneChange,
     handleInputChange,
-    handleOpenEffect,
-    loading,
+    handleOpenEffect,    loading,
     registrationSuccessData,
-    setRegistrationSuccessData,
-    licenciaPreview,
-    pasaportePreview,
+    setRegistrationSuccessData,    licenciaFrentePreview,
+    licenciaReversoPreview,
+    pasaporteFrentePreview,
+    pasaporteReversoPreview,
+    setLicenciaFrentePreview,
+    setLicenciaReversoPreview,
+    setPasaporteFrentePreview,
+    setPasaporteReversoPreview,
     validateEdad,
     validateConfirmPassword,
     errors, // <-- exponer errors
     watch, // <-- return watch for RegisterModal.jsx
-    getValues // <-- add getValues for RegisterModal.jsx
+    getValues, // <-- add getValues for RegisterModal.jsx
+    setValue // <-- add setValue for RegisterModal.jsx
   };
 };
 

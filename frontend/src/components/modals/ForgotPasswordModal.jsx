@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/modals/ForgotPasswordModal.css';
 import hiluxImg from '../../assets/ForgotPass.jpg';
-import { useForgotPasswordModal } from '../../hooks/useForgotPasswordModal';
 import { FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
-import SuccessCheckAnimation from '../SuccessCheckAnimation';
+import SuccessCheckAnimation from './SuccessCheckAnimation.jsx';
+import { useForgotPasswordModal } from '../../hooks/components/modals/useForgotPasswordModal.js';
 
 /**
  * Modal de recuperación de contraseña.
@@ -13,7 +13,23 @@ import SuccessCheckAnimation from '../SuccessCheckAnimation';
  * 3. Ingresar nueva contraseña
  */
 const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
-  // Estado para mostrar/ocultar el modal y animaciones
+  // Hook personalizado que maneja toda la lógica del modal
+  const {
+    step,
+    setStep,
+    loading,
+    message,
+    handleCorreo,
+    handleReenviarCodigo,
+    handleCode,
+    handleNewPassword,
+    correoForm,
+    codeForm,
+    newPasswordForm,
+    resetAll,
+  } = useForgotPasswordModal(onClose);
+
+  // Estados para mostrar/ocultar el modal y animaciones (solo UI)
   const [show, setShow] = useState(false);
   const [closing, setClosing] = useState(false);
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
@@ -22,40 +38,20 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const closeTimeout = useRef();
-
-  // Hook centralizado con toda la lógica de recuperación
-  const {
-    step, // Paso actual (1: correo, 2: código, 3: nueva contraseña)
-    setStep,
-    loading,
-    message,
-    handleCorreo,
-    handleCode,
-    handleNewPassword,
-    handleReenviarCodigo,
-    correoForm,
-    codeForm,
-    newPasswordForm,
-    resetAll
-  } = useForgotPasswordModal(onClose);
-
-  // Efecto para mostrar/ocultar el modal con animación
+  // Sincronizar el estado interno 'show' con la prop 'open'
   useEffect(() => {
     if (open) {
       setShow(true);
       setClosing(false);
-    } else if (show) {
+    } else {
       setClosing(true);
-      closeTimeout.current = setTimeout(() => {
+      const timeout = setTimeout(() => {
         setShow(false);
         setClosing(false);
-        setStep(1); // Siempre vuelve al paso 1 al cerrar
-        resetAll();
       }, 300);
+      return () => clearTimeout(timeout);
     }
-    return () => clearTimeout(closeTimeout.current);
   }, [open]);
-
   // Cierra el modal al hacer click en el fondo
   const handleBackdropClose = () => {
     if (showSuccessAnim) return; // No cerrar si está la animación de éxito
@@ -64,7 +60,8 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
       setShow(false);
       setClosing(false);
       setStep(1);
-      resetAll();
+      resetAll(); // Usar la función del hook
+      setNewPasswordError(""); // Limpiar errores locales
       if (onClose) onClose();
     }, 300);
   };
@@ -77,7 +74,8 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
       setShow(false);
       setClosing(false);
       setStep(1);
-      resetAll();
+      resetAll(); // Usar la función del hook
+      setNewPasswordError(""); // Limpiar errores locales
       if (onBackToLogin) {
         onBackToLogin();
       } else if (onClose) {
@@ -85,7 +83,6 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
       }
     }, 300);
   };
-
   // Muestra animación de éxito y luego cierra el modal
   const handleShowSuccessAnim = (msg) => {
     setSuccessAnimMessage(msg);
@@ -97,7 +94,8 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
         setShow(false);
         setClosing(false);
         setStep(1);
-        resetAll();
+        resetAll(); // Usar la función del hook
+        setNewPasswordError(""); // Limpiar errores locales
         if (onBackToLogin) {
           onBackToLogin();
         } else if (onClose) {
@@ -109,18 +107,13 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
 
   // Si el modal no debe mostrarse, no renderiza nada
   if (!show) return null;
-
   // Renderiza animación de éxito si corresponde
   if (showSuccessAnim) {
     return (
-      <div className="forgot-password-modal-backdrop modal-fade-in">
-        <div className="forgot-password-modal-content login-modal-content login-modal-loading-content modal-slide-in" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, minHeight: 0, boxShadow: '0 2px 16px rgba(0,0,0,0.2)'}} onClick={e => e.stopPropagation()}>
-          <SuccessCheckAnimation
-            message={successAnimMessage || "¡Contraseña cambiada con éxito!"}
-            subtitle="Ya puedes iniciar sesión con tu nueva contraseña."
-          />
-        </div>
-      </div> 
+      <SuccessCheckAnimation
+        message={successAnimMessage || "¡Contraseña cambiada con éxito!"}
+        subtitle="Ya puedes iniciar sesión con tu nueva contraseña."
+      />
     );
   }
 
@@ -214,9 +207,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                 <button type="submit" className="forgot-password-modal-btn" disabled={loading}>{loading ? 'Verificando...' : 'Verificar código'}</button>
               </div>
             </form>
-          )}
-
-          {/* Paso 3: Nueva contraseña */}
+          )}          {/* Paso 3: Nueva contraseña */}
           {step === 3 && (
             <form className="forgot-password-modal-form" data-step={step} onSubmit={newPasswordForm.handleSubmit(async (data) => {
               setNewPasswordError("");
@@ -231,7 +222,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                 newPasswordForm.setError('confirmPassword', { type: 'manual', message: 'Las contraseñas no coinciden.' });
                 return;
               }
-              // Solo si pasa todas las validaciones, llama al backend
+              // Solo si pasa todas las validaciones, llama al backend usando el hook
               const result = await handleNewPassword(data);
               if (result && result.success) {
                 handleShowSuccessAnim('¡Contraseña cambiada con éxito!');
