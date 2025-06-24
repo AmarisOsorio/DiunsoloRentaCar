@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/Catalogo.css';
 import VehiculoCard from '../components/VehiculoCard';
 import catalogBG from '../assets/catalogBG.png';
-import useCatalogo from '../hooks//pages/Catalogo';
+import useCatalogo from '../hooks/pages/Catalogo';
 
 const Catalogo = () => {
   const { vehiculos, loading } = useCatalogo();
