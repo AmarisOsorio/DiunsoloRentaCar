@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 
 import clientsModel from "../models/Clientes.js";
 import { config } from "../config.js";
+import sendWelcomeMail from '../utils/mailWelcome.js';
 
 // Obtener __dirname para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -17,26 +18,30 @@ const registerClientsController = {};
 registerClientsController.register = async (req, res) => {
   try {
     // LOG para depuración
-    console.log('req.body:', req.body);
-    console.log('req.files:', req.files);
+    // console.log('BODY:', req.body);
+    // console.log('FILES:', req.files);
     let pasaporteBuffer = null;
     let licenciaBuffer = null;
-    if (req.files && req.files.pasaporte_dui && req.files.pasaporte_dui[0]) {
-      pasaporteBuffer = req.files.pasaporte_dui[0].buffer;
+    if (req.files && req.files.pasaporteDui && req.files.pasaporteDui[0]) {
+      pasaporteBuffer = req.files.pasaporteDui[0].buffer;
     }
     if (req.files && req.files.licencia && req.files.licencia[0]) {
       licenciaBuffer = req.files.licencia[0].buffer;
     }
 
     const {
-      nombre_completo,
-      fecha_de_nacimiento,
+      nombreCompleto,
+      fechaDeNacimiento,
       correo,
       contraseña: contraseñaRaw,
-      telefono
+      contrasena: contrasenaRaw,
+      telefono,
+      pasaporteDui,
+      licencia
     } = req.body;
 
-    const contraseña = contraseñaRaw || req.body['contraseÃ±a'];
+    // Soportar ambos: 'contraseña', 'contrasena', y variantes mal codificadas
+    const contraseña = contraseñaRaw || contrasenaRaw || req.body['contraseña'] || req.body['contrasena'] || req.body['contraseÃ±a'];
     if (!contraseña) {
       return res.status(400).json({ message: "El campo 'contraseña' es obligatorio y no fue recibido correctamente." });
     }
@@ -61,13 +66,14 @@ registerClientsController.register = async (req, res) => {
       } else {
         // Actualizar datos del cliente no verificado
         const passwordHashUpdate = await bcryptjs.hash(contraseña, 10);
-        existsClient.nombre_completo = nombre_completo;
-        existsClient.fecha_de_nacimiento = fecha_de_nacimiento;
+        existsClient.nombreCompleto = nombreCompleto;
+        existsClient.fechaDeNacimiento = fechaDeNacimiento;
         existsClient.telefono = telefono;
         existsClient.contraseña = passwordHashUpdate;
-        if (pasaporteBuffer) existsClient.pasaporte_dui = pasaporteBuffer;
-        if (licenciaBuffer) existsClient.licencia = licenciaBuffer;
+        if (req.body.pasaporteDui) existsClient.pasaporteDui = req.body.pasaporteDui;
+        if (req.body.licencia) existsClient.licencia = req.body.licencia;
         await existsClient.save();
+        // console.log("Cliente actualizado: ", correo);
         // Generar y enviar nuevo código de verificación (6 caracteres alfanuméricos)
         let verificationCodeUpdate = '';
         for (let i = 0; i < 6; i++) {
@@ -89,7 +95,7 @@ registerClientsController.register = async (req, res) => {
                 <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
               </div>
               <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-              <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
+              <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
               <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
               <div style="text-align: center; margin: 32px 0;">
                 <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCodeUpdate}</span>
@@ -111,7 +117,7 @@ registerClientsController.register = async (req, res) => {
             }
           ],
         };
-        transporter.sendMail(mailOptionsUpdate, (error, info) => {
+        transporter.sendMail(mailOptionsUpdate, (error) => {
           if (error) {
             console.error("Error enviando correo:", error);
             return res.status(500).json({ message: "Error enviando correo" });
@@ -126,15 +132,16 @@ registerClientsController.register = async (req, res) => {
     // Si no existe, crear nuevo cliente
     const passwordHash = await bcryptjs.hash(contraseña, 10);
     const newClient = new clientsModel({
-      nombre_completo,
-      fecha_de_nacimiento,
+      nombreCompleto,
+      fechaDeNacimiento,
       correo,
       contraseña: passwordHash,
       telefono,
-      pasaporte_dui: pasaporteBuffer,
-      licencia: licenciaBuffer
+      pasaporteDui: pasaporteDui || null, // URL
+      licencia: licencia || null // URL
     });
     await newClient.save();
+    // console.log("Nuevo cliente registrado: ", correo);
     // Generar código de 6 caracteres alfanuméricos (números y letras mayúsculas)
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
@@ -159,7 +166,7 @@ registerClientsController.register = async (req, res) => {
             <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
           </div>
           <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-          <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
+          <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
           <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
           <div style="text-align: center; margin: 32px 0;">
             <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCode}</span>
@@ -192,20 +199,16 @@ registerClientsController.register = async (req, res) => {
         }
         return res.status(500).json({ message: "Error enviando correo", error: error.toString(), smtp: error.response });
       }
-      console.log("Correo enviado:", info.response);
       res.json({
-        message: "Cliente registrado. Por favor verifica tu correo con el código enviado",
-        info: info.response
+        message: "Cliente registrado. Por favor verifica tu correo con el código enviado"
       });
     });
   } catch (error) {
-    console.error('Error en registerClientsController.register:', error);
     res.json({ message: "Error" + error });
   }
 };
 
 registerClientsController.verifyCodeEmail = async (req, res) => {
-  // Validación robusta del body
   if (!req.body || !req.body.verificationCode) {
     return res.status(400).json({ message: "El campo 'verificationCode' es obligatorio en el body." });
   }
@@ -220,12 +223,17 @@ registerClientsController.verifyCodeEmail = async (req, res) => {
     const client = await clientsModel.findOne({ correo });
     client.isVerified = true;
     await client.save();
+    // Enviar correo de bienvenida tras verificación exitosa
+    try {
+      await sendWelcomeMail({ correo, nombre: client.nombreCompleto });
+    } catch (e) {
+      // No bloquear la verificación si el correo de bienvenida falla
+      console.error('Error enviando correo de bienvenida:', e);
+    }
     res.json({ message: "Correo verificado exitosamente" });
     res.clearCookie("VerificationToken");
-    // NO MÁS CÓDIGO DESPUÉS DE ENVIAR LA RESPUESTA
     return;
   } catch (error) {
-    // IMPORTANTE: solo una respuesta en el catch
     if (!res.headersSent) {
       return res.json({ message: "error" });
     }
@@ -237,9 +245,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
   if (!token) {
     return res.status(400).json({ message: "No hay sesión de verificación activa." });
   }
-  // Definir chars aquí para evitar ReferenceError
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  // Definir transporter aquí para evitar error
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -256,10 +262,8 @@ registerClientsController.resendCodeEmail = async (req, res) => {
     if (!correo) {
       return res.status(400).json({ message: "No se encontró el correo en la sesión." });
     }
-    // Obtener nombre_completo del cliente
     const client = await clientsModel.findOne({ correo });
-    const nombre_completo = client ? client.nombre_completo : '';
-    // Generar nuevo código de 6 caracteres alfanuméricos (mayúsculas y números)
+    const nombreCompleto = client ? client.nombreCompleto : '';
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
       verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -270,7 +274,6 @@ registerClientsController.resendCodeEmail = async (req, res) => {
       { expiresIn: "15m" }
     );
     res.cookie("VerificationToken", tokenCode, { maxAge: 15 * 60 * 1000 });
-    // Enviar correo
     const mailOptions = {
       from: config.email.email_user,
       to: correo,
@@ -281,7 +284,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
             <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
           </div>
           <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-          <p>Hola${nombre_completo ? `, <b>${nombre_completo}</b>` : ''},</p>
+          <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
           <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
           <div style="text-align: center; margin: 32px 0;">
             <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCode}</span>
@@ -305,14 +308,11 @@ registerClientsController.resendCodeEmail = async (req, res) => {
     };
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error("Error enviando correo:", error);
         return res.status(500).json({ message: "Error enviando correo" });
       }
-      console.log("Correo reenviado: " + info.response);
       return res.json({ message: "Nuevo código enviado" });
     });
   } catch (error) {
-    console.error("Error en resendCodeEmail:", error);
     res.status(500).json({ message: "Error reenviando código" });
   }
 };

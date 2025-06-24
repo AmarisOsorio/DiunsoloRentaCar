@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { config } from "./src/config.js";
 
-console.log("DB URI:", config.db.URI);
 mongoose.connect(config.db.URI);
 
 const connection = mongoose.connection;
@@ -15,5 +14,5 @@ connection.on("disconnected", () => {
 });
 
 connection.on("error", (error) => {
-  console.log("Error found " + error);
+  console.log("Error found: " + error);
 });

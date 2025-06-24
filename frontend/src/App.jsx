@@ -7,31 +7,43 @@ import Footer from './components/Footer';
 import Home from './Pages/Home';
 import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
+import TerminosCondiciones from './Pages/TerminosCondiciones';
+import Perfil from './Pages/Perfil';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
 import RegisterModal from './components/modals/RegisterModal';
 import ForgotPasswordModal from './components/modals/ForgotPasswordModal';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Cuando se cierra el modal de registro, también limpia el estado de éxito
+  const handleCloseRegister = () => {
+    setShowRegisterModal(false);
+    // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
+  };
 
   return (
-    <Router>
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/contacto" element={<Contacto />} />
-        </Routes>
-        <LoginModal open={showLogin} onClose={() => setShowLogin(false)} onOpenRegister={() => { setShowLogin(false); setShowRegister(true); }} onOpenForgot={() => { setShowLogin(false); setShowForgot(true); }} />
-        <RegisterModal open={showRegister} onClose={() => setShowRegister(false)} onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }} />
-        <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} />
-      </main>
-      <Footer />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <main>          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/catalogo" element={<Catalogo />} />
+            <Route path="/contacto" element={<Contacto />} />
+            <Route path="/terminos" element={<TerminosCondiciones />} />
+            <Route path="/perfil" element={<Perfil />} />
+          </Routes>
+          <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
+          <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
+          <ForgotPasswordModal open={showForgotModal} onClose={() => { setShowForgotModal(false); setShowLoginModal(true); }} />
+        </main>
+        <Footer />
+      </Router>
+    </AuthProvider>
   );
 }
 

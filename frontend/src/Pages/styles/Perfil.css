@@ -1,0 +1,657 @@
+/* ===== ESTILOS GENERALES DE PERFIL ===== */
+.perfil-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding-top: 80px; /* Ajustar según la altura del navbar */
+}
+
+/* ===== SIDEBAR ===== */
+.perfil-sidebar {
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #e9ecef;
+  padding: 2rem 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.perfil-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1C318C;
+  margin: 0 0 2rem 0;
+  padding: 0 2rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+
+.perfil-nav {
+  padding: 0 1rem;
+}
+
+.perfil-nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.perfil-nav-item:hover {
+  background-color: #f8f9fa;
+  color: #1C318C;
+  transform: translateX(4px);
+}
+
+.perfil-nav-item.active {
+  background-color: #e8f2ff;
+  color: #1C318C;
+  font-weight: 600;
+  border-left: 4px solid #009BDB;
+}
+
+.perfil-nav-icon {
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
+  min-width: 20px;
+}
+
+/* ===== CONTENIDO PRINCIPAL ===== */
+.perfil-main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+  background-color: #ffffff;
+  min-height: calc(100vh - 80px);
+}
+
+.perfil-breadcrumb {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.perfil-breadcrumb svg {
+  margin-right: 0.5rem;
+}
+
+.perfil-content {
+  max-width: 800px;
+}
+
+/* ===== SECCIONES ===== */
+.perfil-section {
+  margin-bottom: 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.perfil-section-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1C318C;
+  margin: 0;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #1C318C 0%, #009BDB 100%);
+  color: white;
+}
+
+.perfil-section-icon {
+  margin-right: 0.75rem;
+  font-size: 1.3rem;
+}
+
+.perfil-section-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0 0;
+  font-weight: 400;
+}
+
+/* ===== CAMPOS ===== */
+.perfil-field {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.perfil-field:last-child {
+  border-bottom: none;
+}
+
+.perfil-field-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.perfil-field-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.perfil-field-display {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.perfil-field-value {
+  font-size: 1rem;
+  color: #212529;
+  font-weight: 500;
+}
+
+.perfil-field-edit {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.perfil-field-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ===== INPUTS ===== */
+.perfil-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #495057;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.perfil-input:focus {
+  outline: none;
+  border-color: #009BDB;
+  box-shadow: 0 0 0 3px rgba(0, 155, 219, 0.1);
+}
+
+.perfil-input:invalid {
+  border-color: #dc3545;
+}
+
+/* ===== BOTONES ===== */
+.perfil-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  min-width: 40px;
+  height: 40px;
+}
+
+.perfil-btn-edit {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.perfil-btn-edit:hover {
+  background-color: #e9ecef;
+  color: #495057;
+  transform: translateY(-1px);
+}
+
+.perfil-btn-save {
+  background-color: #28a745;
+  color: white;
+}
+
+.perfil-btn-save:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.perfil-btn-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+
+.perfil-btn-cancel:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.perfil-btn-danger {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.perfil-btn-danger:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.perfil-btn-sync {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: auto;
+}
+
+.perfil-btn-sync:hover {
+  background-color: #138496;
+  transform: translateY(-1px);
+}
+
+/* ===== CAMPOS DE CONTRASEÑA ===== */
+.perfil-password-edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.perfil-password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.perfil-password-toggle {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 1rem;
+  z-index: 2;
+}
+
+.perfil-password-toggle:hover {
+  color: #495057;
+}
+
+/* ===== SUBIDA DE DOCUMENTOS ===== */
+.perfil-document-upload {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.perfil-document-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.perfil-document-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+}
+
+.perfil-document-preview {
+  position: relative;
+  width: 200px;
+  height: 130px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.perfil-document-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.perfil-document-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.perfil-document-preview:hover .perfil-document-actions {
+  opacity: 1;
+}
+
+.perfil-btn-change {
+  background-color: #009BDB;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.perfil-btn-change:hover {
+  background-color: #0081b3;
+}
+
+.perfil-btn-delete {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.perfil-btn-delete:hover {
+  background-color: #c82333;
+}
+
+.perfil-upload-button {
+  width: 200px;
+  height: 130px;
+  border: 2px dashed #009BDB;
+  background-color: #f8f9fa;
+  color: #009BDB;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.perfil-upload-button:hover {
+  background-color: #e8f2ff;
+  border-color: #0081b3;
+  color: #0081b3;
+}
+
+.perfil-file-input {
+  display: none;
+}
+
+/* ===== SECCIÓN DE ELIMINAR CUENTA ===== */
+.perfil-delete-section {
+  padding: 2rem;
+}
+
+.perfil-delete-section h3 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.perfil-delete-section p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* ===== SECCIÓN PRÓXIMAMENTE ===== */
+.perfil-coming-soon {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.perfil-coming-soon p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.perfil-coming-soon p:first-child {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .perfil-container {
+    flex-direction: column;
+    padding-top: 60px;
+  }
+
+  .perfil-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 0;
+  }
+
+  .perfil-main {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .perfil-title {
+    font-size: 1.2rem;
+    padding: 0 1rem;
+  }
+
+  .perfil-nav {
+    padding: 0 0.5rem;
+  }
+
+  .perfil-nav-item {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .perfil-nav-item:hover {
+    transform: none;
+  }
+
+  .perfil-section {
+    margin-bottom: 2rem;
+  }
+
+  .perfil-section-title {
+    font-size: 1.2rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .perfil-field {
+    padding: 1rem 1.5rem;
+  }
+
+  .perfil-field-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .perfil-field-display {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .perfil-field-edit {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .perfil-field-actions {
+    justify-content: center;
+  }
+
+  .perfil-document-upload {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .perfil-document-preview,
+  .perfil-upload-button {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .perfil-password-edit {
+    gap: 0.75rem;
+  }
+
+  .perfil-delete-section {
+    padding: 1.5rem;
+  }
+
+  .perfil-coming-soon {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .perfil-main {
+    padding: 0.75rem;
+  }
+
+  .perfil-section-title {
+    font-size: 1.1rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .perfil-field {
+    padding: 0.875rem 1rem;
+  }
+
+  .perfil-document-preview,
+  .perfil-upload-button {
+    height: 100px;
+  }
+
+  .perfil-coming-soon p {
+    font-size: 1rem;
+  }
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.perfil-content {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.perfil-field {
+  transition: all 0.3s ease;
+}
+
+.perfil-field:hover {
+  background-color: #f8f9fa;
+}
+
+/* ===== ACCESIBILIDAD ===== */
+.perfil-btn:focus,
+.perfil-input:focus,
+.perfil-nav-item:focus {
+  outline: 2px solid #009BDB;
+  outline-offset: 2px;
+}
+
+.perfil-upload-button:focus {
+  outline: 2px solid #009BDB;
+  outline-offset: 2px;
+}
+
+/* ===== DARK MODE SUPPORT ===== */
+@media (prefers-color-scheme: dark) {
+  .perfil-container {
+    background-color: #1a1a1a;
+  }
+
+  .perfil-sidebar {
+    background: #2d2d2d;
+    border-right-color: #444;
+  }
+
+  .perfil-main {
+    background-color: #2d2d2d;
+  }
+
+  .perfil-section {
+    background: #2d2d2d;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .perfil-field {
+    border-bottom-color: #444;
+  }
+
+  .perfil-field:hover {
+    background-color: #333;
+  }
+
+  .perfil-input {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+  }
+
+  .perfil-field-value {
+    color: #fff;
+  }
+
+  .perfil-field-label {
+    color: #ccc;
+  }
+
+  .perfil-breadcrumb {
+    color: #ccc;
+    border-bottom-color: #444;
+  }
+
+  .perfil-coming-soon {
+    color: #ccc;
+  }
+}

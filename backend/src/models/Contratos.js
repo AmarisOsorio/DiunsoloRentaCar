@@ -142,6 +142,7 @@ const contratosSchema = new Schema({
         ref:"Reservas", 
         required: true
     },
+<<<<<<< HEAD
     clientID: {
         type: Schema.Types.ObjectId, 
         ref: "Clientes",
@@ -150,6 +151,14 @@ const contratosSchema = new Schema({
     carID: {
         type: Schema.Types.ObjectId, 
         ref: "Vehiculos",
+=======
+    clientId: {
+        type: String, 
+        required: true
+    },
+    carId: {
+        type: String, 
+>>>>>>> master
         required: true
     },
     estado: {
@@ -164,6 +173,7 @@ const contratosSchema = new Schema({
     fechaFin: {
         type: Date
     },
+<<<<<<< HEAD
     datosHojaEstado: [{
         fechaEntrega:{ 
             type: Date
@@ -375,6 +385,128 @@ const contratosSchema = new Schema({
         firmaEntrega: {
             type: String
         }
+=======
+    datosHojaEstado: {
+        fechaEntrega: Date,
+        fechaDevolucion: Date,
+        numeroUnidad: String,
+        marcaModelo: String,
+        placa: String,
+        nombreCliente: String,
+        anotaciones: String,
+        documentacionEntrega: {
+            entrega: {
+                llaves: Boolean,
+                tarjetaCirculacion: Boolean,
+                facturaConsumidor: Boolean
+            },
+            devolucion: {
+                llaves: Boolean,
+                tarjetaCirculacion: Boolean,
+                facturaConsumidor: Boolean
+            }
+        },
+        inspeccionFisica: {
+            entrega: {
+                interna: {
+                    condicionGeneral: String,
+                    capo: Boolean,
+                    medidaAceite: String,
+                    antena: Boolean,
+                    espejos: Boolean,
+                    maletero: Boolean,
+                    vidriosBuenEstado: Boolean,
+                    bolsaHerramientas: Boolean,
+                    manijasPuertas: Boolean,
+                    tapaGasolina: Boolean,
+                    tazasRines: {
+                        presente: Boolean,
+                        cantidad: Number
+                    }
+                },
+                externa:{
+                    interruptorMaletero:Boolean,
+                    llaveEncendido:Boolean,
+                    luces:Boolean,
+                    radioOriginal:Boolean,
+                    ventilacionAcCalefaccion:Boolean,
+                    panelInstrumentos:String,
+                    palancaCambios:Boolean,
+                    seguroPuerta:Boolean,
+                    alfombras:Boolean,
+                    llantaRepuesto:Boolean
+                }
+            },
+            devolucion:{
+                interna:{
+                    condicionGeneral:String,
+                    capo:Boolean,
+                    medidaAceite:String,
+                    antena:Boolean,
+                    espejos:Boolean,
+                    maletero:Boolean,
+                    vidriosBuenEstado:Boolean,
+                    bolsaHerramientas:Boolean,
+                    manijasPuertas:Boolean,
+                    tapaGasolina:Boolean,
+                    tazasRines:{
+                        presente:Boolean,
+                        cantidad:Number
+                    }
+                },
+                externa:{
+                    interruptorMaletero:Boolean,
+                    llaveEncendido:Boolean,
+                    luces:Boolean,
+                    radioOriginal:Boolean,
+                    ventilacionAcCalefaccion:Boolean,
+                    panelInstrumentos:String,
+                    palancaCambios:Boolean,
+                    seguroPuerta:Boolean,
+                    alfombras:Boolean,
+                    llantaRepuesto:Boolean
+                }
+            }
+        },
+        fotosCondicionGeneral: [String],
+        estadoCombustible: {
+            entrega: String,
+            devolucion: String
+        },
+        firmaEntrega: String
+    },
+    datosArrendamiento: {
+        nombreArrendatario: String,
+        profesionArrendatario: String,
+        direccionArrendatario: String,
+        paisPasaporte: String,
+        numeroPasaporte: String,
+        paisLicencia: String,
+        numeroLicencia: String,
+        extraDriverName: String,
+        paisPasaporteConductorExtra: String,
+        numeroPasaporteConductorExtra: String,
+        paisLicenciaConductorExtra: String,
+        numeroLicenciaConductorExtra: String,
+        ciudadEntrega: String,
+        horaEntrega: String,
+        fechaEntrega: Date,
+        precioDiario: Number,
+        montoTotal: Number,
+        diasAlquiler: Number,
+        montoDeposito: Number,
+        diasPlazo: Number,
+        penalidadMalUso: Number,
+        ciudadFirma: String,
+        horaFirma: String,
+        fechaFirma: Date,
+        firmaArrendador: String,
+        firmaArrendatario: String
+    },
+    documentos: {
+        hojaEstadoPdf: String,
+        arrendamientoPdf: String
+>>>>>>> master
     }
 ],
     datosArrendamiento: [{

@@ -1,20 +1,23 @@
 /*
     Fields:
-        imagenes (array[string: URL]),
-        nombre_vehiculo (string),
-        precio_por_dia (number),
-        placa (string),
-        id_marca (string),
-        clase (string),
-        color (string),
-        año (number),
-        capacidad (number),
-        modelo (string),
-        numero_motor (string),
-        numero_chasis_grabado (string),
-        numero_vin_chasis (string),
-        contratoArrendamientoPDF (string: URL),
-        estado (string: "Disponible,Reservado,Mantenimiento")
+        imagenes
+        nombreVehiculo
+        precioPorDia
+        placa
+        idMarca
+        clase
+        color
+        anio
+        capacidad
+        modelo
+        numeroMotor
+        numeroChasisGrabado
+        numeroVinChasis
+        contratoArrendamientoPdf
+        estado
+            - Disponible
+            - Reservado
+            - Mantenimiento
 */
 
 //Imports
@@ -26,11 +29,11 @@ const vehiculosSchema = new Schema({
         type: [String],
         required: true
     },
-    nombre_vehiculo: {
+    nombreVehiculo: {
         type: String,
         required: true
     },
-    precio_por_dia: {
+    precioPorDia: {
         type: Number,
         required: true
     },
@@ -39,7 +42,7 @@ const vehiculosSchema = new Schema({
         required: true,
         unique: true
     },
-    id_marca: {
+    idMarca: {
         type: String,
         required: true
     },
@@ -51,7 +54,7 @@ const vehiculosSchema = new Schema({
         type: String,
         required: true
     },
-    año: {
+    anio: {
         type: Number,
         required: true
     },
@@ -63,19 +66,19 @@ const vehiculosSchema = new Schema({
         type: String,
         required: true
     },
-    numero_motor: {
+    numeroMotor: {
         type: String,
         required: true
     },
-    numero_chasis_grabado: {
+    numeroChasisGrabado: {
         type: String,
         required: true
     },
-    numero_vin_chasis: {
+    numeroVinChasis: {
         type: String,
         required: true
     },
-    contratoArrendamientoPDF: {
+    contratoArrendamientoPdf: {
         type: String,
         required: true
     },

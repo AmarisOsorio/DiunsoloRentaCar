@@ -1,0 +1,181 @@
+.marcas-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-top: 2rem;
+}
+
+.marca-card {
+  background: #f4f8fc;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+  max-width: 350px;
+  transition: transform 0.2s;
+}
+
+.marca-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 6px 24px #0002;
+}
+
+.marca-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.marca-nombre {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1C318C;
+  text-align: center;
+}
+
+.marcas-loading {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+  margin-top: 2rem;
+}
+
+.catalogo-header {
+  width: 100%;
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalogo-header-overlay {
+  width: 100%;
+  height: 100%;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+}
+
+.catalogo-header-overlay h1 {
+  font-size: 2.6rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.catalogo-header-overlay p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.vehiculos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.2rem 1rem;
+  justify-items: center;
+  align-items: stretch;
+}
+
+.vehiculo-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 0.8rem 0.8rem 1rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  max-width: 100%;
+  transition: transform 0.5s, box-shadow 0.2s;
+}
+
+.vehiculo-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 6px 24px #0002;
+}
+
+.vehiculo-img {
+  width: 170px;
+  height: 110px;
+  object-fit: contain;
+  margin-bottom: 0.7rem;
+  border-radius: 10px;
+  background: #f4f8fc;
+}
+
+.vehiculo-card-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vehiculo-nombre {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #1C318C;
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+
+.vehiculo-clase-anio {
+  color: #888;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.vehiculo-estado {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.estado-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 7px;
+  background: #28a745; /* Verde por defecto */
+}
+
+.vehiculo-estado.disponible .estado-dot {
+  background: #28a745;
+}
+.vehiculo-estado.reservado .estado-dot {
+  background: #ffc107;
+}
+.vehiculo-estado.mantenimiento .estado-dot {
+  background: #dc3545;
+}
+
+.vehiculo-vermas {
+  width: 100%;
+  background: #1C318C;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.2rem;
+  transition: background 0.2s;
+}
+
+.vehiculo-vermas:hover {
+  background: #16306e;
+}

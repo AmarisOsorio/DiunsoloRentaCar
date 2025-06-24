@@ -7,7 +7,7 @@ router
   .route("/")
   .post(
     upload.fields([
-      { name: "pasaporte_dui", maxCount: 1 },
+      { name: "pasaporteDui", maxCount: 1 },
       { name: "licencia", maxCount: 1 },
     ]),
     registerClientsController.register
