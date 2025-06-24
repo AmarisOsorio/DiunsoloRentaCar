@@ -13,6 +13,8 @@ cloudinary.config({
 
 // Función helper para subir múltiples imágenes
 const uploadMultipleImages = async (files, folder = "contratos") => {
+    if (!files || files.length === 0) return [];
+    
     const uploadPromises = files.map(file => 
         cloudinary.uploader.upload(file.path, {
             folder: folder,
@@ -34,6 +36,12 @@ const deleteImageFromCloudinary = async (imageUrl, folder = "contratos") => {
     } catch (error) {
         console.log("Error al eliminar imagen:", error);
     }
+};
+
+// Función helper para filtrar archivos por campo
+const filterFilesByFieldname = (files, fieldname) => {
+    if (!files) return [];
+    return files.filter(file => file.fieldname === fieldname);
 };
 
 // SELECT - Obtener todos los contratos
@@ -105,11 +113,14 @@ contratosController.insertContrato = async (req, res) => {
             documentos: documentos ? JSON.parse(documentos) : undefined
         };
 
+        // Filtrar archivos de fotos de condición general
+        const fotosFiles = filterFilesByFieldname(req.files, 'fotos');
+        
         // Manejar subida de imágenes si existen archivos
-        if (req.files && req.files.length > 0) {
+        if (fotosFiles && fotosFiles.length > 0) {
             try {
                 // Subir fotos de condición general
-                const fotosCondicionGeneral = await uploadMultipleImages(req.files, "contratos/fotos-condicion");
+                const fotosCondicionGeneral = await uploadMultipleImages(fotosFiles, "contratos/fotos-condicion");
                 
                 // Si ya existen datosHojaEstado, agregar las fotos
                 if (contratoData.datosHojaEstado) {
@@ -224,8 +235,11 @@ contratosController.updateContrato = async (req, res) => {
             documentos: documentos ? JSON.parse(documentos) : existingContrato.documentos
         };
 
+        // Filtrar archivos de fotos
+        const fotosFiles = filterFilesByFieldname(req.files, 'fotos');
+
         // Manejar nuevas imágenes de condición general
-        if (req.files && req.files.length > 0) {
+        if (fotosFiles && fotosFiles.length > 0) {
             try {
                 // Eliminar imágenes anteriores si existen
                 if (existingContrato.datosHojaEstado && 
@@ -242,7 +256,7 @@ contratosController.updateContrato = async (req, res) => {
                 }
 
                 // Subir nuevas imágenes
-                const nuevasFotos = await uploadMultipleImages(req.files, "contratos/fotos-condicion");
+                const nuevasFotos = await uploadMultipleImages(fotosFiles, "contratos/fotos-condicion");
                 
                 if (updateData.datosHojaEstado && updateData.datosHojaEstado[0]) {
                     updateData.datosHojaEstado[0].fotosCondicionGeneral = nuevasFotos;
@@ -311,8 +325,11 @@ contratosController.updateHojaEstado = async (req, res) => {
             datosHojaEstado: datosHojaEstado ? JSON.parse(datosHojaEstado) : {}
         };
 
+        // Filtrar archivos de fotos
+        const fotosFiles = filterFilesByFieldname(req.files, 'fotos');
+
         // Manejar imágenes de condición general
-        if (req.files && req.files.length > 0) {
+        if (fotosFiles && fotosFiles.length > 0) {
             try {
                 // Eliminar imágenes anteriores si existen
                 if (existingContrato.datosHojaEstado && 
@@ -329,7 +346,7 @@ contratosController.updateHojaEstado = async (req, res) => {
                 }
 
                 // Subir nuevas imágenes
-                const fotosCondicionGeneral = await uploadMultipleImages(req.files, "contratos/fotos-condicion");
+                const fotosCondicionGeneral = await uploadMultipleImages(fotosFiles, "contratos/fotos-condicion");
                 
                 if (updateData.datosHojaEstado[0]) {
                     updateData.datosHojaEstado[0].fotosCondicionGeneral = fotosCondicionGeneral;

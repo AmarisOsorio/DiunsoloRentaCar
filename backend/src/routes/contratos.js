@@ -1,17 +1,24 @@
 import express from "express";
+import multer from "multer";
 import contratosController from "../controllers/contratosController.js";
 
 const router = express.Router();
 
+// Configuración de multer para subir archivos temporalmente
+const upload = multer({ dest: 'uploads/' });
+
+// Configuración de multer que acepta cualquier tipo de campo
+const uploadAny = multer({ dest: 'uploads/' }).any();
+
 // Rutas principales
 router.route("/")
     .get(contratosController.getContratos)
-    .post(contratosController.insertContrato);
+    .post(uploadAny, contratosController.insertContrato); // Acepta cualquier campo
 
 // Rutas con parámetro ID
 router.route("/:id")
     .get(contratosController.getContratoById)
-    .put(contratosController.updateContrato)
+    .put(uploadAny, contratosController.updateContrato) // Acepta cualquier campo
     .delete(contratosController.deleteContrato);
 
 // Rutas específicas para operaciones especiales
@@ -28,9 +35,9 @@ router.route("/:id/anular")
     .put(contratosController.anularContrato);
 
 router.route("/:id/hoja-estado")
-    .put(contratosController.updateHojaEstado);
+    .put(uploadAny, contratosController.updateHojaEstado); // Acepta cualquier campo
 
 router.route("/:id/datos-arrendamiento")
-    .put(contratosController.updateDatosArrendamiento);
+    .put(uploadAny, contratosController.updateDatosArrendamiento); // Acepta cualquier campo
 
 export default router;
