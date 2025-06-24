@@ -7,6 +7,7 @@
   justify-content: center;
   z-index: 1000;
 }
+
 .login-modal-content {
   display: flex;
   background: #fff;
@@ -17,6 +18,21 @@
   min-height: 350px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.2);
   position: relative;
+}
+.login-modal-content.login-modal-loading-content {
+  min-width: 340px;
+  min-height: 340px;
+  max-width: 400px;
+  max-height: 400px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 2rem 1.2rem 2rem;
+  border: 1px solid #e6f6fb;
+  overflow: hidden;
 }
 .login-modal-left {
   flex: 1 1 50%;
@@ -94,6 +110,7 @@
   margin-bottom: 2px;
   text-align: left;
   display: block;
+  width: 100%;
 }
 .login-modal-label {
   color: #1C318C;
@@ -102,7 +119,12 @@
   text-align: left;
   display: block;
 }
-.login-modal-form input {
+.login-modal-form input,
+.login-modal-form input[type="password"],
+.login-modal-form input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 8px;
   border: 1px solid #009BDB;
   border-radius: 4px;
@@ -191,7 +213,10 @@
 .login-modal-form input[type="password"],
 .login-modal-form input[type="text"] {
   padding-right: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 
 @media (max-width: 700px) {
   .login-modal-content {

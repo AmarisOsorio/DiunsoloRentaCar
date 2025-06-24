@@ -1,5 +1,10 @@
 import nodemailer from "nodemailer";
 import { config } from "../config.js";
+import path from "path";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -22,6 +27,13 @@ const sendEmail = async (to, subject, text, html) => {
       subject,
       text,
       html,
+      attachments: [
+        {
+          filename: 'diunsolologo.png',
+          path: path.resolve(__dirname, '..', '..', '..', 'frontend', 'src', 'assets', 'diunsolologo.png'),
+          cid: 'diunsolologo'
+        }
+      ]
     });
     return info;
   } catch (error) {
@@ -31,22 +43,21 @@ const sendEmail = async (to, subject, text, html) => {
 
 const HTMLRecoveryEmail = (code) => {
   return `
-    <div style="font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px; margin: 0 auto;">
-      <h1 style="color: #2c3e50; font-size: 24px; margin-bottom: 20px;">Recuperación de Contraseña</h1>
-      <p style="font-size: 16px; color: #555; line-height: 1.5;">
-        Hola, recibimos una solicitud para restablecer tu contraseña. Usa el siguiente código de verificación para continuar:
-      </p>
-      <div style="display: inline-block; padding: 10px 20px; margin: 20px 0; font-size: 18px; font-weight: bold; color: #fff; background-color: #007bff; border-radius: 5px; border: 1px solid #0056b3;">
-        ${code}
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 10px; padding: 28px 18px 24px 18px; background: #fafbfc;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <img src="cid:diunsolologo" alt="Diunsolo RentaCar" style="max-width: 120px; margin-bottom: 12px;" />
       </div>
-      <p style="font-size: 14px; color: #777; line-height: 1.5;">
-        Este código es válido por los próximos <strong>15 minutos</strong>. Si no solicitaste este correo, puedes ignorarlo.
-      </p>
-      <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-      <footer style="font-size: 12px; color: #aaa;">
-        Si necesitas más ayuda, contacta a nuestro equipo de soporte en
-        <a href="mailto:soporte@diunsolo.com" style="color: #3498db; text-decoration: none;">soporte@diunsolo.com</a>.
-      </footer>
+      <h2 style="color: #1C318C; text-align: center; font-size: 2rem; margin-bottom: 0.5rem;">Recuperación de contraseña</h2>
+      <p style="font-size: 1.1rem; color: #222; text-align: center; margin-bottom: 1.2rem;">Hola,<br>recibimos una solicitud para restablecer tu contraseña.<br>Usa el siguiente código de verificación para continuar:</p>
+      <div style="background: #e6f6fb; border-radius: 8px; padding: 18px 12px; margin: 18px 0; text-align: center;">
+        <span style="font-size: 1.5rem; color: #1C318C; font-weight: 700; letter-spacing: 2px;">${code}</span>
+      </div>
+      <div style="color: #888; font-size: 1rem; text-align: center; margin-bottom: 1.2rem;">Este código es válido por los próximos <strong>15 minutos</strong>.<br>Si no solicitaste este correo, puedes ignorarlo.</div>
+      <hr style="margin: 32px 0 18px 0; border: none; border-top: 1px solid #eee;" />
+      <p style="font-size: 0.97em; color: #888; text-align: center;">¿Necesitas ayuda? Contáctanos en <a href="mailto:soporte@diunsolo.com" style="color:#009BDB;">soporte@diunsolo.com</a></p>
+      <div style="text-align: center; margin-top: 18px;">
+        <a href="http://localhost:5173" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
+      </div>
     </div>
   `;
 };

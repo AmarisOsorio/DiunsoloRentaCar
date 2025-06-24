@@ -1,7 +1,7 @@
 import React from 'react';
 import '../components/styles/ServicesCard.css';
 
-const ServiceCard = ({ iconName, title, description }) => {
+const ServicesCard = ({ iconName, title, description }) => {
   return (
     <div className="service-card">
       <div className="service-icon">
@@ -13,4 +13,4 @@ const ServiceCard = ({ iconName, title, description }) => {
   );
 };
 
-export default ServiceCard;
+export default ServicesCard;

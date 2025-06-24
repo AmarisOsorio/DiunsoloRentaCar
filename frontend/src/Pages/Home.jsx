@@ -1,6 +1,6 @@
 import React from 'react';
-import '../components/styles/Home.css';
-import ServiceCard from '../components/ServicesCard';
+import './styles/Home.css';
+import ServicesCard from '../components/ServicesCard';
 import Rapido from '../assets/FlashOn.png'
 import Seguro from '../assets/Protect.png'
 import Aeropuerto from '../assets/AirplaneTakeOff.png'
@@ -42,34 +42,31 @@ const homeServices = [
     }
 ];
 
-    function HomePage () {
-      return(
-        <>
-
-        <div>
-          <header className="header-container">
-           <div className="header-overlay">
-             <h1>Bienvenido a DiunsoloRentaCar</h1>
-             <p>Tu mejor opción para renta de autos.</p>
-            </div>
-          </header>
-
-
-          <section className="services-section">
-            <div className="services-grid">
-               {homeServices.map((homeServices, index) => (
-                 <ServiceCard
-                   key={index}
-                   iconName={homeServices.iconName}
-                   title={homeServices.title}
-                   description={homeServices.description} /> 
-                   ))}
-            </div>
-          </section>
-        </div>
-        
-        </>
-      );
-    }
+function HomePage() {
+  return (
+    <>
+      <div>
+        <header className="header-container">
+          <div className="header-overlay">
+            <h1>Bienvenido a DiunsoloRentaCar</h1>
+            <p>Tu mejor opción para renta de autos.</p>
+          </div>
+        </header>
+        <section className="services-section">
+          <div className="services-grid">
+            {homeServices.map((service, index) => (
+              <ServicesCard
+                key={index}
+                iconName={service.iconName}
+                title={service.title}
+                description={service.description}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
 
 export default HomePage;

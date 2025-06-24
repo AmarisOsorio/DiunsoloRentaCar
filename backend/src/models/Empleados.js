@@ -13,18 +13,18 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const empleadosSchema = new Schema({
-    nombre_completo: {
+    nombreCompleto: {
         type: String,
         required: true
     },
 
-    correo_electronico: {
+    correoElectronico: {
         type: String,
         required: true,
         unique: true
     },
 
-    contraseña: {
+    contrasena: {
         type: String,
         required: true
     },

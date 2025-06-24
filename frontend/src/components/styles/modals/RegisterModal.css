@@ -11,7 +11,7 @@
   background: #fff;
   border-radius: 10px;
   min-width: 340px;
-  max-width: 570px; /* Fijar un ancho máximo consistente */
+  max-width: 500px; /* Fijar un ancho máximo consistente */
   padding: 1.2rem 2rem 1.2rem 2rem;
   position: relative;
   box-shadow: 0 2px 16px rgba(0,0,0,0.2);
@@ -75,14 +75,26 @@
   display: block;
 }
 .register-modal-form input {
-  padding: 8px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: 8px;
+  padding-right: 38px;
   border: 1px solid #009BDB;
   border-radius: 4px;
   background: #e6f6fb;
-  width: 100%; /* Ensure inputs take full width of their grid cell */
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
+  font-size: 1rem;
 }
-/* Styling for the file input button */
+
+/* Inputs que no llevan icono (como file o date) pueden sobrescribir si es necesario */
+.register-modal-form input[type="file"],
+.register-modal-form input[type="date"] {
+  padding-right: 8px;
+}
+
 .register-modal-form input::file-selector-button {
   padding: 8px;
   border: none;
@@ -102,8 +114,9 @@
   background-color: #1C318C;
 }
 .register-modal-form input:focus {
-  outline: 2px solid #1C318C;
+  outline: none;
   box-shadow: 0 0 0 2px #1C318C33;
+  border-color: #1C318C;
 }
 /* Styles for elements that should span the full width */
 .form-group-full-width {
@@ -267,7 +280,7 @@
   .register-modal-content {
     background: #fff !important;
     box-shadow: 0 2px 16px rgba(0,0,0,0.13) !important;
-    padding: 0rem 0.5rem 0.7rem 0.5rem !important;
+    padding: 0.7rem 1.2rem 0.7rem 1.2rem !important;
     max-width: 98vw;
     min-width: unset !important;
     max-height: 98vh !important;
@@ -365,6 +378,7 @@
 /* Evitar que el modal crezca demasiado por la imagen */
 .form-group-half-width, .form-group-full-width {
   overflow-x: auto;
+  position: relative; /* --- Ensure parent is relative for absolute positioning of error icon --- */
 }
 
 /* Error alert styles */
@@ -398,25 +412,27 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 .fb-error-icon {
-  display: inline-flex;
+  position: absolute;
+  right: 8px;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  height: 22px;
+  width: 22px;
+  display: flex;
   align-items: center;
   justify-content: center;
   background: #e53935;
   color: #fff;
   font-weight: bold;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
   font-size: 1.1em;
   margin-left: 4px;
   margin-right: 0;
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   border: 2px solid #fff;
   z-index: 2;
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
+  /* El truco: usa top:0; bottom:0; margin:auto para centrar perfectamente */
 }
 .fb-error-tooltip {
   position: absolute;
@@ -431,7 +447,7 @@
   font-size: 0.95em;
   font-weight: 500;
   min-width: 120px;
-  max-width: 170px;
+  max-width: 170px; 
   box-shadow: 0 2px 8px rgba(0,0,0,0.13);
   white-space: pre-line;
   z-index: 2001; /* Más alto que el modal */
@@ -443,17 +459,18 @@
   position: absolute;
   left: 100%;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) rotate(0deg); /* Apunta hacia la derecha */
   width: 0;
   height: 0;
   border-top: 7px solid transparent;
   border-bottom: 7px solid transparent;
   border-left: 10px solid #be4b49;
+  border-right: none;
 }
 
 /* Ajuste para que el tooltip y el ícono de error estén más cerca del input (menos separación horizontal) */
 .fb-error-tooltip-portal {
-  position: absolute !important;
+  position: fixed;
   z-index: 3000 !important;
   pointer-events: none;
   min-width: 120px;
@@ -473,12 +490,14 @@
 .fb-error-tooltip-portal .fb-error-tooltip-arrow {
   position: absolute;
   left: 100%;
-  top: 8px;
+  top: 50%;
+  transform: translateY(-50%) rotate(0deg); /* Apunta hacia la derecha */
   width: 0;
   height: 0;
   border-top: 7px solid transparent;
   border-bottom: 7px solid transparent;
   border-left: 10px solid #be4b49;
+  border-right: none;
 }
 
 /* Menos separación horizontal entre tooltip y el input */
@@ -506,25 +525,44 @@
   border: 2px solid #fff;
   z-index: 2;
   position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 8px;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
 }
 
 @media (max-width: 768px) {
   .fb-error-tooltip-portal {
-    left: 10px !important;
-    right: 10px !important;
-    min-width: 90px;
-    max-width: 98vw;
-    font-size: 0.93em;
-    margin-right: 0;
+    position: absolute;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    min-width: unset;
+    max-width: unset;
+    top: 100%;
+    bottom: auto;
+    margin-top: 6px;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    z-index: 3000 !important;
+    border-top-right-radius: 6px; /* Borde redondeado solo en la esquina superior derecha */
+    border-top-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
   }
-  .fb-error-icon {
-    right: 2px;
-    width: 20px;
-    height: 20px;
-    font-size: 1em;
+  /* Móvil: flecha arriba, centrada y apuntando hacia arriba */
+  .fb-error-tooltip-portal .fb-error-tooltip-arrow {
+    left: 50%;
+    right: auto;
+    top: -10px;
+    bottom: auto;
+    transform: translateX(-50%) rotate(0deg);
+    border-top: none;
+    border-bottom: 10px solid #be4b49;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    width: 0;
+    height: 0;
   }
 }
 
@@ -540,6 +578,10 @@
   cursor: pointer;
   color: #1C318C;
   font-size: 1.2em;
+  z-index: 1;
+}
+.input-eye-icon.input-eye-icon-error {
+  right: 36px; /* Mueve el ojo a la izquierda cuando hay error */
 }
 
 .register-modal-error {
@@ -555,9 +597,4 @@
   max-width: 100%;
   text-align: center;
   color: #009BDB;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
