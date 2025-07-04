@@ -9,12 +9,16 @@ const upload = multer({ dest: "uploads/" });
 
 //Routes
 router.route("/")
-  .get(vehiclesController.getVehicles)
+  .get(vehiclesController.getVehicles) //Get all vehicles [Catalogo]
   .post(upload.array("imagenes"), vehiclesController.addVehicle); 
+
+router.route("/home")
+  .get(vehiclesController.getHomeVehicles); //Get featured vehicles [Home]
 
 router.route("/:id")
   .get(vehiclesController.getVehicleById)
   .put(vehiclesController.updateVehicle)
   .delete(vehiclesController.deleteVehicle);
 
+//Export
 export default router;

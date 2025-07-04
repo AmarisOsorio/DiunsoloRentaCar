@@ -1,11 +1,11 @@
 /*
     Fields:
-        carID (string),
-        tipo_mantenimiento (string),
-        fecha_inicio (date),
-        fecha_devolucion (date),
+        idVehiculo (string),
+        tipoMantenimiento (string),
+        fechaInicio (date),
+        fechaDevolucion (date),
         estado (string: "Pendiente, Activo, Finalizado"),
-        fecha_creacion (date),
+        fechaCreacion (date),
 */
 
 //Imports
@@ -13,9 +13,10 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const mantenimientosSchema = new Schema({
-    carId: {
-        type: String,
-        required: true
+    idVehiculo: {
+            type:Schema.Types.ObjectId,
+            ref: "Vehiculos",
+            require:true,
     },
     tipoMantenimiento: {
         type: String,

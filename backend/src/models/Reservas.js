@@ -4,14 +4,14 @@
         cliente (object){
             nombre (string),
             telefono (string),
-            correo_electronico (string)
+            correoElectronico (string)
         },
         carID (string),
-        fecha_inicio (date),
-        fecha_devolucion (date),
+        fechaInicio (date),
+        fechaDevolucion (date),
         estado (string: "Pendiente,Activa,Finalizada"),
         precioPorDia (number),
-        fecha_creacion (date),
+        fechaCreacion (date),
 */
 
 //Imports
@@ -19,11 +19,13 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const reservasSchema = new Schema({
-    clientId: {
-        type: String,
+
+    clientID: {
+        type: Schema.Types.ObjectId,
+        ref: 'Clientes',
         required: true
     },
-    cliente: {
+    cliente: [ { 
         nombre: {
             type: String,
             required: true
@@ -32,20 +34,21 @@ const reservasSchema = new Schema({
             type: String,
             required: true
         },
-        correoElectronico: {
+        correoElectronico: { 
             type: String,
             required: true
         }
-    },
-    carId: {
-        type: String,
+    }],
+    vehiculoID: {
+        type: Schema.Types.ObjectId,
+        ref: 'Vehiculos', 
         required: true
     },
-    fechaInicio: {
+    fechaInicio: {  
         type: Date,
         required: true
     },
-    fechaDevolucion: {
+    fechaDevolucion: { 
         type: Date,
         required: true
     },
@@ -57,6 +60,10 @@ const reservasSchema = new Schema({
     precioPorDia: {
         type: Number,
         required: true
+    },
+    fechaCreacion: {  
+        type: Date,
+        default: Date.now
     }
 }, {
     timestamps: true,

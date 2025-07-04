@@ -8,9 +8,11 @@ import loginRoutes from "./src/routes/login.js";
 import logoutRoutes from "./src/routes/logout.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.js";
 import clientsRoutes from "./src/routes/clients.js";
+import mantenimientosRoutes from "./src/routes/mantenimientos.js";
 import sendWelcome from "./src/routes/sendWelcome.js";
 import uploadImageRoutes from "./src/routes/uploadImage.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
+
 import contactRoutes from "./src/routes/contact.js";
 import profileRoutes from "./src/routes/profile.js";
 import { fileURLToPath } from 'url';
@@ -56,4 +58,8 @@ app.use("/api", contactRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
 app.use("/api/profile", profileRoutes);
 
+
+import reservasRoutes from "./src/routes/reservas.js";
+app.use("/api/reservas", reservasRoutes);
+app.use("/api/mantenimientos", mantenimientosRoutes); 
 export default app;
