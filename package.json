@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
-    "react-hook-form": "^7.57.0"
+    "react-hook-form": "^7.57.0",
+    "streamifier": "^0.1.1"
   }
 }

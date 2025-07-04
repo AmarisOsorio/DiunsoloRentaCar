@@ -1,3 +1,31 @@
+.register-verify-btn-relative {
+  position: relative;
+}
+
+.register-verify-btn-spinner {
+  margin-right: 8px;
+  vertical-align: middle;
+  display: inline-block;
+  position: static;
+}
+
+.register-verify-btn-text-disabled {
+  opacity: 0.6;
+}
+
+.register-verify-resend-relative {
+  position: relative;
+}
+
+.register-verify-resend-spinner {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.register-verify-resend-text-disabled {
+  opacity: 0.6;
+  margin-left: 18px;
+}
 /* VerifyAccountModal.css */
 
 .register-verify-modal-content {

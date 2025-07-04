@@ -69,30 +69,13 @@ loginController.login = async (req, res) => {
           rejectUnauthorized: false
         }
       });
+      // Usar plantilla HTMLVerifyAccountEmail
+      const { HTMLVerifyAccountEmail } = await import('../utils/mailVerifyAccount.js');
       const mailOptions = {
         from: config.email.email_user,
         to: correo,
         subject: "Verificación de correo - Código de activación | Diunsolo RentaCar",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
-            </div>
-            <h2 style="color: #1a202c; text-align: center;">¡Verifica tu cuenta en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-            <p>Hola${userFound.nombreCompleto ? `, <b>${userFound.nombreCompleto}</b>` : ''},</p>
-            <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
-            <div style="text-align: center; margin: 32px 0;">
-              <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCode}</span>
-            </div>
-            <p style="text-align: center; color: #555;">Este código expirará en <b>15 minutos</b>.<br>Regresa a la página de verificación y cópialo o escríbelo en el campo correspondiente.</p>
-            <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;" />
-            <p style="font-size: 0.95em; color: #888;">¿No solicitaste este código? Si no fuiste tú quien se registró, por favor ignora este correo electrónico.</p>
-            <div style="margin-top: 24px; text-align: center;">
-              <a href="https://diunsolorentacar.com" style="color: #007bff; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a><br>
-              <a href="https://diunsolorentacar.com/soporte" style="color: #888; font-size: 0.95em;">Soporte</a>
-            </div>
-          </div>
-        `,
+        html: HTMLVerifyAccountEmail(verificationCode),
         attachments: [
           {
             filename: 'diunsolologo.png',
@@ -129,7 +112,28 @@ loginController.login = async (req, res) => {
       (error, token) => {
         if (error) console.log(error);
         res.cookie("authToken", token);
-        res.json({ message: "login exitoso", userType });
+        
+        // Formatear información del usuario para enviar al frontend
+        let userData = null;
+        if (userType === "Cliente") {
+          userData = {
+            id: userFound._id,
+            nombreCompleto: userFound.nombreCompleto,
+            correo: userFound.correo,
+            telefono: userFound.telefono,
+            fechaDeNacimiento: userFound.fechaDeNacimiento,
+            pasaporteDui: userFound.pasaporteDui,
+            licencia: userFound.licencia,
+            isVerified: userFound.isVerified,
+            fechaRegistro: userFound.createdAt
+          };
+        }
+        
+        res.json({ 
+          message: "login exitoso", 
+          userType,
+          user: userData
+        });
       }
     );
   } catch (error) {

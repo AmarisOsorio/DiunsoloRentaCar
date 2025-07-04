@@ -9,21 +9,49 @@
 }
 .register-modal-content {
   background: #fff;
-  border-radius: 10px;
+  border-radius: 10px; /* Mantener este border-radius para el contenedor principal */
   min-width: 340px;
-  max-width: 500px; /* Fijar un ancho máximo consistente */
+  max-width: 500px;
   padding: 1.2rem 2rem 1.2rem 2rem;
   position: relative;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   min-height: unset !important;
-  max-height: 580px !important;
+  max-height: 580px !important; /* Es crucial mantener el max-height aquí */
   height: auto !important;
-  overflow-y: auto; /* Permite scroll vertical si el contenido sobrepasa el alto */
+  overflow-y: auto; /* ¡Mantén el overflow-y: auto aquí! */
+
+  /* --- Aquí es donde aplicamos los estilos para redondear la barra de scroll en Webkit --- */
+  /* NOTA: Estos estilos solo funcionan en navegadores basados en Webkit (Chrome, Safari, Edge, Opera) */
 }
+
+/* Estilos para la barra de desplazamiento en Webkit */
+.register-modal-content::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra de desplazamiento */
+  background-color: transparent; /* Fondo transparente para la barra */
+}
+
+.register-modal-content::-webkit-scrollbar-track {
+  background-color: transparent; /* Fondo del "track" (camino) de la barra, transparente para que se vea el border-radius del padre */
+  border-radius: 10px; /* Opcional: Redondear el track, aunque el thumb es más importante */
+}
+
+.register-modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2); /* Color del "pulgar" de la barra, puedes ajustarlo */
+  border-radius: 10px; /* ¡Esto es lo que redondea el "pulgar"! */
+  border: 2px solid transparent; /* Añade un borde transparente para un pequeño "padding" visual */
+  background-clip: padding-box; /* Asegura que el fondo se recorte al padding-box, importante con el borde */
+}
+
+/* Para la esquina donde se encuentran las barras de scroll (si hay scroll horizontal y vertical) */
+.register-modal-content::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* --- Fin de los estilos para la barra de scroll --- */
 .register-modal-close {
   position: absolute;
   top: 1rem;
@@ -74,11 +102,12 @@
   text-align: left;
   display: block;
 }
+/* Por defecto, padding normal */
 .register-modal-form input {
   padding-top: 6px;
   padding-bottom: 6px;
   padding-left: 8px;
-  padding-right: 38px;
+  padding-right: 8px;
   border: 1px solid #009BDB;
   border-radius: 4px;
   background: #e6f6fb;
@@ -87,6 +116,21 @@
   transition: border-color 0.2s, box-shadow 0.2s;
   line-height: 1.5;
   font-size: 1rem;
+}
+
+/* Inputs con icono de ojo (sin error) */
+.register-modal-form input.input-has-icon {
+  padding-right: 2em !important;
+}
+
+/* Inputs con icono de ojo y error */
+.register-modal-form input.input-error.input-error-has-icon {
+  padding-right: 3.2em !important;
+}
+
+/* Inputs solo con error (sin icono de ojo) */
+.register-modal-form input.input-error:not(.input-error-has-icon) {
+  padding-right: 2em !important;
 }
 
 /* Inputs que no llevan icono (como file o date) pueden sobrescribir si es necesario */
@@ -124,45 +168,66 @@
 }
 
 /* Styles for image previews */
-.register-modal-image-preview {
+
+/* Imagen y contenedor con proporción cuadrada adaptable */
+.register-modal-image-container {
   width: 100%;
+  aspect-ratio: 4/3;
   max-width: 100%;
   min-width: 0;
-  height: auto;
-  max-height: 90px;
-  object-fit: contain;
-  margin-top: 8px;
+  background: #f8fafc;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  display: block;
-  background: #f8fafc;
-}
-
-/* Contenedor para reservar espacio de la imagen */
-.form-group-half-width .register-modal-image-container {
-  width: 100%;
-  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 8px;
+  overflow: hidden;
 }
 
-.form-group-half-width .register-modal-image-preview,
-.form-group-half-width .register-modal-image-placeholder {
+.register-modal-image-preview {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #f8fafc;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+}
+
+/* Contenedor para reservar espacio de la imagen */
+
+.form-group-half-width .register-modal-image-container,
+.form-group-full-width .register-modal-image-container {
+  width: 100%;
+  aspect-ratio: 4/3;
   max-width: 100%;
   min-width: 0;
-  height: 90px;
-  max-height: 90px;
-  object-fit: contain;
-  margin-top: 8px;
+  background: #f8fafc;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.form-group-half-width .register-modal-image-preview,
+.form-group-half-width .register-modal-image-placeholder,
+.form-group-full-width .register-modal-image-preview,
+.form-group-full-width .register-modal-image-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
   background: #f8fafc;
+  border: none;
+  box-shadow: none;
+  margin: 0;
 }
 
 .register-modal-btn {
@@ -281,9 +346,13 @@
     background: #fff !important;
     box-shadow: 0 2px 16px rgba(0,0,0,0.13) !important;
     padding: 0.7rem 1.2rem 0.7rem 1.2rem !important;
-    max-width: 98vw;
+    max-width: 94vw !important;
+    width: 94vw !important;
     min-width: unset !important;
-    max-height: 98vh !important;
+    left: 0;
+    right: 0;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -324,13 +393,15 @@
     position: static;
   }
   .register-modal-close {
-    position: static;
+    position: absolute !important;
+    top: 0.7rem !important;
+    right: 0.7rem !important;
+    left: auto !important;
+    margin: 0 !important;
     background: #fff;
-    margin-left: auto;
-    margin-top: 0;
-    align-self: flex-end;
-    z-index: 10;
+    z-index: 20;
     border-bottom: none;
+    align-self: flex-end;
   }
   .register-modal-title {
     font-size: 1.4rem !important;
@@ -372,6 +443,17 @@
     max-height: 90px;
     object-fit: contain;
     margin-bottom: 8px;
+  }
+  .register-modal-title {
+    position: static !important;
+    top: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    background: #fff;
+    z-index: 2;
+    width: 100%;
+    text-align: center;
+    display: block;
   }
 }
 

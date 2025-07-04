@@ -3,7 +3,7 @@ import '../styles/modals/ForgotPasswordModal.css';
 import hiluxImg from '../../assets/ForgotPass.jpg';
 import { FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import SuccessCheckAnimation from './SuccessCheckAnimation.jsx';
-import { useForgotPasswordModal } from '../../hooks/components/modals/useForgotPasswordModal.js';
+import useForgotPasswordModal from '../../hooks/components/modals/useForgotPasswordModal.js';
 
 /**
  * Modal de recuperación de contraseña.

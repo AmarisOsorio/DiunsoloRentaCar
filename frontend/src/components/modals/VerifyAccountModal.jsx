@@ -4,7 +4,19 @@ import { FaEnvelope } from 'react-icons/fa';
 import useVerifyAccountModal from '../../hooks/components/modals/useVerifyAccountModal.jsx';
 import SuccessCheckAnimation from './SuccessCheckAnimation.jsx';
 
-const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password, onLoginAfterVerify }) => {
+const VerifyAccountModal = ({
+  open,
+  onClose,
+  onVerify,
+  onResend,
+  email,
+  password,
+  verifying = false,
+  resending = false,
+  onLoginAfterVerify,
+  emailCodeReady = true, // por defecto true para compatibilidad
+  error // <-- error externo
+}) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [showAccountVerified, setShowAccountVerified] = useState(false);
@@ -19,7 +31,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
     formattedTimer,
     canResend,
     loading,
-    error,
+    error: localError,
     success,
     isVerified
   } = useVerifyAccountModal(email, async (code) => await onVerify(code), async () => {
@@ -40,6 +52,10 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
       setTimeout(() => setShowToast(false), 3500);
     }
   });
+
+  // Recibe error externo del hook padre (useInfoPerfil)
+  const externalError = error;
+
   React.useEffect(() => {
     if (isVerified) {
       setShowAccountVerified(true);
@@ -61,12 +77,15 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
   if (!open && !showAccountVerified) return null;
   // Usar SuccessCheckAnimation para éxito de verificación
   if (showAccountVerified) {
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 1200);
     return (
       <SuccessCheckAnimation
         message="¡Cuenta verificada!"
         subtitle="Iniciando sesión automáticamente..."
         onClose={onClose}
-        duration={2000}
+        duration={1200}
       />
     );
   }
@@ -77,7 +96,7 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
         {/* Botón de cerrar y renderizado condicional de Eduardo */}
         <button
           className="register-modal-close"
-          onClick={showAccountVerified ? handleAccountVerifiedClose : onClose}
+          onClick={showAccountVerified ? onClose : onClose}
         >
           &times;
         </button>
@@ -87,12 +106,12 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
         </div>
         <h2 className="register-verify-title">¡Verifica tu Cuenta!</h2>
         <div className="register-verify-instruction">
-          Hemos enviado un código de 6 dígitos a <span className="register-verify-email">{email}</span>.<br />
+          Hemos enviado un código de 6 dígitos a su correo <span className="register-verify-email">{email}</span>.<br />
           Por favor, ingresa el código a continuación para activar tu cuenta.
         </div>
-        <form onSubmit={originalHandleSubmit} autoComplete="off">
+        <form onSubmit={e => { e.preventDefault(); onVerify(codeArr.join('')); }} autoComplete="off">
           <div className="register-verify-code-inputs" onPaste={handlePaste}>
-            {codeArr.map((digit, idx) => ( // Se usa `codeArr` de Eduardo
+            {codeArr.map((digit, idx) => (
               <input
                 key={idx}
                 type="text"
@@ -117,29 +136,39 @@ const VerifyAccountModal = ({ open, onClose, onVerify, onResend, email, password
           <div className="register-verify-timer">
             El código expira en <b>{formattedTimer}</b>
           </div>
-          {error && <div className="register-verify-error" role="alert">{error}</div>}
+          {(localError || externalError) && (
+            <div className="register-verify-error" role="alert">{localError || externalError}</div>
+          )}
           {success && <div className="register-verify-success" role="status">{success}</div>}
-          <button className="register-verify-btn" type="submit" disabled={loading || codeArr.some(d => d === '')}> {/* Se usa `codeArr` de Eduardo */}
-            {loading ? (
-              <span className="spinner" style={{ marginRight: 8 }}></span>
-            ) : null}
-            {loading ? 'Verificando...' : 'Verificar Cuenta'}
+          <button
+            className="register-verify-btn register-verify-btn-relative"
+            type="submit"
+            disabled={codeArr.some(d => d === '') || verifying || showAccountVerified || !emailCodeReady}
+            title={!emailCodeReady ? 'Espera a que el código esté listo' : ''}
+          >
+            {(verifying || loading) && (
+              <span className="spinner register-verify-btn-spinner"></span>
+            )}
+            <span className={verifying || loading ? 'register-verify-btn-text-disabled' : ''}>
+              Verificar Cuenta
+            </span>
           </button>
         </form>
         <div className="register-verify-resend-row">
           ¿No recibiste el código?{' '}
           <span
-            className={`register-verify-resend${!canResend ? ' disabled' : ''}`}
-            onClick={canResend && !loading ? handleResend : undefined}
-            tabIndex={canResend && !loading ? 0 : -1}
+            className={`register-verify-resend${!canResend ? ' disabled' : ''} register-verify-resend-relative`}
+            onClick={canResend && !resending ? handleResend : undefined}
+            tabIndex={canResend && !resending ? 0 : -1}
             role="button"
-            aria-disabled={!canResend || loading}
-            style={{ position: 'relative' }}
+            aria-disabled={!canResend || resending}
           >
-            {loading && canResend ? (
-              <span className="spinner" style={{ marginRight: 6, verticalAlign: 'middle' }}></span>
-            ) : null}
-            Reenviar Codigo
+            {resending && canResend && (
+              <span className="spinner register-verify-resend-spinner"></span>
+            )}
+            <span className={resending ? 'register-verify-resend-text-disabled' : ''}>
+              Reenviar Codigo
+            </span>
           </span>
         </div>
         {showToast && (

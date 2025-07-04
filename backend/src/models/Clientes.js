@@ -15,7 +15,11 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const clientsSchema = new Schema({
-    nombreCompleto: {
+    nombre: {
+        type: String,
+        required: true
+    },
+    apellido: {
         type: String,
         required: true
     },
@@ -36,14 +40,24 @@ const clientsSchema = new Schema({
         type: Date,
         required: true
     },
-    pasaporteDui: {
-        type: String, // Cambiado de Buffer a String (URL)
+    // Documentos separados por lado
+    licenciaFrente: {
+        type: String, // URL del archivo
         required: false
     },
-    licencia: {
-        type: String, // Cambiado de Buffer a String (URL)
-        required: false,
+    licenciaReverso: {
+        type: String, // URL del archivo
+        required: false
     },
+    pasaporteFrente: {
+        type: String, // URL del archivo
+        required: false
+    },
+    pasaporteReverso: {
+        type: String, // URL del archivo
+        required: false
+    },
+    // Eliminados campos legacy: pasaporteDui y licencia. Solo se usan los de frente y reverso.
     isVerified: {
         type: Boolean,
         default: false

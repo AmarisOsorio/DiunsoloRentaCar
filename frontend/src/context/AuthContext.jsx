@@ -20,6 +20,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, [userType, isAuthenticated, userInfo]);
 
+  // Cargar perfil automáticamente si el usuario está autenticado pero no hay userInfo
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (isAuthenticated && userType === 'cliente' && !userInfo) {
+        const result = await getProfile();
+        if (result.success) {
+          setUserInfo(result.user);
+        }
+      }
+    };
+
+    loadUserProfile();
+  }, [isAuthenticated, userType, userInfo]);
+
   const login = async ({ correo, contraseña }) => {
     try {
       const res = await fetch(`${API_URL}/login`, {
@@ -56,19 +70,23 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     try {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
+      let formData;
+      if (data instanceof FormData) {
+        formData = data;
+        // Elimina 'contrasena' si existe
+        if (formData.has('contrasena')) {
+          formData.delete('contrasena');
         }
-      });
-      // DEBUG: Log all FormData keys and values before sending
-      // if (typeof window !== 'undefined') {
-      //   console.log('FormData about to be sent:');
-      //   for (let pair of formData.entries()) {
-      //     console.log(pair[0], ':', pair[1]);
-      //   }
-      // }
+      } else {
+        formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            if (key === 'confirmarContraseña') return;
+            if (key === 'contrasena') return; // No agregar 'contrasena'
+            formData.append(key, value);
+          }
+        });
+      }
       const res = await fetch(`${API_URL}/registerClients`, {
         method: 'POST',
         body: formData,
@@ -143,16 +161,19 @@ export const AuthProvider = ({ children }) => {
 
   const updateUserInfo = async (newInfo) => {
     try {
-      const res = await fetch(`${API_URL}/user/update`, {
+      // Solo enviar nombres y apellidos (no nombreCompleto)
+      const filteredInfo = { ...newInfo };
+      if ('nombreCompleto' in filteredInfo) delete filteredInfo.nombreCompleto;
+      const res = await fetch(`${API_URL}/profile/update`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newInfo)
+        body: JSON.stringify(filteredInfo)
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.success) {
         setUserInfo(data.user);
-        return { success: true, message: 'Información actualizada correctamente' };
+        return { success: true, message: data.message };
       }
       return { success: false, message: data.message || 'Error al actualizar información' };
     } catch (error) {
@@ -162,14 +183,14 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (newPassword) => {
     try {
-      const res = await fetch(`${API_URL}/user/change-password`, {
+      const res = await fetch(`${API_URL}/profile/change-password`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPassword })
       });
       const data = await res.json();
-      return { success: res.ok, message: data.message };
+      return { success: data.success, message: data.message };
     } catch (error) {
       return { success: false, message: 'Error de conexión' };
     }
@@ -177,12 +198,12 @@ export const AuthProvider = ({ children }) => {
 
   const deleteAccount = async () => {
     try {
-      const res = await fetch(`${API_URL}/user/delete`, {
+      const res = await fetch(`${API_URL}/profile/delete`, {
         method: 'DELETE',
         credentials: 'include'
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.success) {
         setUserType(null);
         setIsAuthenticated(false);
         setUserInfo(null);
@@ -191,11 +212,109 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('userInfo');
         window.dispatchEvent(new Event('auth-changed'));
       }
-      return { success: res.ok, message: data.message };
+      return { success: data.success, message: data.message };
     } catch (error) {
       return { success: false, message: 'Error de conexión' };
     }
-  };  return (
+  };
+
+  // Función para obtener información del perfil
+  const getProfile = async () => {
+    try {
+      const res = await fetch(`${API_URL}/profile`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      if (res.status === 401) {
+        // Si el backend responde 401, forzar logout en frontend
+        setUserType(null);
+        setIsAuthenticated(false);
+        setUserInfo(null);
+        localStorage.removeItem('userType');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userInfo');
+        window.dispatchEvent(new Event('auth-changed'));
+        return { success: false, message: 'No autorizado' };
+      }
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUserInfo(data.user);
+        return { success: true, user: data.user };
+      }
+      return { success: false, message: data.message };
+    } catch (error) {
+      return { success: false, message: 'Error de conexión' };
+    }
+  };
+
+  // Función para subir documento con lado específico
+  const uploadDocument = async (file, documentType, side) => {
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('documentType', documentType);
+      formData.append('side', side); // 'frente' o 'reverso'
+
+      const res = await fetch(`${API_URL}/profile/upload-document`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        // Actualizar el usuario en el contexto si es necesario
+        setUserInfo(prevUser => ({
+          ...prevUser,
+          ...data.updatedFields
+        }));
+      }
+
+      return { success: data.success, message: data.message, fileUrl: data.fileUrl };
+    } catch (error) {
+      return { success: false, message: 'Error de conexión' };
+    }
+  };
+
+  // Función para eliminar documento con lado específico
+  const deleteDocument = async (documentType, side) => {
+    try {
+      const res = await fetch(`${API_URL}/profile/delete-document`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          documentType,
+          side
+        })
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        // Actualizar el usuario en el contexto
+        setUserInfo(prevUser => ({
+          ...prevUser,
+          ...data.updatedFields
+        }));
+        
+        // Forzar una actualización del perfil para asegurar sincronización
+        await getProfile();
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      return {
+        success: false,
+        message: 'Error de conexión'
+      };
+    }
+  };
+
+  return (
     <AuthContext.Provider value={{ 
       userType, 
       isAuthenticated, 
@@ -211,7 +330,11 @@ export const AuthProvider = ({ children }) => {
       resendVerificationCode,
       updateUserInfo,
       changePassword,
-      deleteAccount
+      deleteAccount,
+      getProfile,
+      uploadDocument,
+      deleteDocument
+    // , requestEmailChange, verifyEmailChange
     }}>
       {children}
     </AuthContext.Provider>

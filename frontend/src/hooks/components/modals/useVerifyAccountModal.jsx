@@ -59,8 +59,13 @@ const useVerifyAccountModal = (email, onVerify, onResend) => {
     setSuccess('');
     try {
       const result = await onVerify(code.join(''));
-      // Forzar success para debug visual
-      if (result.success || (result.message && result.message.toLowerCase().includes('exitosamente'))) {
+      // Considera éxito si success es true, o si el mensaje contiene "exitosamente" o "correo actualizado"
+      const msg = result.message ? result.message.toLowerCase() : '';
+      if (
+        result.success ||
+        (msg.includes('exitosamente')) ||
+        (msg.includes('correo actualizado'))
+      ) {
         setSuccess('¡Cuenta verificada! Redirigiendo...');
         setIsVerified(true); // Marca como verificada
       } else {

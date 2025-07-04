@@ -6,8 +6,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import clientsModel from "../models/Clientes.js";
+import cloudinary from '../utils/cloudinary.js';
 import { config } from "../config.js";
 import sendWelcomeMail from '../utils/mailWelcome.js';
+import { HTMLVerifyAccountEmail } from '../utils/mailVerifyAccount.js';
+import { validarEdadMinima } from '../utils/ageValidation.js';
 
 // Obtener __dirname para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -15,35 +18,80 @@ const __dirname = path.dirname(__filename);
 
 const registerClientsController = {};
 
+// Función auxiliar para subir buffer a Cloudinary y devolver la URL
+async function uploadBufferToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
 registerClientsController.register = async (req, res) => {
   try {
-    // LOG para depuración
+    // Eliminar logs de depuración innecesarios
     // console.log('BODY:', req.body);
     // console.log('FILES:', req.files);
-    let pasaporteBuffer = null;
-    let licenciaBuffer = null;
-    if (req.files && req.files.pasaporteDui && req.files.pasaporteDui[0]) {
-      pasaporteBuffer = req.files.pasaporteDui[0].buffer;
-    }
-    if (req.files && req.files.licencia && req.files.licencia[0]) {
-      licenciaBuffer = req.files.licencia[0].buffer;
-    }
 
-    const {
-      nombreCompleto,
+    // Recibir nombres y apellidos por separado
+    let {
+      nombres,
+      apellidos,
       fechaDeNacimiento,
       correo,
       contraseña: contraseñaRaw,
-      contrasena: contrasenaRaw,
-      telefono,
-      pasaporteDui,
-      licencia
+      telefono
     } = req.body;
 
-    // Soportar ambos: 'contraseña', 'contrasena', y variantes mal codificadas
-    const contraseña = contraseñaRaw || contrasenaRaw || req.body['contraseña'] || req.body['contrasena'] || req.body['contraseÃ±a'];
+    // Procesar imágenes si existen (Cloudinary)
+    let licenciaFrenteUrl = null;
+    let licenciaReversoUrl = null;
+    let pasaporteFrenteUrl = null;
+    let pasaporteReversoUrl = null;
+    if (req.files) {
+      if (req.files.licenciaFrente) {
+        licenciaFrenteUrl = await uploadBufferToCloudinary(req.files.licenciaFrente[0].buffer, 'diunsolo/licencias');
+      }
+      if (req.files.licenciaReverso) {
+        licenciaReversoUrl = await uploadBufferToCloudinary(req.files.licenciaReverso[0].buffer, 'diunsolo/licencias');
+      }
+      if (req.files.pasaporteFrente) {
+        pasaporteFrenteUrl = await uploadBufferToCloudinary(req.files.pasaporteFrente[0].buffer, 'diunsolo/pasaportes');
+      }
+      if (req.files.pasaporteReverso) {
+        pasaporteReversoUrl = await uploadBufferToCloudinary(req.files.pasaporteReverso[0].buffer, 'diunsolo/pasaportes');
+      }
+    }
+
+    // Normalizar teléfono a 0000-0000 y validar
+    if (telefono) {
+      // console.log('[BACKEND] Telefono recibido:', telefono);
+      let clean = (telefono + '').replace(/[^0-9]/g, '');
+      if (clean.length === 8) {
+        telefono = clean.slice(0, 4) + '-' + clean.slice(4);
+      }
+      // console.log('[BACKEND] Telefono normalizado:', telefono);
+      // Validación de formato y primer dígito
+      const regex = /^[267]\d{3}-\d{4}$/;
+      if (!regex.test(telefono)) {
+        // console.log('[BACKEND] ERROR: No pasa regex');
+        return res.status(400).json({ message: 'El teléfono debe estar completo y en formato 0000-0000, iniciando con 2, 6 o 7' });
+      }
+    }
+
+    // Soportar variantes mal codificadas, pero nunca 'contrasena'
+    const contraseña = contraseñaRaw || req.body['contraseña'] || req.body['contraseÃ±a'];
     if (!contraseña) {
       return res.status(400).json({ message: "El campo 'contraseña' es obligatorio y no fue recibido correctamente." });
+    }
+    // Validar nombres y apellidos
+    if (!nombres || !apellidos) {
+      return res.status(400).json({ message: "Los campos 'nombres' y 'apellidos' son obligatorios." });
     }
 
     // Declarar transporter y chars solo una vez
@@ -64,14 +112,24 @@ registerClientsController.register = async (req, res) => {
       if (existsClient.isVerified) {
         return res.json({ message: "Client already exists", isVerified: true });
       } else {
+        // Validar edad mínima (18 años) antes de actualizar
+        const validacionEdad = validarEdadMinima(fechaDeNacimiento);
+        if (!validacionEdad.isValid) {
+          return res.status(400).json({ 
+            message: validacionEdad.message 
+          });
+        }
         // Actualizar datos del cliente no verificado
         const passwordHashUpdate = await bcryptjs.hash(contraseña, 10);
-        existsClient.nombreCompleto = nombreCompleto;
+        existsClient.nombre = nombres;
+        existsClient.apellido = apellidos;
         existsClient.fechaDeNacimiento = fechaDeNacimiento;
         existsClient.telefono = telefono;
         existsClient.contraseña = passwordHashUpdate;
-        if (req.body.pasaporteDui) existsClient.pasaporteDui = req.body.pasaporteDui;
-        if (req.body.licencia) existsClient.licencia = req.body.licencia;
+        if (licenciaFrenteUrl) existsClient.licenciaFrente = licenciaFrenteUrl;
+        if (licenciaReversoUrl) existsClient.licenciaReverso = licenciaReversoUrl;
+        if (pasaporteFrenteUrl) existsClient.pasaporteFrente = pasaporteFrenteUrl;
+        if (pasaporteReversoUrl) existsClient.pasaporteReverso = pasaporteReversoUrl;
         await existsClient.save();
         // console.log("Cliente actualizado: ", correo);
         // Generar y enviar nuevo código de verificación (6 caracteres alfanuméricos)
@@ -85,6 +143,8 @@ registerClientsController.register = async (req, res) => {
           { expiresIn: "15m" }
         );
         res.cookie("VerificationToken", tokenCodeUpdate, { maxAge: 15 * 60 * 1000 });
+        const nombre = existsClient.nombre || '';
+        const apellido = existsClient.apellido || '';
         const mailOptionsUpdate = {
           from: config.email.email_user,
           to: correo,
@@ -95,7 +155,7 @@ registerClientsController.register = async (req, res) => {
                 <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
               </div>
               <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-              <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
+              <p>Hola${nombre || apellido ? `, <b>${nombre} ${apellido}</b>` : ''},</p>
               <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
               <div style="text-align: center; margin: 32px 0;">
                 <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCodeUpdate}</span>
@@ -129,16 +189,27 @@ registerClientsController.register = async (req, res) => {
       }
     }
 
+    // Validar edad mínima (18 años) antes de crear el cliente
+    const validacionEdad = validarEdadMinima(fechaDeNacimiento);
+    if (!validacionEdad.isValid) {
+      return res.status(400).json({ 
+        message: validacionEdad.message 
+      });
+    }
+
     // Si no existe, crear nuevo cliente
     const passwordHash = await bcryptjs.hash(contraseña, 10);
     const newClient = new clientsModel({
-      nombreCompleto,
+      nombre: nombres,
+      apellido: apellidos,
       fechaDeNacimiento,
       correo,
       contraseña: passwordHash,
       telefono,
-      pasaporteDui: pasaporteDui || null, // URL
-      licencia: licencia || null // URL
+      licenciaFrente: licenciaFrenteUrl,
+      licenciaReverso: licenciaReversoUrl,
+      pasaporteFrente: pasaporteFrenteUrl,
+      pasaporteReverso: pasaporteReversoUrl
     });
     await newClient.save();
     // console.log("Nuevo cliente registrado: ", correo);
@@ -160,26 +231,7 @@ registerClientsController.register = async (req, res) => {
       from: config.email.email_user,
       to: correo,
       subject: "Verificación de correo - Código de activación | Diunsolo RentaCar",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
-          <div style="text-align: center; margin-bottom: 24px;">
-            <img src=\"cid:diunsolologo\" alt=\"Diunsolo RentaCar\" style=\"max-width: 120px; margin-bottom: 12px;\" />
-          </div>
-          <h2 style="color: #1a202c; text-align: center;">¡Gracias por registrarte en <span style='color:#007bff;'>Diunsolo RentaCar</span>!</h2>
-          <p>Hola${nombreCompleto ? `, <b>${nombreCompleto}</b>` : ''},</p>
-          <p>Para activar tu cuenta y comenzar a explorar nuestra flota de vehículos, por favor utiliza el siguiente código de verificación:</p>
-          <div style="text-align: center; margin: 32px 0;">
-            <span style="display: inline-block; font-size: 2.2em; font-weight: bold; letter-spacing: 8px; background: #e9f5ff; color: #007bff; padding: 16px 32px; border-radius: 8px; border: 1px dashed #007bff;">${verificationCode}</span>
-          </div>
-          <p style="text-align: center; color: #555;">Este código expirará en <b>15 minutos</b>.<br>Regresa a la página de verificación y cópialo o escríbelo en el campo correspondiente.</p>
-          <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;" />
-          <p style="font-size: 0.95em; color: #888;">¿No solicitaste este código? Si no fuiste tú quien se registró, por favor ignora este correo electrónico.</p>
-          <div style="margin-top: 24px; text-align: center;">
-            <a href="https://diunsolorentacar.com" style="color: #007bff; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a><br>
-            <a href="https://diunsolorentacar.com/soporte" style="color: #888; font-size: 0.95em;">Soporte</a>
-          </div>
-        </div>
-      `,
+      html: HTMLVerifyAccountEmail(verificationCode),
       attachments: [
         {
           filename: 'diunsolologo.png',
@@ -204,7 +256,7 @@ registerClientsController.register = async (req, res) => {
       });
     });
   } catch (error) {
-    res.json({ message: "Error" + error });
+    res.json({ message: "Error" + (error && error.message ? ': ' + error.message : '') });
   }
 };
 
@@ -225,7 +277,7 @@ registerClientsController.verifyCodeEmail = async (req, res) => {
     await client.save();
     // Enviar correo de bienvenida tras verificación exitosa
     try {
-      await sendWelcomeMail({ correo, nombre: client.nombreCompleto });
+      await sendWelcomeMail({ correo, nombre: `${client.nombre || ''} ${client.apellido || ''}`.trim() });
     } catch (e) {
       // No bloquear la verificación si el correo de bienvenida falla
       console.error('Error enviando correo de bienvenida:', e);
@@ -263,7 +315,7 @@ registerClientsController.resendCodeEmail = async (req, res) => {
       return res.status(400).json({ message: "No se encontró el correo en la sesión." });
     }
     const client = await clientsModel.findOne({ correo });
-    const nombreCompleto = client ? client.nombreCompleto : '';
+    const nombreCompleto = client ? `${client.nombre || ''} ${client.apellido || ''}`.trim() : '';
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
       verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));

@@ -7,8 +7,10 @@ router
   .route("/")
   .post(
     upload.fields([
-      { name: "pasaporteDui", maxCount: 1 },
-      { name: "licencia", maxCount: 1 },
+      { name: "licenciaFrente", maxCount: 1 },
+      { name: "licenciaReverso", maxCount: 1 },
+      { name: "pasaporteFrente", maxCount: 1 },
+      { name: "pasaporteReverso", maxCount: 1 },
     ]),
     registerClientsController.register
   );
