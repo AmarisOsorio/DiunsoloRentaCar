@@ -130,7 +130,7 @@ const Perfil = () => {
         );
         
       case 'reservas':
-        return <Reservas />;
+        return <Reservas shouldFetch={activeSubmenu === 'reservas'} />;
         
       case 'contratos':
         return <Contratos />;
