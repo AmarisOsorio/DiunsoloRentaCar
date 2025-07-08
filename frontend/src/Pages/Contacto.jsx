@@ -1,6 +1,6 @@
 import React from 'react';
 import './styles/Contacto.css';
-import contactHeader from '../assets/contactHeader.png';
+import contactHeader from '../assets/bannerContactanos3.jpg';
 import LocationIcon from '../assets/LocationIcon.png';
 import EmailIcon from '../assets/EmailIcon.png';
 import PhoneIcon from '../assets/PhoneIcon.png';

@@ -1,7 +1,7 @@
 import React from 'react';
 import './styles/Catalogo.css';
 import VehiculoCard from '../components/VehiculoCard';
-import catalogBG from '../assets/catalogBG.png';
+import catalogBG from '../assets/bannerCatalogo3.webp';
 import useCatalogo from '../hooks/pages/useCatalogo';
 
 const Catalogo = () => {
