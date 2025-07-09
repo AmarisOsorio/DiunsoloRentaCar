@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -10,6 +10,19 @@ export const AuthProvider = ({ children }) => {
     const saved = localStorage.getItem('userInfo');
     return saved ? JSON.parse(saved) : null;
   });
+  
+  // Estado para controlar cuando las reservas necesitan ser recargadas
+  const [reservasInvalidated, setReservasInvalidated] = useState(false);
+  
+  // Función para invalidar las reservas (llamar cuando se crean/modifican/eliminan reservas)
+  const invalidateReservations = useCallback(() => {
+    setReservasInvalidated(true);
+  }, []);
+  
+  // Función para marcar las reservas como válidas (llamar después de cargarlas)
+  const markReservationsAsValid = useCallback(() => {
+    setReservasInvalidated(false);
+  }, []);
   useEffect(() => {
     localStorage.setItem('userType', userType || '');
     localStorage.setItem('isAuthenticated', isAuthenticated);
@@ -314,6 +327,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Obtener reservas del usuario autenticado (memorizada para evitar renders infinitos)
+  const getUserReservations = useCallback(async () => {
+    try {
+      console.log('🔄 [AuthContext] getUserReservations llamado - API_URL:', API_URL);
+      const res = await fetch(`${API_URL}/reservas/mis-reservas`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      console.log('🔄 [AuthContext] Response status:', res.status, 'ok:', res.ok);
+      const data = await res.json();
+      console.log('🔄 [AuthContext] Response data:', data);
+      
+      if (res.ok && data.success) {
+        return { success: true, reservas: data.reservas || [] };
+      }
+      return { success: false, message: data.message || 'No se pudieron obtener las reservas' };
+    } catch (error) {
+      console.error('[getUserReservations] error:', error);
+      return { success: false, message: 'Error de conexión' };
+    }
+  }, [API_URL]);
+
   return (
     <AuthContext.Provider value={{ 
       userType, 
@@ -333,7 +368,11 @@ export const AuthProvider = ({ children }) => {
       deleteAccount,
       getProfile,
       uploadDocument,
-      deleteDocument
+      deleteDocument,
+      getUserReservations,
+      reservasInvalidated,
+      invalidateReservations,
+      markReservationsAsValid
     // , requestEmailChange, verifyEmailChange
     }}>
       {children}

@@ -230,7 +230,17 @@ export function useInfoPerfil() {
   const navigate = useNavigate();
 
   // Estados para el submenú activo
-  const [activeSubmenu, setActiveSubmenu] = useState('informacion-cuenta');
+  // Leer el submenú activo desde localStorage si existe
+  const getInitialSubmenu = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('perfilActiveSubmenu');
+      if (saved === 'informacion-cuenta' || saved === 'reservas' || saved === 'contratos') {
+        return saved;
+      }
+    }
+    return 'informacion-cuenta';
+  };
+  const [activeSubmenu, setActiveSubmenu] = useState(getInitialSubmenu);
 
   // Estados para edición de campos
   const [editingField, setEditingField] = useState(null);
@@ -600,6 +610,13 @@ export function useInfoPerfil() {
     });
   };
 
+  const handleNavigation = (submenu) => {
+    setActiveSubmenu(submenu);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('perfilActiveSubmenu', submenu);
+    }
+  };
+
   return {
     activeSubmenu,
     setActiveSubmenu,
@@ -646,6 +663,9 @@ export function useInfoPerfil() {
     getInputClassName,
     imageConfirmModal,
     setImageConfirmModal,
+
+    // Navegación de submenús
+    handleNavigation,
 
     // Eliminar cuenta
     handleDeleteAccount,
