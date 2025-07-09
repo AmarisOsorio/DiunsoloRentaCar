@@ -2,13 +2,21 @@ import React from 'react';
 import './styles/Home.css';
 import ServicesCard from '../components/ServicesCard';
 import VehiculoCardHome from '../components/VehiculoCard';
+import FamiliarSection from '../components/FamilySection';
+import IntroSection from '../components/IntroSection';
+import GallerySection from '../components/GallerySection';
+
 import useHomeVehiculos from '../hooks/pages/Home';
+
 import Rapido from '../assets/FlashOn.png'
 import Seguro from '../assets/Protect.png'
 import Aeropuerto from '../assets/AirplaneTakeOff.png'
 import WIFI from '../assets/WIFI.png'
 import Chofer from '../assets/AirPilotHat.png'
 import EntregaExpress from '../assets/Airplaneticket.png'
+import VideoDiunsolo from '../assets/DIUNSOLOANUNCIO.mp4'
+import FamiliaDiunsolo from '../assets/FamiliaDiunsolo.jpg'
+
 
 const homeServices = [
     {
@@ -55,7 +63,19 @@ function HomePage() {
             <p>Tu mejor opción para renta de autos.</p>
           </div>
         </header>
-        
+
+
+        <FamiliarSection 
+          imageSrc={FamiliaDiunsolo}
+          imageAlt="Familia Diunsolo"
+        />
+
+
+        <IntroSection 
+          videoSrc={VideoDiunsolo}
+        />
+
+
         <section className="services-section">
           <div className="services-grid">
             {homeServices.map((service, index) => (
@@ -88,6 +108,8 @@ function HomePage() {
             <div className="vehiculos-loading-home">No hay vehículos disponibles</div>
           )}
         </section>
+
+        <GallerySection />
       </div>
     </>
   );

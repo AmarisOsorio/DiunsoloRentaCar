@@ -50,15 +50,33 @@ vehiclesController.getVehicleById = async (req, res) => {
 vehiclesController.addVehicle = async (req, res) => {
   try {
     let imagenes = [];
+    let imagenVista3_4 = '';
+    let imagenLateral = '';
 
     // Si llegan archivos, súbelos a Cloudinary
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file =>
-        cloudinary.uploader.upload(file.path, { folder: 'vehiculos' })
-      );
-      const uploadResults = await Promise.all(uploadPromises);
-      imagenes = uploadResults.map(result => result.secure_url);
-    } 
+    if (req.files) {
+      // Manejo de campos múltiples y únicos
+      // imagenes[] puede ser array, imagenVista3/4 e imagenLateral son archivos únicos
+      if (Array.isArray(req.files.imagenes)) {
+        const uploadImgs = req.files.imagenes.map(file =>
+          cloudinary.uploader.upload(file.path, { folder: 'vehiculos' })
+        );
+        const uploadImgsResults = await Promise.all(uploadImgs);
+        imagenes = uploadImgsResults.map(result => result.secure_url);
+      } else if (req.files.imagenes) {
+        // Si solo hay una imagen en imagenes
+        const uploadImg = await cloudinary.uploader.upload(req.files.imagenes[0].path, { folder: 'vehiculos' });
+        imagenes = [uploadImg.secure_url];
+      }
+      if (req.files.imagenVista3_4 && req.files.imagenVista3_4[0]) {
+        const uploadRender = await cloudinary.uploader.upload(req.files.imagenVista3_4[0].path, { folder: 'vehiculos' });
+        imagenVista3_4 = uploadRender.secure_url;
+      }
+      if (req.files.imagenLateral && req.files.imagenLateral[0]) {
+        const uploadLateral = await cloudinary.uploader.upload(req.files.imagenLateral[0].path, { folder: 'vehiculos' });
+        imagenLateral = uploadLateral.secure_url;
+      }
+    }
     // Si llegan imagenes en el body (como string o array de URLs)
     else if (req.body && req.body.imagenes) {
       if (Array.isArray(req.body.imagenes)) {
@@ -71,6 +89,8 @@ vehiclesController.addVehicle = async (req, res) => {
           imagenes = [req.body.imagenes];
         }
       }
+      imagenVista3_4 = req.body.imagenVista3_4 || '';
+      imagenLateral = req.body.imagenLateral || '';
     }
 
     if (!Array.isArray(imagenes)) imagenes = [];
@@ -92,7 +112,14 @@ vehiclesController.addVehicle = async (req, res) => {
       estado
     } = req.body;
 
+    // Validar que existan las imágenes principales
+    if (!imagenVista3_4 || !imagenLateral) {
+      return res.status(400).json({ message: "Faltan imagenVista3/4 o imagenLateral" });
+    }
+
     const newVehicle = new vehiclesModel({
+      imagenVista3_4,
+      imagenLateral,
       imagenes,
       nombreVehiculo,
       precioPorDia,

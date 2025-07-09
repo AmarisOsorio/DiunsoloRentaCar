@@ -6,7 +6,7 @@ import { useAuth } from '../../../context/AuthContext.jsx';
  * Hook personalizado para manejar el flujo de recuperación de contraseña.
  * Gestiona los formularios, pasos, loading y comunicación con el backend.
  */
-export function useForgotPasswordModal(onClose) {
+function useForgotPasswordModal(onClose) {
   // Formularios para cada paso
   const correoForm = useForm(); // Paso 1: correo
   const codeForm = useForm();   // Paso 2: código de verificación
@@ -96,8 +96,9 @@ export function useForgotPasswordModal(onClose) {
     handleCode,
     handleNewPassword,
     correoForm,
-    codeForm,
-    newPasswordForm,
+    codeForm,    newPasswordForm,
     resetAll,
   };
 }
+
+export default useForgotPasswordModal;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import './components/styles/Navbar.css';
 import './components/styles/Footer.css';
 import Navbar from './components/Navbar';
@@ -15,7 +15,11 @@ import RegisterModal from './components/modals/RegisterModal';
 import ForgotPasswordModal from './components/modals/ForgotPasswordModal';
 import { AuthProvider } from './context/AuthContext';
 
-function App() {
+/**
+ * Componente interno que maneja las rutas y la visibilidad condicional del footer
+ */
+const AppContent = () => {
+  const location = useLocation();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -26,22 +30,35 @@ function App() {
     // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
   };
 
+  // Rutas donde no se debe mostrar el footer
+  const routesWithoutFooter = ['/perfil'];
+  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
+
+  return (
+    <>
+      <Navbar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/contacto" element={<Contacto />} />
+          <Route path="/terminos" element={<TerminosCondiciones />} />
+          <Route path="/perfil" element={<Perfil />} />
+        </Routes>
+        <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
+        <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
+        <ForgotPasswordModal open={showForgotModal} onClose={() => { setShowForgotModal(false); setShowLoginModal(true); }} />
+      </main>
+      {shouldShowFooter && <Footer />}
+    </>
+  );
+};
+
+function App() {
   return (
     <AuthProvider>
       <Router>
-        <Navbar />
-        <main>          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/catalogo" element={<Catalogo />} />
-            <Route path="/contacto" element={<Contacto />} />
-            <Route path="/terminos" element={<TerminosCondiciones />} />
-            <Route path="/perfil" element={<Perfil />} />
-          </Routes>
-          <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
-          <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
-          <ForgotPasswordModal open={showForgotModal} onClose={() => { setShowForgotModal(false); setShowLoginModal(true); }} />
-        </main>
-        <Footer />
+        <AppContent />
       </Router>
     </AuthProvider>
   );

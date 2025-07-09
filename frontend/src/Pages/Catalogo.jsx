@@ -1,8 +1,8 @@
 import React from 'react';
 import './styles/Catalogo.css';
 import VehiculoCard from '../components/VehiculoCard';
-import catalogBG from '../assets/catalogBG.png';
-import useCatalogo from '../hooks/pages/Catalogo';
+import catalogBG from '../assets/bannerCatalogo3.webp';
+import useCatalogo from '../hooks/pages/useCatalogo';
 
 const Catalogo = () => {
   const { vehiculos, loading } = useCatalogo();

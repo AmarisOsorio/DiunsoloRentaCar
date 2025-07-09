@@ -29,7 +29,7 @@ const useRegisterModal = () => {
       licenciaReverso: null,
       pasaporteFrente: null,
       pasaporteReverso: null,
-      nacimiento: '',
+      fechaDeNacimiento: '', // <-- update here
     }
   });
 
@@ -62,41 +62,25 @@ const useRegisterModal = () => {
     }
   };
   // Handles changes to form input fields, including file inputs.
-  const handleChange = async e => {
-    const { name, value, files } = e.target;
+  const handleChange = e => {
+    const { name, files } = e.target;
     if (files && files[0]) {
-      // Subir la imagen al backend y guardar la URL
-      const formData = new FormData();
-      formData.append("image", files[0]);
-      try {
-        const res = await fetch("/api/upload/upload-image", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.url) {
-          setValue(name, data.url);
-          // Actualizar preview correspondiente
-          const previewUrl = URL.createObjectURL(files[0]);
-          switch(name) {
-            case 'licenciaFrente':
-              setLicenciaFrentePreview(previewUrl);
-              break;
-            case 'licenciaReverso':
-              setLicenciaReversoPreview(previewUrl);
-              break;
-            case 'pasaporteFrente':
-              setPasaporteFrentePreview(previewUrl);
-              break;
-            case 'pasaporteReverso':
-              setPasaporteReversoPreview(previewUrl);
-              break;
-          }
-        } else {
-          setRegisterError("Error subiendo la imagen.");
-        }
-      } catch (err) {
-        setRegisterError("Error subiendo la imagen.");
+      setValue(name, files[0]);
+      // Actualizar preview correspondiente
+      const previewUrl = URL.createObjectURL(files[0]);
+      switch(name) {
+        case 'licenciaFrente':
+          setLicenciaFrentePreview(previewUrl);
+          break;
+        case 'licenciaReverso':
+          setLicenciaReversoPreview(previewUrl);
+          break;
+        case 'pasaporteFrente':
+          setPasaporteFrentePreview(previewUrl);
+          break;
+        case 'pasaporteReverso':
+          setPasaporteReversoPreview(previewUrl);
+          break;
       }
     } else if (name === 'licenciaFrente' || name === 'licenciaReverso' || name === 'pasaporteFrente' || name === 'pasaporteReverso') {
       setValue(name, null);
@@ -135,7 +119,7 @@ const useRegisterModal = () => {
     }
   };
 
-  // Teléfono con formato 0000-0000
+  // Teléfono con formato 0000-0000 y validación de primer dígito
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 4) {
@@ -143,6 +127,14 @@ const useRegisterModal = () => {
     }
     if (value.length > 9) value = value.slice(0, 9);
     setValue('telefono', value);
+
+    // Validación de formato y primer dígito
+    const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+    if (value.length === 9 && !regex.test(value)) {
+      setError('telefono', { type: 'manual', message: 'Formato: 0000-0000, inicia con 2, 6 o 7' });
+    } else {
+      clearErrors('telefono');
+    }
   };
 
   // Validación personalizada para edad mínima
@@ -170,24 +162,52 @@ const useRegisterModal = () => {
     setRegisterError('');
     setRegisterSuccess('');
     setLoading(true);
-    // Validación de teléfono
-    if (!/^[0-9]{4}-[0-9]{4}$/.test(data.telefono)) {
-      setRegisterError('El teléfono debe estar completo');
-      setLoading(false);
-      return;
+    // Normalizar teléfono a 0000-0000 antes de enviar (sin validación de formato ni primer dígito)
+    let telefono = (data.telefono || '').toString();
+    const raw = telefono.replace(/[^0-9]/g, '');
+    if (raw.length === 8) {
+      telefono = raw.slice(0, 4) + '-' + raw.slice(4, 8);
     }
-    // Validación de email (ya la hace RHF, pero por si acaso)
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      setRegisterError('Dirección de correo incorrecta.');
-      setLoading(false);
-      return;
+    // Detectar si hay archivos
+    const hasFiles = [data.licenciaFrente, data.licenciaReverso, data.pasaporteFrente, data.pasaporteReverso].some(f => f instanceof File);
+    let payload;
+    // Asegurarse de que los campos nombres y apellidos existan y sean string
+    const nombres = data.nombres || '';
+    const apellidos = data.apellidos || '';
+    if (hasFiles) {
+      payload = new FormData();
+      payload.append('nombres', nombres);
+      payload.append('apellidos', apellidos);
+      payload.append('contraseña', data.contraseña);
+      payload.append('confirmarContraseña', data.confirmarContraseña);
+      payload.append('telefono', telefono);
+      payload.append('correo', data.email);
+      payload.append('fechaDeNacimiento', data.fechaDeNacimiento);
+      if (data.licenciaFrente instanceof File) payload.append('licenciaFrente', data.licenciaFrente);
+      if (data.licenciaReverso instanceof File) payload.append('licenciaReverso', data.licenciaReverso);
+      if (data.pasaporteFrente instanceof File) payload.append('pasaporteFrente', data.pasaporteFrente);
+      if (data.pasaporteReverso instanceof File) payload.append('pasaporteReverso', data.pasaporteReverso);
+    } else {
+      payload = {
+        nombres,
+        apellidos,
+        correo: data.email,
+        contraseña: data.contraseña,
+        telefono: telefono,
+        fechaDeNacimiento: data.fechaDeNacimiento,
+        pasaporteFrenteDui: data.pasaporteFrente || undefined,
+        pasaporteReversoDui: data.pasaporteReverso || undefined,
+        licenciaFrente: data.licenciaFrente || undefined,
+        licenciaReverso: data.licenciaReverso || undefined
+      };
     }
     try {
-      const response = await fetch('/api/clients/check-email', {
+      // Verificar correo duplicado (igual para ambos casos)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const response = await fetch(`${API_URL}/clients/check-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: data.email })
+        body: JSON.stringify({ correo: data.email }) // El backend espera 'correo'
       });
       if (!response.ok) {
         setRegisterError("No se pudo verificar el correo. Intenta más tarde.");
@@ -195,38 +215,35 @@ const useRegisterModal = () => {
         return;
       }
       const emailResult = await response.json();
-      if (emailResult.exists) {        // Si el correo existe, intentamos registrar para ver si está verificado o no
-        const payload = {
-          nombreCompleto: `${data.nombres} ${data.apellidos}`,
+      if (emailResult.exists) {
+        // Si el correo existe, intentamos registrar para ver si está verificado o no
+        const payloadToSend = hasFiles ? payload : {
+          nombres,
+          apellidos,
           correo: data.email,
-          contraseña: data.contraseña, // use ñ
-          telefono: data.telefono,
-          fechaDeNacimiento: data.nacimiento,
+          contraseña: data.contraseña,
+          telefono: telefono,
+          fechaDeNacimiento: data.fechaDeNacimiento,
           pasaporteFrenteDui: data.pasaporteFrente || undefined,
           pasaporteReversoDui: data.pasaporteReverso || undefined,
           licenciaFrente: data.licenciaFrente || undefined,
           licenciaReverso: data.licenciaReverso || undefined
         };
-        const result = await registerUser(payload);
-        if (result.message && result.message.toLowerCase().includes('datos actualizados') && result.isVerified === false) {
-          setRegisterError('La cuenta ya estaba registrada pero no verificada. Tus datos han sido actualizados y se ha enviado un nuevo código de verificación.');
-          setShowVerify(true);
-          setLoading(false);
-          return;
-        }
-        // Si el backend responde que ya existe pero NO está verificada (prioridad alta)
+        const result = await registerUser(payloadToSend);
         if (
           result.message &&
-          (result.message.toLowerCase().includes("no verificada") ||
+          (
+            result.message.toLowerCase().includes("no verificada") ||
             result.message.toLowerCase().includes("nuevo código enviado") ||
             result.message.toLowerCase().includes("se ha enviado un nuevo código de verificación") ||
-            result.message.toLowerCase().includes("la cuenta ya está registrada pero no verificada"))
+            result.message.toLowerCase().includes("la cuenta ya está registrada pero no verificada") ||
+            result.message.toLowerCase().includes("datos actualizados")
+          )
         ) {
           setRegisterError(
             "La cuenta ya está registrada pero no verificada. Se ha enviado un nuevo código de verificación. Si modificas tus datos, se actualizarán."
           );
           setShowVerify(true);
-          // Ya no llamamos a resendVerificationCode aquí
           setLoading(false);
           return;
         }
@@ -256,20 +273,11 @@ const useRegisterModal = () => {
       setRegisterError("No se pudo verificar el correo. Intenta más tarde.");
       setLoading(false);
       return;
-    }    try {
-      const payload = {
-        nombreCompleto: `${data.nombres} ${data.apellidos}`,
-        correo: data.email,
-        contraseña: data.contraseña, // use ñ
-        telefono: data.telefono,
-        fechaDeNacimiento: data.nacimiento,
-        pasaporteFrenteDui: data.pasaporteFrente || undefined,
-        pasaporteReversoDui: data.pasaporteReverso || undefined,
-        licenciaFrente: data.licenciaFrente || undefined,
-        licenciaReverso: data.licenciaReverso || undefined
-      };
-      const result = await registerUser(payload);      if (result.message && result.message.includes('verifica tu correo')) {
-        setRegistrationSuccessData({ nombre: `${data.nombres} ${data.apellidos}` });
+    }
+    try {
+      const result = await registerUser(payload);
+      if (result.message && result.message.includes('verifica tu correo')) {
+        setRegistrationSuccessData({ nombre: `${nombres} ${apellidos}` });
         setRegisterSuccess(result.message);
       } else if (result.message && result.message.toLowerCase().includes('client already exists')) {
         setRegisterError('La cuenta ya está registrada pero no verificada. Se ha enviado un nuevo código de verificación.');
@@ -368,3 +376,4 @@ const useRegisterModal = () => {
 };
 
 export default useRegisterModal;
+
