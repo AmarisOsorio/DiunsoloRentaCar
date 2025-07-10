@@ -1,11 +1,24 @@
 import React from 'react';
 import './styles/Catalogo.css';
 import VehiculoCard from '../components/VehiculoCard';
+import VehiculoModal from '../components/modals/VehiculoModal';
 import catalogBG from '../assets/bannerCatalogo3.webp';
 import useCatalogo from '../hooks/pages/useCatalogo';
+import useVehicleModal from '../hooks/components/modals/useVehicleModal';
 
 const Catalogo = () => {
   const { vehiculos, loading } = useCatalogo();
+  const { 
+    isOpen, 
+    selectedVehiculo, 
+    imagenActual, 
+    setImagenActual, 
+    openModal, 
+    closeModal, 
+    getEstadoClass, 
+    cambiarImagen, 
+    handleBackdropClick 
+  } = useVehicleModal();
 
   if (loading) return <div className="marcas-loading">Cargando vehículos...</div>;
 
@@ -30,6 +43,7 @@ const Catalogo = () => {
                 vehiculo={vehiculo} 
                 variant="catalogo"
                 showPrice={false}
+                onClick={() => openModal(vehiculo)}
               />
             ))
           ) : (
@@ -37,6 +51,17 @@ const Catalogo = () => {
           )}
         </div>
       </section>
+      
+      <VehiculoModal
+        vehiculo={selectedVehiculo}
+        isOpen={isOpen}
+        onClose={closeModal}
+        imagenActual={imagenActual}
+        setImagenActual={setImagenActual}
+        getEstadoClass={getEstadoClass}
+        cambiarImagen={cambiarImagen}
+        handleBackdropClick={handleBackdropClick}
+      />
     </>
   );
 };

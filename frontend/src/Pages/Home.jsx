@@ -1,12 +1,14 @@
 import React from 'react';
 import './styles/Home.css';
 import ServicesCard from '../components/ServicesCard';
-import VehiculoCardHome from '../components/VehiculoCard';
+import VehiculoCard from '../components/VehiculoCard';
+import VehiculoModal from '../components/modals/VehiculoModal';
 import FamiliarSection from '../components/FamilySection';
 import IntroSection from '../components/IntroSection';
 import GallerySection from '../components/GallerySection';
 
 import useHomeVehiculos from '../hooks/pages/Home';
+import useVehicleModal from '../hooks/components/modals/useVehicleModal';
 
 import Rapido from '../assets/FlashOn.png'
 import Seguro from '../assets/Protect.png'
@@ -53,6 +55,17 @@ const homeServices = [
 
 function HomePage() {
   const { vehiculos, loading, error } = useHomeVehiculos();
+  const { 
+    isOpen, 
+    selectedVehiculo, 
+    imagenActual, 
+    setImagenActual, 
+    openModal, 
+    closeModal, 
+    getEstadoClass, 
+    cambiarImagen, 
+    handleBackdropClick 
+  } = useVehicleModal();
 
   return (
     <>
@@ -99,7 +112,11 @@ function HomePage() {
           {!loading && !error && vehiculos.length > 0 && (
             <div className="vehiculos-destacados-grid">
               {vehiculos.map((vehiculo) => (
-                <VehiculoCardHome key={vehiculo._id} vehiculo={vehiculo} />
+                <VehiculoCard 
+                  key={vehiculo._id} 
+                  vehiculo={vehiculo} 
+                  onClick={() => openModal(vehiculo)}
+                />
               ))}
             </div>
           )}
@@ -111,6 +128,17 @@ function HomePage() {
 
         <GallerySection />
       </div>
+      
+      <VehiculoModal
+        vehiculo={selectedVehiculo}
+        isOpen={isOpen}
+        onClose={closeModal}
+        imagenActual={imagenActual}
+        setImagenActual={setImagenActual}
+        getEstadoClass={getEstadoClass}
+        cambiarImagen={cambiarImagen}
+        handleBackdropClick={handleBackdropClick}
+      />
     </>
   );
 }
