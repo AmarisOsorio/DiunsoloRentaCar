@@ -2,6 +2,8 @@ const ReservasController = {};
 import reservasModel from "../models/Reservas.js";
 import clientesModel from "../models/Clientes.js";
 import vehiculosModel from "../models/Vehiculos.js";
+import { Contratos } from "../models/Contratos.js";
+import ContractGenerator from "../utils/contractGenerator.js";
 
 //Select
 
@@ -60,8 +62,77 @@ ReservasController.insertReservas = async (req, res) => {
         precioPorDia
     });
 
-    await newReserva.save();
-    res.json({message: "Reserva saved"});
+    const savedReserva = await newReserva.save();
+    
+    // Generar contrato automáticamente
+    try {
+        // Obtener datos completos del vehículo para el contrato
+        const vehiculo = await vehiculosModel.findById(vehiculoID);
+        const cliente = await clientesModel.findById(clientID);
+        
+        if (vehiculo && cliente) {
+            // Calcular días de alquiler
+            const dias = Math.ceil((new Date(fechaDevolucion) - new Date(fechaInicio)) / (1000 * 60 * 60 * 24));
+            
+            // Crear el contrato básico
+            const nuevoContrato = new Contratos({
+                reservationId: savedReserva._id.toString(),
+                datosArrendamiento: {
+                    nombreArrendatario: `${cliente.nombre} ${cliente.apellido || ''}`.trim(),
+                    direccionArrendatario: cliente.direccion || '',
+                    numeroPasaporte: cliente.numeroPasaporte || '',
+                    numeroLicencia: cliente.numeroLicencia || '',
+                    fechaEntrega: fechaInicio,
+                    precioDiario: precioPorDia,
+                    montoTotal: dias * precioPorDia,
+                    diasAlquiler: dias,
+                    montoDeposito: Math.round(precioPorDia * 2), // 2 días como depósito
+                    ciudadFirma: 'Ciudad de Guatemala',
+                    fechaFirma: new Date()
+                },
+                datosHojaEstado: {
+                    fechaEntrega: fechaInicio,
+                    fechaDevolucion: fechaDevolucion,
+                    numeroUnidad: vehiculo.numeroVinChasis,
+                    marcaModelo: `${vehiculo.nombreVehiculo} ${vehiculo.modelo}`,
+                    placa: vehiculo.placa,
+                    nombreCliente: `${cliente.nombre} ${cliente.apellido || ''}`.trim()
+                }
+            });
+            
+            // Generar el PDF del contrato
+            try {
+                const pdfBuffer = await ContractGenerator.generateContract(
+                    nuevoContrato.toObject(),
+                    vehiculo,
+                    cliente,
+                    savedReserva
+                );
+                
+                // Guardar el PDF
+                const filename = `contrato_${savedReserva._id}_${Date.now()}.pdf`;
+                const pdfUrl = await ContractGenerator.saveContractPDF(pdfBuffer, filename);
+                
+                // Actualizar el contrato con la URL del PDF generado
+                nuevoContrato.documentos = {
+                    arrendamientoPdf: pdfUrl
+                };
+                
+            } catch (pdfError) {
+                console.error('Error generando PDF del contrato:', pdfError);
+                // Continuamos sin el PDF si hay error
+            }
+            
+            await nuevoContrato.save();
+            console.log(`Contrato generado automáticamente para la reserva ${savedReserva._id}`);
+        }
+        
+    } catch (contractError) {
+        console.error('Error generando contrato automático:', contractError);
+        // No fallar la reserva si hay error en el contrato
+    }
+    
+    res.json({message: "Reserva saved", reservaId: savedReserva._id});
 };
 
 //Delete

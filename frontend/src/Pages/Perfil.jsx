@@ -145,7 +145,7 @@ const Perfil = () => {
       <div className="perfil-container">
         {/* Submenú lateral */}
         <div className="perfil-sidebar">
-          <h1 className="perfil-title">Información de la cuenta</h1>
+          <h1 className="perfil-title">Mi perfil</h1>
           <nav className="perfil-nav">
             <button
               onClick={() => handleNavigation('informacion-cuenta')}
