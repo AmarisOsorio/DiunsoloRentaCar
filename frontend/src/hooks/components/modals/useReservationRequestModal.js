@@ -34,44 +34,47 @@ const useReservationRequestModal = () => {
 
       console.log('Estado de autenticación:', { isAuthenticated, userInfo });
 
-      // Intentar obtener userInfo si no está disponible
+      // Inicializar con userInfo del contexto si está disponible
       let currentUserInfo = userInfo;
-      if (!currentUserInfo) {
-        console.log('UserInfo no disponible, intentando obtenerlo...');
-        
-        // Intentar múltiples veces con delay
-        let attempts = 0;
-        const maxAttempts = 3;
-        
-        while (!currentUserInfo && attempts < maxAttempts) {
-          attempts++;
-          console.log(`Intento ${attempts} de ${maxAttempts} para obtener perfil`);
-          
+      console.log('UserInfo inicial del contexto:', currentUserInfo);
+      
+      // Si no hay userInfo en el contexto, intentar obtener el perfil
+      if (!currentUserInfo || !currentUserInfo._id) {
+        try {
+          console.log('Obteniendo perfil del usuario...');
           const profileResult = await getProfile();
           console.log('Resultado del perfil:', profileResult);
           
-          if (profileResult.success && profileResult.user) {
+          if (profileResult && profileResult.success && profileResult.user && profileResult.user._id) {
             currentUserInfo = profileResult.user;
             console.log('Perfil obtenido exitosamente:', currentUserInfo);
-            break;
           } else {
-            console.log('Error al obtener perfil:', profileResult.message);
-            if (attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 500));
-            }
+            console.log('Error al obtener perfil o perfil no válido:', profileResult);
           }
-        }
-        
-        if (!currentUserInfo) {
-          throw new Error('No se pudo obtener la información del usuario después de varios intentos. Por favor, cierra sesión y vuelve a iniciar sesión.');
+        } catch (profileError) {
+          console.error('Error al obtener perfil:', profileError);
         }
       }
 
       // Verificar que tenemos el ID del usuario
-      if (!currentUserInfo || !currentUserInfo._id) {
-        console.error('UserInfo no válido:', currentUserInfo);
+      console.log('Verificando currentUserInfo:', currentUserInfo);
+      console.log('currentUserInfo._id:', currentUserInfo?._id);
+      console.log('Tipo de _id:', typeof currentUserInfo?._id);
+      
+      if (!currentUserInfo) {
+        console.error('currentUserInfo es null o undefined');
         throw new Error('No se pudo obtener la información del usuario. Por favor, inicia sesión nuevamente.');
       }
+      
+      if (!currentUserInfo._id && !currentUserInfo.id) {
+        console.error('UserInfo sin _id ni id válido:', currentUserInfo);
+        console.error('Propiedades disponibles:', Object.keys(currentUserInfo));
+        throw new Error('Información de usuario incompleta. Por favor, inicia sesión nuevamente.');
+      }
+
+      // Usar _id o id como fallback
+      const userId = currentUserInfo._id || currentUserInfo.id;
+      console.log('ID del usuario a usar:', userId);
 
       // Validar datos de reserva
       if (!reservationData.vehiculoID) {
@@ -98,38 +101,51 @@ const useReservationRequestModal = () => {
         throw new Error('La fecha de inicio no puede ser en el pasado');
       }
 
+      // Validar datos del cliente de la reserva
+      if (!reservationData.clienteReserva || 
+          !reservationData.clienteReserva.nombre || 
+          !reservationData.clienteReserva.telefono || 
+          !reservationData.clienteReserva.correoElectronico) {
+        throw new Error('Todos los datos del cliente son requeridos');
+      }
+
       console.log('UserInfo válido:', currentUserInfo);
       console.log('ReservationData:', reservationData);
 
-      // Preparar datos para enviar
+      console.log('=== DATOS DE LA RESERVA ===');
+      console.log('Usuario autenticado (quien hace la reserva):', {
+        id: userId,
+        nombre: currentUserInfo.nombre || currentUserInfo.nombres,
+        correo: currentUserInfo.correo || currentUserInfo.email
+      });
+      console.log('Cliente beneficiario (datos del formulario):', reservationData.clienteReserva);
+      console.log('================================');
+
+      // Enviar los datos del cliente beneficiario en el array 'cliente'
       const dataToSend = {
-        clientID: currentUserInfo._id,
+        clientID: userId, // ID del usuario autenticado que hace la reserva
         vehiculoID: reservationData.vehiculoID,
         fechaInicio: reservationData.fechaInicio,
         fechaDevolucion: reservationData.fechaDevolucion,
         comentarios: reservationData.comentarios || '',
         estado: 'Pendiente',
-        precioPorDia: reservationData.precioPorDia || 0
+        precioPorDia: reservationData.precioPorDia || 0,
+        // Array cliente con los datos del formulario (cliente beneficiario)
+        cliente: [{
+          nombre: reservationData.clienteReserva.nombre,
+          telefono: reservationData.clienteReserva.telefono,
+          correoElectronico: reservationData.clienteReserva.correoElectronico
+        }]
       };
 
-      // Agregar información del cliente si está disponible
-      const nombre = currentUserInfo.nombre || currentUserInfo.name || currentUserInfo.fullName;
-      const telefono = currentUserInfo.telefono || currentUserInfo.phone || currentUserInfo.phoneNumber;
-      const correoElectronico = currentUserInfo.correoElectronico || currentUserInfo.email || currentUserInfo.correo;
-      
-      if (nombre && telefono && correoElectronico) {
-        dataToSend.cliente = [{
-          nombre: nombre,
-          telefono: telefono,
-          correoElectronico: correoElectronico
-        }];
-        console.log('Información del cliente incluida:', dataToSend.cliente);
-      } else {
-        console.warn('Información del cliente incompleta, enviando solo datos básicos');
-        console.warn('Campos disponibles en userInfo:', Object.keys(currentUserInfo));
-      }
+      console.log('=== ESTRUCTURA ENVIADA AL BACKEND ===');
+      console.log('clientID (usuario autenticado):', dataToSend.clientID);
+      console.log('cliente (array con datos del formulario):', dataToSend.cliente);
+      console.log('RESULTADO: clientID = usuario autenticado, cliente = datos del formulario');
+      console.log('=====================================');
 
       console.log('Datos a enviar:', dataToSend);
+      console.log('URL de la API:', `${API_URL}/reservas`);
 
       const response = await fetch(`${API_URL}/reservas`, {
         method: 'POST',
@@ -139,6 +155,9 @@ const useReservationRequestModal = () => {
         },
         body: JSON.stringify(dataToSend)
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
 
       const result = await response.json();
       console.log('Respuesta del servidor:', result);
@@ -156,24 +175,25 @@ const useReservationRequestModal = () => {
         }
       }
 
-      if (!result.success) {
+      // Verificar si el backend retorna success o si el mensaje indica éxito
+      if (result.message && result.message.includes('saved')) {
+        console.log('Reserva creada exitosamente:', result);
+        setSuccess(true);
+        
+        // Invalidar las reservas para que se recarguen
+        if (invalidateReservations) {
+          invalidateReservations();
+        }
+        
+        // Cerrar modal después de 2 segundos
+        setTimeout(() => {
+          closeModal();
+        }, 2000);
+        
+        return result;
+      } else {
         throw new Error(result.message || 'Error al procesar la reserva');
       }
-
-      console.log('Reserva creada exitosamente:', result);
-      setSuccess(true);
-      
-      // Invalidar las reservas para que se recarguen
-      if (invalidateReservations) {
-        invalidateReservations();
-      }
-      
-      // Cerrar modal después de 2 segundos
-      setTimeout(() => {
-        closeModal();
-      }, 2000);
-      
-      return result;
       
     } catch (err) {
       console.error('Error en submitReservation:', err);
@@ -184,6 +204,40 @@ const useReservationRequestModal = () => {
     }
   };
 
+  const checkExistingReservations = async (vehiculoId) => {
+    try {
+      console.log('Verificando reservas existentes...');
+      const response = await fetch(`${API_URL}/reservas/mis-reservas`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.reservas) {
+          // Verificar si hay reservas pendientes o activas para este vehículo
+          const reservaExistente = result.reservas.find(reserva => 
+            reserva.vehiculoID._id === vehiculoId && 
+            (reserva.estado === 'Pendiente' || reserva.estado === 'Activa')
+          );
+          
+          if (reservaExistente) {
+            console.log('Reserva existente encontrada:', reservaExistente);
+            return {
+              hasExisting: true,
+              reserva: reservaExistente
+            };
+          }
+        }
+      }
+      
+      return { hasExisting: false };
+    } catch (error) {
+      console.error('Error verificando reservas:', error);
+      return { hasExisting: false }; // En caso de error, permitir continuar
+    }
+  };
+
   return {
     isOpen,
     loading,
@@ -191,7 +245,8 @@ const useReservationRequestModal = () => {
     success,
     openModal,
     closeModal,
-    submitReservation
+    submitReservation,
+    checkExistingReservations
   };
 };
 

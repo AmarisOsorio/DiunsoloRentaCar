@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../src/context/AuthContext';
 import '../styles/modals/ReservationRequest.css';
 
 const ReservationRequestModal = ({ 
@@ -10,10 +11,16 @@ const ReservationRequestModal = ({
   error, 
   success 
 }) => {
+  const { isAuthenticated, userInfo } = useAuth();
   const [formData, setFormData] = useState({
+    // Datos de la reserva
     fechaInicio: '',
     fechaDevolucion: '',
-    comentarios: ''
+    comentarios: '',
+    // Datos del cliente de la reserva
+    nombreCliente: '',
+    telefonoCliente: '',
+    correoElectronicoCliente: ''
   });
 
   const [validationErrors, setValidationErrors] = useState({});
@@ -22,8 +29,14 @@ const ReservationRequestModal = ({
   useEffect(() => {
     if (isOpen) {
       setValidationErrors({});
+      // Verificar autenticación cuando se abre el modal
+      if (!isAuthenticated) {
+        console.warn('Usuario no autenticado al abrir modal de reserva');
+      } else {
+        console.log('Usuario autenticado:', { isAuthenticated, userInfo });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthenticated, userInfo]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,6 +57,7 @@ const ReservationRequestModal = ({
   const validateForm = () => {
     const errors = {};
     
+    // Validaciones de fechas
     if (!formData.fechaInicio) {
       errors.fechaInicio = 'La fecha de inicio es requerida';
     }
@@ -68,12 +82,33 @@ const ReservationRequestModal = ({
         errors.fechaInicio = 'La fecha de inicio no puede ser en el pasado';
       }
     }
+
+    // Validaciones de datos del cliente
+    if (!formData.nombreCliente.trim()) {
+      errors.nombreCliente = 'El nombre del cliente es requerido';
+    }
+    
+    if (!formData.telefonoCliente.trim()) {
+      errors.telefonoCliente = 'El teléfono del cliente es requerido';
+    }
+    
+    if (!formData.correoElectronicoCliente.trim()) {
+      errors.correoElectronicoCliente = 'El correo electrónico del cliente es requerido';
+    } else if (!/\S+@\S+\.\S+/.test(formData.correoElectronicoCliente)) {
+      errors.correoElectronicoCliente = 'El correo electrónico no es válido';
+    }
     
     return errors;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Verificar autenticación antes de validar el formulario
+    if (!isAuthenticated) {
+      console.error('Usuario no autenticado al intentar enviar reserva');
+      return;
+    }
     
     const errors = validateForm();
     
@@ -87,7 +122,13 @@ const ReservationRequestModal = ({
       fechaInicio: formData.fechaInicio,
       fechaDevolucion: formData.fechaDevolucion,
       comentarios: formData.comentarios,
-      precioPorDia: vehiculo.precioPorDia || 0
+      precioPorDia: vehiculo.precioPorDia || 0,
+      // Datos del cliente de la reserva
+      clienteReserva: {
+        nombre: formData.nombreCliente.trim(),
+        telefono: formData.telefonoCliente.trim(),
+        correoElectronico: formData.correoElectronicoCliente.trim()
+      }
     };
 
     onSubmit(reservationData);
@@ -103,7 +144,10 @@ const ReservationRequestModal = ({
     setFormData({
       fechaInicio: '',
       fechaDevolucion: '',
-      comentarios: ''
+      comentarios: '',
+      nombreCliente: '',
+      telefonoCliente: '',
+      correoElectronicoCliente: ''
     });
     setValidationErrors({});
   };
@@ -126,7 +170,7 @@ const ReservationRequestModal = ({
         <div className="reservation-modal-content">
           {/* Header */}
           <div className="reservation-modal-header">
-            <h2 className="reservation-title">Solicitar Reserva</h2>
+            <h2 className="reservation-title">Solicitud de reserva</h2>
             <div className="vehiculo-info">
               <img 
                 src={vehiculo.imagenes?.[0] || '/default-car.jpg'} 
@@ -143,7 +187,12 @@ const ReservationRequestModal = ({
 
           {/* Body */}
           <div className="reservation-modal-body">
-            {success ? (
+            {!isAuthenticated ? (
+              <div className="error-message">
+                <span className="error-icon">⚠</span>
+                Debes iniciar sesión para realizar una reserva.
+              </div>
+            ) : success ? (
               <div className="success-message">
                 <div className="success-icon">✓</div>
                 <h3>¡Solicitud enviada exitosamente!</h3>
@@ -151,40 +200,110 @@ const ReservationRequestModal = ({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="reservation-form">
-                <div className="form-group">
-                  <label htmlFor="fechaInicio">Fecha de inicio</label>
-                  <input
-                    type="date"
-                    id="fechaInicio"
-                    name="fechaInicio"
-                    value={formData.fechaInicio}
-                    onChange={handleInputChange}
-                    min={today}
-                    required
-                    className={`form-input ${validationErrors.fechaInicio ? 'error' : ''}`}
-                  />
-                  {validationErrors.fechaInicio && (
-                    <div className="field-error">{validationErrors.fechaInicio}</div>
-                  )}
+                {/* Sección de datos del cliente */}
+                <div className="form-section">
+                  <h3 className="section-title">Datos del cliente beneficiario</h3>
+                  <p className="section-description">
+                    Ingresa los datos de la persona que usará el vehículo. 
+                    La reserva se asociará a tu cuenta, pero estos datos aparecerán en el contrato.
+                  </p>
+                  
+                  <div className="form-group">
+                    <label htmlFor="nombreCliente">Nombre completo</label>
+                    <input
+                      type="text"
+                      id="nombreCliente"
+                      name="nombreCliente"
+                      value={formData.nombreCliente}
+                      onChange={handleInputChange}
+                      required
+                      className={`form-input ${validationErrors.nombreCliente ? 'error' : ''}`}
+                      placeholder="Nombre completo del cliente"
+                    />
+                    {validationErrors.nombreCliente && (
+                      <div className="field-error">{validationErrors.nombreCliente}</div>
+                    )}
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="telefonoCliente">Teléfono</label>
+                      <input
+                        type="tel"
+                        id="telefonoCliente"
+                        name="telefonoCliente"
+                        value={formData.telefonoCliente}
+                        onChange={handleInputChange}
+                        required
+                        className={`form-input ${validationErrors.telefonoCliente ? 'error' : ''}`}
+                        placeholder="Número de teléfono"
+                      />
+                      {validationErrors.telefonoCliente && (
+                        <div className="field-error">{validationErrors.telefonoCliente}</div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="correoElectronicoCliente">Correo electrónico</label>
+                      <input
+                        type="email"
+                        id="correoElectronicoCliente"
+                        name="correoElectronicoCliente"
+                        value={formData.correoElectronicoCliente}
+                        onChange={handleInputChange}
+                        required
+                        className={`form-input ${validationErrors.correoElectronicoCliente ? 'error' : ''}`}
+                        placeholder="correo@ejemplo.com"
+                      />
+                      {validationErrors.correoElectronicoCliente && (
+                        <div className="field-error">{validationErrors.correoElectronicoCliente}</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="fechaDevolucion">Fecha de devolución</label>
-                  <input
-                    type="date"
-                    id="fechaDevolucion"
-                    name="fechaDevolucion"
-                    value={formData.fechaDevolucion}
-                    onChange={handleInputChange}
-                    min={formData.fechaInicio || today}
-                    required
-                    className={`form-input ${validationErrors.fechaDevolucion ? 'error' : ''}`}
-                  />
-                  {validationErrors.fechaDevolucion && (
-                    <div className="field-error">{validationErrors.fechaDevolucion}</div>
-                  )}
+                {/* Sección de fechas de reserva */}
+                <div className="form-section">
+                  <h3 className="section-title">Fechas de la reserva</h3>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="fechaInicio">Fecha de inicio</label>
+                      <input
+                        type="date"
+                        id="fechaInicio"
+                        name="fechaInicio"
+                        value={formData.fechaInicio}
+                        onChange={handleInputChange}
+                        min={today}
+                        required
+                        className={`form-input ${validationErrors.fechaInicio ? 'error' : ''}`}
+                      />
+                      {validationErrors.fechaInicio && (
+                        <div className="field-error">{validationErrors.fechaInicio}</div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="fechaDevolucion">Fecha de finalización</label>
+                      <input
+                        type="date"
+                        id="fechaDevolucion"
+                        name="fechaDevolucion"
+                        value={formData.fechaDevolucion}
+                        onChange={handleInputChange}
+                        min={formData.fechaInicio || today}
+                        required
+                        className={`form-input ${validationErrors.fechaDevolucion ? 'error' : ''}`}
+                      />
+                      {validationErrors.fechaDevolucion && (
+                        <div className="field-error">{validationErrors.fechaDevolucion}</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
+                {/* Comentarios adicionales */}
                 <div className="form-group">
                   <label htmlFor="comentarios">Comentarios adicionales (opcional)</label>
                   <textarea
@@ -217,9 +336,9 @@ const ReservationRequestModal = ({
                   <button 
                     type="submit" 
                     className="btn-primary"
-                    disabled={loading}
+                    disabled={loading || !isAuthenticated}
                   >
-                    {loading ? 'Enviando...' : 'Enviar Solicitud'}
+                    {loading ? 'Enviando...' : 'Enviar'}
                   </button>
                 </div>
               </form>
