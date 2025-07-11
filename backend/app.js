@@ -16,7 +16,9 @@ import pdfViewerRoutes from "./src/routes/pdfViewer.js";
 
 
 import contactRoutes from "./src/routes/contact.js";
+
 import profileRoutes from "./src/routes/profile.js";
+
 import { fileURLToPath } from 'url';
 import path from 'path';
 import cors from "cors";
@@ -54,6 +56,7 @@ app.use("/api/logout", logoutRoutes);
 app.use("/api/passwordRecovery", passwordRecoveryRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/send-welcome", sendWelcome);
+
 app.use("/api/upload", uploadImageRoutes);
 app.use("/api", contactRoutes);
 
@@ -62,8 +65,12 @@ app.use("/api/profile", profileRoutes);
 
 
 
+
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/contratos", contratosRoutes);
 app.use("/api/mantenimientos", mantenimientosRoutes); 
 app.use("/api/pdf", pdfViewerRoutes);
+
+
+
 export default app;
