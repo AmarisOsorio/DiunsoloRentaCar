@@ -1,132 +1,132 @@
-/*
+    /*
     Fields: 
         reservationId (string)
         estado (string: "Activo,Finalizado,Anulado")
-        fecha_inicio (fecha de cuando se agrego este contrato a la base)
-        fecha_fin (fecha de cuando se paso estado a "Finalizado")
-        datos_hoja_estado (object){
-            fecha_entrega (date)
-            fecha_devolucion (date)
-            numero_unidad (string)
-            marca_modelo (string)
+        fechaInicio (fecha de cuando se agrego este contrato a la base)
+        fechaFin (fecha de cuando se paso estado a "Finalizado")
+        datosHojaEstado (object){
+            fechaEntrega (date)
+            fechaDevolucion (date)
+            numeroUnidad (string)
+            marcaModelo (string)
             placa (string)
-            nombre_cliente (string)
+            nombreCliente (string)
             anotaciones (string)
-            documentacion_entrega (object){
+            documentacionEntrega (object){
                 entrega (object){
                     llaves (boolean)
-                    tarjeta_circulacion (boolean)
-                    factura_consumidor (boolean)
+                    tarjetaCirculacion (boolean)
+                    facturaConsumidor (boolean)
                 }
                 
                 devolucion (object){
                     llaves (boolean)
-                    tarjeta_circulacion (boolean)
-                    factura_consumidor (boolean)
+                    tarjetaCirculacion (boolean)
+                    facturaConsumidor (boolean)
                 }
             }
 
-            inspeccion_fisica (object){
+            inspeccionFisica (object){
                 entrega (object){
-                    interna (object){
-                        condicion_general (string)
+                    externa (object){
+                        condicionGeneral (string)
                         capo (boolean)
-                        medida_aceite (string)
+                        medidaAceite (string)
                         antena (boolean)
                         espejos (boolean)
                         maletero (boolean)
-                        vidrios_buen_estado (boolean)
-                        bolsa_herramientas (boolean)
-                        manijas_puertas (boolean)
-                        tapa_gasolina (boolean)
-                        tazas_rines (object){
+                        vidriosBuenEstado (boolean)
+                        bolsaHerramientas (boolean)
+                        manijasPuertas (boolean)
+                        tapaGasolina (boolean)
+                        tazasRines (object){
                             presente (boolean)
                             cantidad (number)
                         }
                     }
-                    externa (object){
-                        interruptor_maletero (boolean)
-                        llave_encendido (boolean)
+                    interna (object){
+                        interruptorMaletero (boolean)
+                        llaveEncendido (boolean)
                         luces (boolean)
-                        radio_original (boolean)
-                        ventilacion_ac_calefaccion (boolean)
-                        panel_instrumentos (string)
-                        palanca_cambios (boolean)
-                        seguro_puerta (boolean)
+                        radioOriginal (boolean)
+                        ventilacionAcCalefaccion (boolean)
+                        panelInstrumentos (string)
+                        palancaCambios (boolean)
+                        seguroPuerta (boolean)
                         alfombras (boolean)
-                        llanta_repuesto (boolean)
+                        llantaRepuesto (boolean)
                     }
+                }
 
                 devolucion (object){
+                    externa (object){
+                        condicionGeneral (string)
+                        capo (boolean)
+                        medidaAceite (string)
+                        antena (boolean)
+                        espejos (boolean)
+                        maletero (boolean)
+                        vidriosBuenEstado (boolean)
+                        bolsaHerramientas (boolean)
+                        manijasPuertas (boolean)
+                        tapaGasolina (boolean)
+                        tazasRines (object){
+                            presente (boolean)
+                            cantidad (number)
+                        }
+                    }
                     interna (object){
-                            condicion_general (string)
-                            capo (boolean)
-                            medida_aceite (string)
-                            antena (boolean)
-                            espejos (boolean)
-                            maletero (boolean)
-                            vidrios_buen_estado (boolean)
-                            bolsa_herramientas (boolean)
-                            manijas_puertas (boolean)
-                            tapa_gasolina (boolean)
-                            tazas_rines (object){
-                                presente (boolean)
-                                cantidad (number)
-                            }
-                        }
-                        externa (object){
-                            interruptor_maletero (boolean)
-                            llave_encendido (boolean)
-                            luces (boolean)
-                            radio_original (boolean)
-                            ventilacion_ac_calefaccion (boolean)
-                            panel_instrumentos (string)
-                            palanca_cambios (boolean)
-                            seguro_puerta (boolean)
-                            alfombras (boolean)
-                            llanta_repuesto (boolean)
-                        }
+                        interruptorMaletero (boolean)
+                        llaveEncendido (boolean)
+                        luces (boolean)
+                        radioOriginal (boolean)
+                        ventilacionAcCalefaccion (boolean)
+                        panelInstrumentos (string)
+                        palancaCambios (boolean)
+                        seguroPuerta (boolean)
+                        alfombras (boolean)
+                        llantaRepuesto (boolean)
                     }
                 }
             }
-            fotos_condicion_general (array[string: URL])
-            estado_combustible (object){
+            fotosCondicionGeneral (array[string: URL])
+            estadoCombustible (object){
                 entrega (string)
                 devolucion (string)
             }
-            firma_entrega (string: URL/base64)
+            firmaEntrega (string: URL/base64)
         }
-        datos_arrendamiento (object){
-            nombre_arrendatario (string)
-            profesion_arrendatario (string)
-            direccion_arrendatario (string)
-            pais_pasaporte (string)
-            numero_pasaporte (string)
-            pais_licencia (string)
-            numero_licencia (string)
-            extra_driver_name (string)
-            pais_pasaporte_conductor_extra (string)
-            numero_pasaporte_conductor_extra (string)
-            pais_licencia_conductor_extra (string)
-            numero_licencia_conductor_extra (string)
-            ciudad_entrega (string)
-            hora_entrega (string)
-            fecha_entrega (date)
-            precio_diario (number)
-            monto_total (number)
-            dias_alquiler (number)
-            monto_deposito (number)
-            dias_plazo (number)
-            penalidad_mal_uso (number)
-            ciudad_firma (string)
-            hora_firma (string)
-            fecha_firma (date)
-            firma_arrendador (string: URL/base64)
-            firma_arrendatario (string: URL/base64)
+        datosArrendamiento (object){
+            nombreArrendatario (string)
+            profesionArrendatario (string)
+            direccionArrendatario (string)
+            paisPasaporte (string)
+            numeroPasaporte (string)
+            paisLicencia (string)
+            numeroLicencia (string)
+            extraDriverName (string)
+            paisPasaporteConductorExtra (string)
+            numeroPasaporteConductorExtra (string)
+            paisLicenciaConductorExtra (string)
+            numeroLicenciaConductorExtra (string)
+            ciudadEntrega (string)
+            horaEntrega (string)
+            fechaEntrega (date)
+            precioDiario (number)
+            montoTotal (number)
+            diasAlquiler (number)
+            montoDeposito (number)
+            diasPlazo (number)
+            penalidadMalUso (number)
+            ciudadFirma (string)
+            horaFirma (string)
+            fechaFirma (date)
+            firmaArrendador (string: URL/base64)
+            firmaArrendatario (string: URL/base64)
         }
         documentos (object){
-            hoja_estado_pdf (string: URL)
-            arrendamiento_pdf (string: URL)
+            hojaEstadoPdf (string: URL)
+            arrendamientoPdf (string: URL)
         }
 */
 
@@ -136,9 +136,34 @@ import {Schema, model} from "mongoose";
 //Schema
 const contratosSchema = new Schema({
     reservationId: {
+
         type: String, 
         required: true,
         unique: true
+
+        type: Schema.Types.ObjectId,
+        ref:"Reservas", 
+        required: true
+    },
+
+    clientID: {
+        type: Schema.Types.ObjectId, 
+        ref: "Clientes",
+        required: true
+    },
+    carID: {
+        type: Schema.Types.ObjectId, 
+        ref: "Vehiculos",
+
+    clientId: {
+        type: String, 
+        required: true
+    },
+    carId: {
+        type: String, 
+
+        required: true
+
     },
     estado: {
         type: String, 
@@ -152,6 +177,219 @@ const contratosSchema = new Schema({
     fechaFin: {
         type: Date
     },
+
+    datosHojaEstado: [{
+        fechaEntrega:{ 
+            type: Date
+        },
+        fechaDevolucion:{ 
+            type: Date
+        },
+        numeroUnidad: {
+            type: String
+        },
+        marcaModelo: {
+            type: String
+        },
+        placa: {
+            type: String
+        },
+        nombreCliente: {
+           type: String
+        },
+        anotaciones: {
+           type: String
+        },
+        documentacionEntrega: [{
+            entrega: [{
+                llaves: {
+                    type: Boolean
+                },
+                tarjetaCirculacion: {
+                    type:Boolean
+                },
+                facturaConsumidor: {
+                    type:Boolean
+                }
+            }],
+            devolucion: [{
+                llaves: {
+                    type: Boolean
+                },
+                tarjetaCirculacion: {
+                    type: Boolean
+                },
+                facturaConsumidor: {
+                    type: Boolean
+                }
+            }]
+        }
+        ],
+        inspeccionFisica: [{
+            entrega: [{
+                externa: [{
+                    condicionGeneral: {
+                        type: String
+                    },
+                    capo: {
+                        type: Boolean
+                    },
+                    medidaAceite: {
+                        type: String
+                    },
+                    antena: {
+                       type: Boolean
+                    },
+                    espejos: {
+                        type: Boolean
+                    },
+                    maletero: {
+                       type: Boolean
+                    },
+                    vidriosBuenEstado: {
+                        type: Boolean
+                    },
+                    bolsaHerramientas: {
+                        type: Boolean
+                    },
+                    manijasPuertas: {
+                        type: Boolean
+                    },
+                    tapaGasolina: {
+                       type: Boolean
+                    },
+                    tazasRines: [{
+                        presente: {
+                            type: Boolean
+                        },
+                        cantidad: {
+                           type: Number
+                        }
+                    }]
+                }],
+                interna: [{
+                    interruptorMaletero: {
+                       type: Boolean
+                    },
+                    llaveEncendido: {
+                        type: Boolean
+                    },
+                    luces: {
+                        type: Boolean
+                    },
+                    radioOriginal: {
+                       type: Boolean
+                    },
+                    ventilacionAcCalefaccion: {
+                        type: Boolean
+                    },
+                    panelInstrumentos: {
+                        type: String
+                    },
+                    palancaCambios: {
+                        type: Boolean
+                    },
+                    seguroPuerta: {
+                        type: Boolean
+                    },
+                    alfombras: {
+                        type: Boolean
+                    },
+                    llantaRepuesto: {
+                        type: Boolean
+                    }
+                }]
+            }],
+            devolucion: [{
+                externa: [{
+                    condicionGeneral: {
+                        type: String
+                    },
+                    capo: {
+                        type: Boolean
+                    },
+                    medidaAceite: {
+                        type: String
+                    },
+                    antena: {
+                        type: Boolean
+                    },
+                    espejos: {
+                        type: Boolean
+                    },
+                    maletero: {
+                        type: Boolean
+                    },
+                    vidriosBuenEstado: {
+                        type: Boolean
+                    },
+                    bolsaHerramientas: {
+                        type: Boolean
+                    },
+                    manijasPuertas: {
+                        type: Boolean
+                    },
+                    tapaGasolina: {
+                        type: Boolean
+                    },
+                    tazasRines: [{
+                        presente: {
+                           type:  Boolean
+                        },
+                        cantidad: {
+                           type:  Number
+                        }
+                    }]
+                }],
+                interna: [{
+                    interruptorMaletero: {
+                        type: Boolean
+                    },
+                    llaveEncendido: {
+                        type: Boolean
+                    },
+                    luces: {
+                        type: Boolean
+                    },
+                    radioOriginal: {
+                        type: Boolean
+                    },
+                    ventilacionAcCalefaccion: {
+                        type: Boolean
+                    },
+                    panelInstrumentos: {
+                        type: String
+                    },
+                    palancaCambios: {
+                        type: Boolean
+                    },
+                    seguroPuerta: {
+                        type: Boolean
+                    },
+                    alfombras: {
+                        type: Boolean
+                    },
+                    llantaRepuesto: {
+                        type: Boolean
+                    }
+                }]
+            }]
+        }],
+        fotosCondicionGeneral: {
+            type: String
+        },
+        estadoCombustible: [{
+            entrega: {
+                type: String
+            },
+            devolucion: {
+                type: String
+            }
+        }],
+        firmaEntrega: {
+            type: String
+        }
+
     datosHojaEstado: {
         fechaEntrega: Date,
         fechaDevolucion: Date,
@@ -272,11 +510,101 @@ const contratosSchema = new Schema({
     documentos: {
         hojaEstadoPdf: String,
         arrendamientoPdf: String
+
     }
+],
+    datosArrendamiento: [{
+        nombreArrendatario: {
+            type:String
+        },
+        profesionArrendatario: {
+           type: String
+        },
+        direccionArrendatario: {
+          type:  String
+        },
+        paisPasaporte: {
+           type: String
+        },
+        numeroPasaporte: {
+           type: String
+        },
+        paisLicencia: {
+           type: String
+        },
+        numeroLicencia: {
+           type: String
+        },
+        extraDriverName: {
+          type:  String
+        },
+        paisPasaporteConductorExtra: {
+          type:  String
+        },
+        numeroPasaporteConductorExtra: {
+           type: String
+        },
+        paisLicenciaConductorExtra: {
+          type:  String
+        },
+        numeroLicenciaConductorExtra: {
+          type:  String
+        },
+        ciudadEntrega: {
+           type: String
+        },
+        horaEntrega: {
+           type: String
+        },
+        fechaEntrega: {
+            type: Date
+        },
+        precioDiario: {
+            type: Number
+        },
+        montoTotal: {
+          type: Number
+        },
+        diasAlquiler: {
+           type: Number
+        },
+        montoDeposito: {
+          type: Number
+        },
+        diasPlazo: {
+            type:Number
+        },
+        penalidadMalUso: {
+           type: Number
+        },
+        ciudadFirma: {
+          type: String
+        },
+        horaFirma: {
+           type: String
+        },
+        fechaFirma: {
+           type: Date
+        },
+        firmaArrendador: {
+           type: String
+        },
+        firmaArrendatario: {
+           type: String
+        }
+    }],
+    documentos: [{
+        hojaEstadoPdf: {
+           type: String
+        },
+        arrendamientoPdf: {
+           type: String
+        }
+    }]
 }, {
     timestamps: true,
     strict: false
 });
 
 //Export
-export const Contratos = model("Contratos", contratosSchema);
+export const Contratos = model("Contratos", contratosSchema); 
