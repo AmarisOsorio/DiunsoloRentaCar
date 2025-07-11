@@ -1,0 +1,49 @@
+.filtros-container {
+  background-color: #fff;
+  padding: 1rem 1.5rem;
+  width: 220px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.filtro-seccion {
+  margin-bottom: 1.5rem;
+}
+
+.filtro-titulo {
+  font-size: 1rem;
+  text-align: left;
+  color: #1AA5DF;
+  border-bottom: 2px solid #FFD700;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.filtro-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  color: #444;
+  font-weight: 500;
+}
+
+.filtro-checkbox input[type="checkbox"] {
+  accent-color: #1c318c;
+  transform: scale(1.1);
+}
+
+.btn-limpiar-filtros {
+  background-color: #1c318c;
+  color: white;
+  padding: 0.5rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.btn-limpiar-filtros:hover {
+  background-color: #15256c;
+}

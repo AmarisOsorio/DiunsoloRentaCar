@@ -79,10 +79,107 @@
   margin: 0;
 }
 
+.catalogo-content {
+  padding: 2rem;
+}
+
+.catalogo-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.catalogo-sidebar {
+  flex-shrink: 0;
+}
+
+.catalogo-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalogo-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.catalogo-header-info h2 {
+  color: #1C318C;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.resultados-count {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Grid de vehículos */
 .vehiculos-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2.2rem 1rem;
   justify-items: center;
   align-items: stretch;
+}
+
+/* Mensaje cuando no hay vehículos */
+.no-vehiculos {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+}
+
+.no-vehiculos p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.no-vehiculos p:first-child {
+  font-weight: 600;
+  color: #333;
+}
+
+/************************ R E S P O N S I V E***************************/
+
+@media (max-width: 1200px) {
+  .catalogo-layout {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .catalogo-sidebar {
+    width: 100%;
+  }
+  
+  .vehiculos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .catalogo-content {
+    padding: 1rem;
+  }
+  
+  .catalogo-header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .vehiculos-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
