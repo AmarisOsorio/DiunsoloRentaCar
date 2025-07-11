@@ -13,6 +13,7 @@ import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservasRoutes from "./src/routes/reservas.js";
 import contratosRoutes from "./src/routes/contratos.js";
 import pdfViewerRoutes from "./src/routes/pdfViewer.js";
+import marcasRoutes from "./src/routes/marcas.js";
 
 
 import contactRoutes from "./src/routes/contact.js";
@@ -61,6 +62,7 @@ app.use("/api/upload", uploadImageRoutes);
 app.use("/api", contactRoutes);
 
 app.use("/api/vehicles", vehiclesRoutes);
+app.use("/api/marcas", marcasRoutes);
 app.use("/api/profile", profileRoutes);
 
 
