@@ -1,184 +1,195 @@
 import React, { useState } from 'react';
+import '../styles/modals/VehiculoModal.css';
+import ReservationRequestModal from './ReservationRequestModal';
+import useReservationRequestModal from '../../hooks/components/modals/useReservationRequestModal';
+import { useAuth } from '../../context/AuthContext';
+import LoginModal from '../../components/modals/LoginModal';
 
-const VehiculoModal = ({ vehiculo, isOpen, onClose }) => {
-  const [imagenActual, setImagenActual] = useState(0);
+const VehiculoModal = ({ 
+  vehiculo, 
+  isOpen, 
+  onClose, 
+  imagenActual, 
+  setImagenActual, 
+  getEstadoClass, 
+  cambiarImagen, 
+  handleBackdropClick 
+}) => {
+  const { isAuthenticated } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  
+  const {
+    isOpen: isReservationOpen,
+    loading: reservationLoading,
+    error: reservationError,
+    success: reservationSuccess,
+    openModal: openReservationModal,
+    closeModal: closeReservationModal,
+    submitReservation
+  } = useReservationRequestModal();
+
+  const handleSolicitarReserva = () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    openReservationModal();
+  };
+
+  const handleCloseLoginModal = () => {
+    setShowLoginModal(false);
+  };
+
+  const handleReservationSubmit = async (reservationData) => {
+    try {
+      await submitReservation(reservationData);
+      // La modal se cerrará automáticamente en caso de éxito
+    } catch (error) {
+      console.error('Error al enviar reserva:', error);
+    }
+  };
 
   if (!isOpen || !vehiculo) return null;
 
-  const getEstadoClass = (estado) => {
-    switch (estado?.toLowerCase()) {
-      case 'disponible':
-        return 'disponible';
-      case 'reservado':
-        return 'reservado';
-      case 'mantenimiento':
-        return 'mantenimiento';
-      default:
-        return 'disponible';
-    }
-  };
-
-  const cambiarImagen = (direccion) => {
-    if (vehiculo.imagenes && vehiculo.imagenes.length > 1) {
-      if (direccion === 'next') {
-        setImagenActual((prev) => 
-          prev === vehiculo.imagenes.length - 1 ? 0 : prev + 1
-        );
-      } else {
-        setImagenActual((prev) => 
-          prev === 0 ? vehiculo.imagenes.length - 1 : prev - 1
-        );
-      }
-    }
-  };
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-    <div style={modalBackdropStyle} onClick={handleBackdropClick}>
-      <div style={modalContainerStyle}>
-        <button style={modalCloseStyle} onClick={onClose}>×</button>
-        
-        <div style={modalContentStyle}>
-          {/* Header del modal */}
-          <div style={modalHeaderStyle}>
-            <h2 style={vehiculoTitleStyle}>{vehiculo.nombreVehiculo}</h2>
-            <div style={{
-              ...vehiculoEstadoModalStyle,
-              backgroundColor: getEstadoClass(vehiculo.estado) === 'disponible' ? '#28a745' : 
-                              getEstadoClass(vehiculo.estado) === 'reservado' ? '#ffc107' : '#dc3545',
-              color: getEstadoClass(vehiculo.estado) === 'reservado' ? '#000' : '#fff'
-            }}>
-              <span style={{marginRight: '0.5rem'}}>
-                {getEstadoClass(vehiculo.estado) === 'disponible' ? '✓' :
-                 getEstadoClass(vehiculo.estado) === 'reservado' ? '⏱' : '🔧'}
-              </span>
-              {vehiculo.estado}
-            </div>
-          </div>
-
-          {/* Contenido principal */}
-          <div style={modalBodyStyle}>
-            {/* Sección de imagen */}
-            <div style={imagenSectionStyle}>
-              <div style={imagenContainerStyle}>
-                {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
-                  <button 
-                    style={{...imagenNavStyle, left: '10px'}} 
-                    onClick={() => cambiarImagen('prev')}
-                  >
-                    &#8249;
-                  </button>
-                )}
-                
-                <img 
-                  src={vehiculo.imagenes?.[imagenActual] || '/default-car.jpg'} 
-                  alt={vehiculo.nombreVehiculo}
-                  style={vehiculoImagenModalStyle}
-                />
-                
-                {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
-                  <button 
-                    style={{...imagenNavStyle, right: '10px'}} 
-                    onClick={() => cambiarImagen('next')}
-                  >
-                    &#8250;
-                  </button>
-                )}
+    <>
+      <div className="modal-backdrop" onClick={handleBackdropClick}>
+        <div className="modal-container">
+          <button className="modal-close" onClick={onClose}>×</button>
+          
+          <div className="modal-content">
+            {/* Header del modal */}
+            <div className="modal-header">
+              <h2 className="vehiculo-title">{vehiculo.nombreVehiculo}</h2>
+              <div className={`vehiculo-estado-modal ${getEstadoClass(vehiculo.estado)}`}>
+                <span className="estado-icon">
+                  {getEstadoClass(vehiculo.estado) === 'disponible' ? '✓' :
+                   getEstadoClass(vehiculo.estado) === 'reservado' ? '⏱' : '🔧'}
+                </span>
+                {vehiculo.estado}
               </div>
-              
-              {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
-                <div style={imagenThumbnailsStyle}>
-                  {vehiculo.imagenes.map((imagen, index) => (
-                    <img
-                      key={index}
-                      src={imagen}
-                      alt={`${vehiculo.nombreVehiculo} ${index + 1}`}
-                      style={{
-                        ...thumbnailStyle,
-                        opacity: index === imagenActual ? 1 : 0.6
-                      }}
-                      onClick={() => setImagenActual(index)}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Sección de información */}
-            <div style={infoSectionStyle}>
-              <div style={precioDestacadoStyle}>
-                ${vehiculo.precioPorDia}/día
+            {/* Contenido principal */}
+            <div className="modal-body">
+              {/* Sección de imagen */}
+              <div className="imagen-section">
+                <div className="imagen-container">
+                  {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
+                    <button 
+                      className="imagen-nav prev" 
+                      onClick={() => cambiarImagen('prev')}
+                    >
+                      &#8249;
+                    </button>
+                  )}
+                  
+                  <img 
+                    src={vehiculo.imagenes?.[imagenActual] || '/default-car.jpg'} 
+                    alt={vehiculo.nombreVehiculo}
+                    className="vehiculo-imagen-modal"
+                  />
+                  
+                  {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
+                    <button 
+                      className="imagen-nav next" 
+                      onClick={() => cambiarImagen('next')}
+                    >
+                      &#8250;
+                    </button>
+                  )}
+                </div>
+                
+                {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
+                  <div className="imagen-thumbnails">
+                    {vehiculo.imagenes.map((imagen, index) => (
+                      <img
+                        key={index}
+                        src={imagen}
+                        alt={`${vehiculo.nombreVehiculo} ${index + 1}`}
+                        className={`thumbnail ${index === imagenActual ? 'active' : ''}`}
+                        onClick={() => setImagenActual(index)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div style={specsGridStyle}>
-                <div style={specItemStyle}>
-                  <div style={specIconStyle}>🚗</div>
-                  <div>
-                    <div style={specLabelStyle}>Motor diésel</div>
-                    <div style={specValueStyle}>4 cilindros</div>
+              {/* Sección de información */}
+              <div className="info-section">
+                <div className="specs-grid">
+                  <div className="spec-item">
+                    <div className="spec-icon">👥</div>
+                    <div>
+                      <div className="spec-label">Capacidad para {vehiculo.capacidad} personas</div>
+                    </div>
                   </div>
                 </div>
 
-                <div style={specItemStyle}>
-                  <div style={specIconStyle}>⚙️</div>
-                  <div>
-                    <div style={specLabelStyle}>Manual de 6 velocidades</div>
+                <div className="detalles-vehiculo">
+                  <h3 className="detalles-title">Detalles del Vehículo</h3>
+                  <div className="detalles-grid">
+                    <div className="detalle-item">
+                      <span className="detalle-label">Año:</span>
+                      <span className="detalle-valor">{vehiculo.anio}</span>
+                    </div>
+                    <div className="detalle-item">
+                      <span className="detalle-label">Clase:</span>
+                      <span className="detalle-valor">{vehiculo.clase}</span>
+                    </div>
+                    <div className="detalle-item">
+                      <span className="detalle-label">Modelo:</span>
+                      <span className="detalle-valor">{vehiculo.modelo}</span>
+                    </div>
+                    <div className="detalle-item">
+                      <span className="detalle-label">Color:</span>
+                      <span className="detalle-valor">{vehiculo.color}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div style={specItemStyle}>
-                  <div style={specIconStyle}>🚙</div>
-                  <div>
-                    <div style={specLabelStyle}>Tracción 4x4</div>
-                  </div>
-                </div>
-
-                <div style={specItemStyle}>
-                  <div style={specIconStyle}>👥</div>
-                  <div>
-                    <div style={specLabelStyle}>Capacidad para {vehiculo.capacidad} personas</div>
-                  </div>
-                </div>
+                <button 
+                  className="solicitar-reserva-btn"
+                  onClick={handleSolicitarReserva}
+                  disabled={vehiculo.estado !== 'Disponible'}
+                >
+                  {vehiculo.estado === 'Disponible' ? 
+                    (isAuthenticated ? 'Solicitar reserva' : 'Inicia sesión para reservar') : 
+                    'No disponible'
+                  }
+                </button>
               </div>
-
-              <div style={detallesVehiculoStyle}>
-                <h3 style={detallesTitleStyle}>Detalles del Vehículo</h3>
-                <div style={detallesGridStyle}>
-                  <div style={detalleItemStyle}>
-                    <span style={detalleLabelStyle}>Año:</span>
-                    <span style={detalleValorStyle}>{vehiculo.anio}</span>
-                  </div>
-                  <div style={detalleItemStyle}>
-                    <span style={detalleLabelStyle}>Clase:</span>
-                    <span style={detalleValorStyle}>{vehiculo.clase}</span>
-                  </div>
-                  <div style={detalleItemStyle}>
-                    <span style={detalleLabelStyle}>Modelo:</span>
-                    <span style={detalleValorStyle}>{vehiculo.modelo}</span>
-                  </div>
-                  <div style={detalleItemStyle}>
-                    <span style={detalleLabelStyle}>Color:</span>
-                    <span style={detalleValorStyle}>{vehiculo.color}</span>
-                  </div>
-                  <div style={detalleItemStyle}>
-                    <span style={detalleLabelStyle}>Placa:</span>
-                    <span style={detalleValorStyle}>{vehiculo.placa}</span>
-                  </div>
-                </div>
-              </div>
-
-              <button style={solicitarReservaBtnStyle}>
-                Solicitar reserva
-              </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal de solicitud de reserva */}
+      <ReservationRequestModal
+        isOpen={isReservationOpen}
+        onClose={closeReservationModal}
+        vehiculo={vehiculo}
+        onSubmit={handleReservationSubmit}
+        loading={reservationLoading}
+        error={reservationError}
+        success={reservationSuccess}
+      />
+
+      {/* Modal de login */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={handleCloseLoginModal}
+        onOpenRegister={() => {
+          // Puedes manejar la apertura del modal de registro aquí si es necesario
+          console.log('Abrir modal de registro');
+        }}
+        onOpenForgot={() => {
+          // Puedes manejar la apertura del modal de recuperación aquí si es necesario
+          console.log('Abrir modal de recuperación');
+        }}
+      />
+    </>
   );
 };
+
+export default VehiculoModal;

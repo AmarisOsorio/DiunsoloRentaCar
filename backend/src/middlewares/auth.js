@@ -12,7 +12,17 @@ export const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, config.JWT.secret); // Usar config.JWT.secret
     
-    // Buscar el usuario en la base de datos
+    // Si es admin, no buscar en la base de datos
+    if (decoded.id === "Admin") {
+      req.user = {
+        _id: "Admin",
+        email: decoded.email,
+        userType: "admin"
+      };
+      return next();
+    }
+    
+    // Buscar el usuario en la base de datos solo si no es admin
     const user = await ClientsModel.findById(decoded.id);
     
     if (!user) {
@@ -27,3 +37,6 @@ export const authenticateToken = async (req, res, next) => {
     return res.status(403).json({ message: 'Token inválido' });
   }
 };
+
+// Alias para compatibilidad con rutas existentes
+export const verifyAuth = authenticateToken;

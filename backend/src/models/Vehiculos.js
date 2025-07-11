@@ -87,7 +87,8 @@ const vehiculosSchema = new Schema({
     },
     contratoArrendamientoPdf: {
         type: String,
-        required: true
+        required: false,
+        default: ''
     },
     estado: {
         type: String,

@@ -1,17 +1,17 @@
 /*
     Fields:
         clientID (string),
-        cliente (object){
+        cliente (array of objects){
             nombre (string),
             telefono (string),
             correoElectronico (string)
         },
-        carID (string),
+        vehiculoID (string),
         fechaInicio (date),
         fechaDevolucion (date),
         estado (string: "Pendiente,Activa,Finalizada"),
         precioPorDia (number),
-        fechaCreacion (date),
+        fechaCreacion (date)
 */
 
 //Imports

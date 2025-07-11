@@ -1,6 +1,7 @@
 import React from 'react';
+import '../components/styles/VehiculoCard.css';
 
-const VehiculoCardHome = ({ vehiculo }) => {
+const VehiculoCard = ({ vehiculo, variant, showPrice, onClick }) => {
   const getEstadoClass = (estado) => {
     switch (estado?.toLowerCase()) {
       case 'disponible':
@@ -14,10 +15,16 @@ const VehiculoCardHome = ({ vehiculo }) => {
     }
   };
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick(vehiculo);
+    }
+  };
+
   return (
     <div className="vehiculo-card-home">
       <img 
-        src={vehiculo.imagenes?.[0] || '/default-car.jpg'} 
+        src={vehiculo.imagenVista3_4 || '/default-car.jpg'} 
         alt={vehiculo.nombreVehiculo}
         className="vehiculo-img-home"
       />
@@ -28,11 +35,15 @@ const VehiculoCardHome = ({ vehiculo }) => {
           <span className="estado-dot-home"></span>
           {vehiculo.estado}
         </div>
-        <p className="vehiculo-precio-home">${vehiculo.precioPorDia}/día</p>
-        <button className="vehiculo-vermas-home">Ver más</button>
+        <button 
+          className="vehiculo-vermas-home"
+          onClick={handleClick}
+        >
+          Ver más
+        </button>
       </div>
     </div>
   );
 };
 
-export default VehiculoCardHome;
+export default VehiculoCard;

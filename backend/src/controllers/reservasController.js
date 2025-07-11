@@ -2,6 +2,8 @@ const ReservasController = {};
 import reservasModel from "../models/Reservas.js";
 import clientesModel from "../models/Clientes.js";
 import vehiculosModel from "../models/Vehiculos.js";
+import { Contratos } from "../models/Contratos.js";
+import ContractGenerator from "../utils/contractGenerator.js";
 
 //Select
 
@@ -24,7 +26,9 @@ ReservasController.insertReservas = async (req, res) => {
         precioPorDia
     } = req.body;
 
-    // Verificar si ya existe una reserva activa o pendiente para el mismo usuario y vehículo
+    // VALIDACIÓN REMOVIDA: Ya no verificamos si existe una reserva activa o pendiente
+    // Esto permite múltiples reservas del mismo vehículo por usuario
+    /*
     const reservaExistente = await reservasModel.findOne({
         clientID,
         vehiculoID,
@@ -33,26 +37,35 @@ ReservasController.insertReservas = async (req, res) => {
     if (reservaExistente) {
         return res.status(400).json({ message: "Ya existe una reserva activa o pendiente para este vehículo y usuario." });
     }
+    */
 
-    // Buscar datos del cliente
-    let clienteData = null;
-    try {
-        const cliente = await clientesModel.findById(clientID);
-        if (!cliente) {
-            return res.status(404).json({ message: "Cliente no encontrado" });
+    // Usar los datos del cliente que vienen del frontend (cliente beneficiario)
+    // Si no vienen datos del cliente, usar los del usuario autenticado como fallback
+    let clienteData = req.body.cliente || null;
+
+    if (!clienteData || !Array.isArray(clienteData) || clienteData.length === 0) {
+        // Fallback: usar datos del usuario autenticado si no se proporcionaron datos del cliente
+        try {
+            const usuarioAutenticado = await clientesModel.findById(clientID);
+            if (!usuarioAutenticado) {
+                return res.status(404).json({ message: "Usuario autenticado no encontrado" });
+            }
+            clienteData = [{
+                nombre: usuarioAutenticado.nombre + (usuarioAutenticado.apellido ? (" " + usuarioAutenticado.apellido) : ""),
+                telefono: usuarioAutenticado.telefono,
+                correoElectronico: usuarioAutenticado.correo
+            }];
+            console.log('Usando datos del usuario autenticado como fallback:', clienteData);
+        } catch (err) {
+            return res.status(500).json({ message: "Error buscando usuario autenticado", error: err.message });
         }
-        clienteData = {
-            nombre: cliente.nombre + (cliente.apellido ? (" " + cliente.apellido) : ""),
-            telefono: cliente.telefono,
-            correoElectronico: cliente.correo
-        };
-    } catch (err) {
-        return res.status(500).json({ message: "Error buscando cliente", error: err.message });
+    } else {
+        console.log('Usando datos del cliente del formulario:', clienteData);
     }
 
     const newReserva = new reservasModel({
         clientID,
-        cliente: [clienteData],
+        cliente: clienteData, // Ya es un array
         vehiculoID,
         fechaInicio,
         fechaDevolucion,
@@ -60,8 +73,82 @@ ReservasController.insertReservas = async (req, res) => {
         precioPorDia
     });
 
-    await newReserva.save();
-    res.json({message: "Reserva saved"});
+    const savedReserva = await newReserva.save();
+    
+    // Generar contrato automáticamente
+    try {
+        // Obtener datos completos del vehículo para el contrato
+        const vehiculo = await vehiculosModel.findById(vehiculoID);
+        const cliente = await clientesModel.findById(clientID);
+        
+        if (vehiculo && cliente) {
+            // Calcular días de alquiler
+            const dias = Math.ceil((new Date(fechaDevolucion) - new Date(fechaInicio)) / (1000 * 60 * 60 * 24));
+            
+            // Usar datos del cliente beneficiario para el contrato
+            const clienteContrato = clienteData[0]; // Primer elemento del array cliente
+            const nombreParaContrato = clienteContrato.nombre;
+            const correoParaContrato = clienteContrato.correoElectronico;
+            
+            // Crear el contrato básico
+            const nuevoContrato = new Contratos({
+                reservationId: savedReserva._id.toString(),
+                datosArrendamiento: {
+                    nombreArrendatario: nombreParaContrato,
+                    direccionArrendatario: cliente.direccion || '',
+                    numeroPasaporte: cliente.numeroPasaporte || '',
+                    numeroLicencia: cliente.numeroLicencia || '',
+                    fechaEntrega: fechaInicio,
+                    precioDiario: precioPorDia,
+                    montoTotal: dias * precioPorDia,
+                    diasAlquiler: dias,
+                    montoDeposito: Math.round(precioPorDia * 2), // 2 días como depósito
+                    ciudadFirma: 'Ciudad de Guatemala',
+                    fechaFirma: new Date()
+                },
+                datosHojaEstado: {
+                    fechaEntrega: fechaInicio,
+                    fechaDevolucion: fechaDevolucion,
+                    numeroUnidad: vehiculo.numeroVinChasis,
+                    marcaModelo: `${vehiculo.nombreVehiculo} ${vehiculo.modelo}`,
+                    placa: vehiculo.placa,
+                    nombreCliente: nombreParaContrato
+                }
+            });
+            
+            // Generar el PDF del contrato
+            try {
+                const pdfBuffer = await ContractGenerator.generateContract(
+                    nuevoContrato.toObject(),
+                    vehiculo,
+                    cliente,
+                    savedReserva
+                );
+                
+                // Guardar el PDF
+                const filename = `contrato_${savedReserva._id}_${Date.now()}.pdf`;
+                const pdfUrl = await ContractGenerator.saveContractPDF(pdfBuffer, filename);
+                
+                // Actualizar el contrato con la URL del PDF generado
+                nuevoContrato.documentos = {
+                    arrendamientoPdf: pdfUrl
+                };
+                
+            } catch (pdfError) {
+                console.error('Error generando PDF del contrato:', pdfError);
+                // Continuamos sin el PDF si hay error
+            }
+            
+            await nuevoContrato.save();
+            console.log(`Contrato generado automáticamente para la reserva ${savedReserva._id}`);
+        }
+        
+    } catch (contractError) {
+        console.error('Error generando contrato automático:', contractError);
+        // No fallar la reserva si hay error en el contrato
+    }
+    
+    res.json({message: "Reserva saved", reservaId: savedReserva._id});
 };
 
 //Delete

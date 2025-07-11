@@ -40,7 +40,14 @@ export default function useLogin(onClose) {
         setTimeout(() => {
           setShowLogged(false);
           onClose && onClose();
-        }, 2200); // 3 segundos
+          // Para admin, redirigir después de mostrar éxito
+          if (result.userType === 'Admin' || result.userType === 'admin') {
+            setTimeout(() => {
+              window.location.href = '/admin';
+            }, 100);
+          }
+          // Para otros tipos de usuario no redirigir, mantener en la página actual
+        }, 2200); // 2.2 segundos
       }
     } catch (err) {
       setError('Error de red o servidor');
@@ -83,10 +90,14 @@ export default function useLogin(onClose) {
             setShowLogged(true); // Muestra el modal de éxito
             setTimeout(() => {
               setShowLogged(false);
-              if (typeof window !== 'undefined') {
-                window.location.href = '/';
+              onClose && onClose();
+              // Para admin, redirigir después de mostrar éxito
+              if (loginResult.userType === 'Admin' || loginResult.userType === 'admin') {
+                setTimeout(() => {
+                  window.location.href = '/admin';
+                }, 100);
               }
-            }, 1500); // 1.5 segundos de éxito
+            }, 2200); // 2.2 segundos de éxito
           } else {
             // Si por alguna razón el login automático falla, mostrar mensaje normal
             setShowLogged(true);
