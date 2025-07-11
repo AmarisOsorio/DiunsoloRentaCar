@@ -1,23 +1,22 @@
 /*
     Fields:
-        imagenes
-        nombreVehiculo
-        precioPorDia
-        placa
-        idMarca
-        clase
-        color
-        anio
-        capacidad
-        modelo
-        numeroMotor
-        numeroChasisGrabado
-        numeroVinChasis
-        contratoArrendamientoPdf
-        estado
-            - Disponible
-            - Reservado
-            - Mantenimiento
+- imagenVista3/4(string: URL)
+- imagenLateral(string: URL)
+- imagenes (array[string: URL])
+- nombreVehiculo (string)
+- precioPorDia (number)
+- placa (string)
+- idMarca (string)
+- clase (string)
+- color (string)
+- año (number)
+- capacidad (number)
+- modelo (string)
+- numeroMotor (string)
+- numeroChasisGrabado (string)
+- numeroVinChasis (string)
+- contratoArrendamientoPDF (string: URL)
+- estado (string: "Disponible,Reservado,Mantenimiento")
 */
 
 //Imports
@@ -25,6 +24,14 @@ import {Schema, model} from "mongoose";
 
 //Schema
 const vehiculosSchema = new Schema({
+    imagenVista3_4: {
+        type: String,
+        required: true
+    },
+    imagenLateral: {
+        type: String,
+        required: true
+    },
     imagenes: {
         type: [String],
         required: true
@@ -80,7 +87,8 @@ const vehiculosSchema = new Schema({
     },
     contratoArrendamientoPdf: {
         type: String,
-        required: true
+        required: false,
+        default: ''
     },
     estado: {
         type: String,

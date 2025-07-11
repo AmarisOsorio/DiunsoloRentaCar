@@ -1,7 +1,7 @@
 hr{
     border: 0;
     height: 1px;
-    background: linear-gradient(90deg, rgba(0,155,219,0) 0%, rgba(0,155,219,0.5) 50%, rgba(0,155,219,0) 100%);
+    background: #009BDB;
     margin: 7px 5px 7px;
     width: 100%;
 }

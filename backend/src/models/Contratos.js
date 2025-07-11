@@ -1,8 +1,6 @@
     /*
     Fields: 
         reservationId (string)
-        clientID (string)
-        carID (string)
         estado (string: "Activo,Finalizado,Anulado")
         fechaInicio (fecha de cuando se agrego este contrato a la base)
         fechaFin (fecha de cuando se paso estado a "Finalizado")
@@ -138,11 +136,16 @@ import {Schema, model} from "mongoose";
 //Schema
 const contratosSchema = new Schema({
     reservationId: {
+
+        type: String, 
+        required: true,
+        unique: true
+
         type: Schema.Types.ObjectId,
         ref:"Reservas", 
         required: true
     },
-<<<<<<< HEAD
+
     clientID: {
         type: Schema.Types.ObjectId, 
         ref: "Clientes",
@@ -151,15 +154,16 @@ const contratosSchema = new Schema({
     carID: {
         type: Schema.Types.ObjectId, 
         ref: "Vehiculos",
-=======
+
     clientId: {
         type: String, 
         required: true
     },
     carId: {
         type: String, 
->>>>>>> master
+
         required: true
+
     },
     estado: {
         type: String, 
@@ -173,7 +177,7 @@ const contratosSchema = new Schema({
     fechaFin: {
         type: Date
     },
-<<<<<<< HEAD
+
     datosHojaEstado: [{
         fechaEntrega:{ 
             type: Date
@@ -385,7 +389,7 @@ const contratosSchema = new Schema({
         firmaEntrega: {
             type: String
         }
-=======
+
     datosHojaEstado: {
         fechaEntrega: Date,
         fechaDevolucion: Date,
@@ -506,7 +510,7 @@ const contratosSchema = new Schema({
     documentos: {
         hojaEstadoPdf: String,
         arrendamientoPdf: String
->>>>>>> master
+
     }
 ],
     datosArrendamiento: [{
