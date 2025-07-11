@@ -1,5 +1,3 @@
-
-
 import express from "express";
 import cookieParser from "cookie-parser";
 import session from "express-session";
@@ -12,6 +10,10 @@ import mantenimientosRoutes from "./src/routes/mantenimientos.js";
 import sendWelcome from "./src/routes/sendWelcome.js";
 import uploadImageRoutes from "./src/routes/uploadImage.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
+import reservasRoutes from "./src/routes/reservas.js";
+import contratosRoutes from "./src/routes/contratos.js";
+import pdfViewerRoutes from "./src/routes/pdfViewer.js";
+
 
 import contactRoutes from "./src/routes/contact.js";
 import profileRoutes from "./src/routes/profile.js";
@@ -44,7 +46,7 @@ app.use(cors({
 }));
 
 // Servir la carpeta uploads como estática
-app.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use("/api/registerClients", registerClients);
 app.use("/api/login", loginRoutes);
@@ -59,7 +61,9 @@ app.use("/api/vehicles", vehiclesRoutes);
 app.use("/api/profile", profileRoutes);
 
 
-import reservasRoutes from "./src/routes/reservas.js";
+
 app.use("/api/reservas", reservasRoutes);
+app.use("/api/contratos", contratosRoutes);
 app.use("/api/mantenimientos", mantenimientosRoutes); 
+app.use("/api/pdf", pdfViewerRoutes);
 export default app;
