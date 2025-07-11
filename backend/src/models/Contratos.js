@@ -1,8 +1,6 @@
 /*
     Fields: 
         reservationId (string)
-        clientID (string)
-        carID (string)
         estado (string: "Activo,Finalizado,Anulado")
         fecha_inicio (fecha de cuando se agrego este contrato a la base)
         fecha_fin (fecha de cuando se paso estado a "Finalizado")
@@ -139,15 +137,8 @@ import {Schema, model} from "mongoose";
 const contratosSchema = new Schema({
     reservationId: {
         type: String, 
-        required: true
-    },
-    clientId: {
-        type: String, 
-        required: true
-    },
-    carId: {
-        type: String, 
-        required: true
+        required: true,
+        unique: true
     },
     estado: {
         type: String, 

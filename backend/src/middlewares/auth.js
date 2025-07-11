@@ -27,3 +27,6 @@ export const authenticateToken = async (req, res, next) => {
     return res.status(403).json({ message: 'Token inválido' });
   }
 };
+
+// Alias para compatibilidad con rutas existentes
+export const verifyAuth = authenticateToken;
