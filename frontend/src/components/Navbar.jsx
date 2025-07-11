@@ -9,6 +9,7 @@ import ForgotPasswordModal from './modals/ForgotPasswordModal';
 import { useNavbar } from '../hooks/components/useNavbar.jsx';
 import { useAuth } from '../context/AuthContext';
 import Submenu from './submenu';
+import AdminNavbar from './admin/AdminNavbar';
 import { FaChevronDown } from 'react-icons/fa';
 
 const languages = [
@@ -22,6 +23,14 @@ const navLinks = [
 ];
 
 const Navbar = () => {
+  const { userType, isAuthenticated } = useAuth();
+  
+  // Si ya es admin autenticado, mostrar directamente AdminNavbar sin delay
+  if (isAuthenticated && userType === 'admin') {
+    return <AdminNavbar />;
+  }
+  
+  // Para usuarios normales y no autenticados, inicializar hooks del navbar normal
   const {
     lang,
     langOpen,
@@ -32,10 +41,8 @@ const Navbar = () => {
     handleLangBlur,
     handleLangSelect,
   } = useNavbar(navLinks);
-  const { isAuthenticated } = useAuth();
+  
   const [rerenderFlag, setRerenderFlag] = useState(false);
-
-  // Controlar ambos modales aquí
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,11 +51,8 @@ const Navbar = () => {
 
   // Forzar re-render cuando cambia el estado de autenticación
   useEffect(() => {
-    // Forzar lectura de localStorage si el contexto no refleja el login
     const isReallyAuthenticated = isAuthenticated || localStorage.getItem('isAuthenticated') === 'true';
-
     const handler = () => {
-      // Cambia el estado local para forzar re-render
       setRerenderFlag(f => !f);
     };
     window.addEventListener('auth-changed', handler);
@@ -75,10 +79,9 @@ const Navbar = () => {
       const btn = document.getElementById('navbar-profile-btn');
       if (!closing && submenu && !submenu.contains(e.target) && btn && !btn.contains(e.target)) {
         closing = true;
-        // Animación de pliegue antes de cerrar
         const event = new Event('submenu-close');
         window.dispatchEvent(event);
-        setTimeout(() => setSubmenuOpen(false), 300); // Espera la animación (ligeramente más que el CSS)
+        setTimeout(() => setSubmenuOpen(false), 300);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -89,18 +92,16 @@ const Navbar = () => {
     setLoginModalOpen(false);
     setTimeout(() => setRegisterModalOpen(true), 10);
   };
+  
   const handleOpenLogin = () => {
     setRegisterModalOpen(false);
     setTimeout(() => setLoginModalOpen(true), 10);
   };
 
-  // Cerrar menú móvil al navegar
   const handleNavClick = () => setMobileMenuOpen(false);
 
-  // Cuando se cierra el modal de registro, también limpia el estado de éxito
   const handleCloseRegister = () => {
     setRegisterModalOpen(false);
-    // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
   };
 
   React.useEffect(() => {
@@ -179,7 +180,7 @@ const Navbar = () => {
                 className="login-btn"
                 onClick={() => {
                   setLoginModalOpen(true);
-                  setMobileMenuOpen(false); // Cierra el menú móvil al abrir login
+                  setMobileMenuOpen(false);
                 }}
                 style={{ width: '100%', marginTop: '0.5rem' }}
               >
@@ -242,7 +243,7 @@ const Navbar = () => {
         onClose={() => setForgotModalOpen(false)}
         onBackToLogin={() => {
           setForgotModalOpen(false);
-          setTimeout(() => setLoginModalOpen(true), 100); // Cambia a 100ms para abrir más rápido
+          setTimeout(() => setLoginModalOpen(true), 100);
         }}
       />
       <button
