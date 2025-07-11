@@ -13,12 +13,18 @@ const router = express.Router();
 router.route("/")
   .get(clientsController.getClients)
 
+router.route("/nuevos-clientes-registrados")
+  .get(clientsController.getNuevosClientesRegistrados);
+
 router.route("/:id")
   .get(clientsController.getClientById)
   .put(clientsController.updateClient)
   .delete(clientsController.deleteClient);
 
 router.post("/check-email", clientsController.checkEmailExists);
+
+
+
 
 
 export default router;
