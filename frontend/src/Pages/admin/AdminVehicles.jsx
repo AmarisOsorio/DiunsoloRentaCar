@@ -5,7 +5,7 @@ import VehicleCard from '../../components/admin/VehicleCard';
 import DeleteConfirmModal from '../../components/admin/DeleteConfirmModal';
 import VehicleFormModal from '../../components/admin/VehicleFormModal';
 import VehicleDetailsModal from '../../components/admin/VehicleDetailsModal';
-import SuccessModal from '../../components/admin/SuccessModal';
+import SuccessCheckAnimation from '../../components/modals/SuccessCheckAnimation';
 import './styles/AdminPage.css';
 import './styles/AdminVehicles.css';
 import { FaCar, FaPlus, FaSearch, FaFilter, FaTimes } from 'react-icons/fa';
@@ -53,6 +53,15 @@ const AdminVehicles = () => {
   useEffect(() => {
     fetchVehicles();
   }, [fetchVehicles]);
+
+  // Detectar si viene de un login exitoso (comentado para evitar errores)
+  useEffect(() => {
+    const justLoggedIn = sessionStorage.getItem('adminJustLoggedIn');
+    if (justLoggedIn) {
+      // setShowLoginSuccess(true); // Comentado porque la variable no existe
+      sessionStorage.removeItem('adminJustLoggedIn');
+    }
+  }, []);
 
   const getVehicleById = useCallback(async (id) => {
     try {
@@ -107,22 +116,45 @@ const AdminVehicles = () => {
 
   const updateVehicleStatus = useCallback(async (id, newStatus) => {
     try {
-      console.log('Updating vehicle status:', id, newStatus);
-      const response = await fetch(`/api/vehicles/${id}`, {
-        method: 'PUT',
+      console.log('🔄 Iniciando actualización de estado frontend');
+      console.log('📝 Vehicle ID:', id);
+      console.log('📝 Tipo de ID:', typeof id);
+      console.log('📝 Longitud del ID:', id?.length);
+      console.log('📝 Nuevo estado:', newStatus);
+      console.log('📝 Tipo de estado:', typeof newStatus);
+      
+      // Validar que el nuevo estado sea válido
+      const validStates = ['Disponible', 'Reservado', 'Mantenimiento'];
+      if (!validStates.includes(newStatus)) {
+        throw new Error(`Estado inválido: ${newStatus}`);
+      }
+      
+      const url = `/api/vehicles/${id}/status`;
+      console.log('📝 URL a llamar:', url);
+      
+      const requestBody = { estado: newStatus };
+      console.log('📝 Body a enviar:', JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch(url, {
+        method: 'PATCH',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ estado: newStatus })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('📝 Response status:', response.status);
+      console.log('📝 Response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error('Error al actualizar el estado del vehículo');
+        const errorData = await response.text();
+        console.error('❌ Response error data:', errorData);
+        throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
       }
 
-      const updatedVehicle = await response.json();
-      console.log('Vehicle status updated:', updatedVehicle);
+      const result = await response.json();
+      console.log('✅ Vehicle status updated successfully:', result);
       
       // Actualizar la lista local
       setVehicles(prev => prev.map(v => 
@@ -131,7 +163,7 @@ const AdminVehicles = () => {
       
       return { success: true };
     } catch (error) {
-      console.error('Error updating vehicle status:', error);
+      console.error('❌ Error updating vehicle status:', error);
       return { success: false, error: error.message };
     }
   }, []);
@@ -146,18 +178,18 @@ const AdminVehicles = () => {
   const [statusLoading, setStatusLoading] = useState(false);
   
   // Estados para el modal de éxito
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [successOperation, setSuccessOperation] = useState(null);
   const [successVehicleName, setSuccessVehicleName] = useState('');
   
   // Estado para la carga de datos del vehículo en edición
   const [loadingVehicleId, setLoadingVehicleId] = useState(null);
 
-  // Función helper para mostrar modal de éxito
+  // Función helper para mostrar animación de éxito
   const showSuccess = useCallback((operation, vehicleName) => {
     setSuccessOperation(operation);
     setSuccessVehicleName(vehicleName);
-    setShowSuccessModal(true);
+    setShowSuccessAnimation(true);
   }, []);
 
   if (!isAuthorized) {
@@ -420,13 +452,16 @@ const AdminVehicles = () => {
           vehicle={selectedVehicle}
         />
 
-        <SuccessModal
-          isOpen={showSuccessModal}
-          onClose={() => setShowSuccessModal(false)}
-          operation={successOperation}
-          vehicleName={successVehicleName}
-          autoCloseTime={4000}
-        />
+        {showSuccessAnimation && (
+          <SuccessCheckAnimation
+            operation={successOperation}
+            itemName={successVehicleName}
+            entityType="vehículo"
+            onClose={() => setShowSuccessAnimation(false)}
+            duration={2000}
+            showClose={true}
+          />
+        )}
       </div>
     </div>
   );

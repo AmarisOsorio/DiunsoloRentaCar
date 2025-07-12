@@ -17,7 +17,7 @@
   align-items: center;
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0ea5e9; /* Color celeste sólido */
   color: white;
 }
 
@@ -225,7 +225,7 @@
 }
 
 .detail-item.highlight {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0ea5e9; /* Color celeste sólido */
   color: white;
   border: none;
 }

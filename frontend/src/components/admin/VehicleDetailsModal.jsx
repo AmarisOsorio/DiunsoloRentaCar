@@ -93,8 +93,8 @@ const VehicleDetailsModal = ({
           <div className="vehicle-info-section">
             <div className="vehicle-title">
               <h3>{vehicle.nombreVehiculo}</h3>
-              <span className={`status-badge ${vehicle.disponible ? 'available' : 'unavailable'}`}>
-                {vehicle.disponible ? 'Disponible' : 'No disponible'}
+              <span className={`status-badge ${vehicle.estado === 'Disponible' ? 'available' : 'unavailable'}`}>
+                {vehicle.estado || 'Estado desconocido'}
               </span>
             </div>
 
@@ -146,7 +146,7 @@ const VehicleDetailsModal = ({
                       Precio diario:
                     </span>
                     <span className="detail-value price">
-                      {formatPrice(vehicle.precioDiario)}
+                      {formatPrice(vehicle.precioPorDia || vehicle.precioDiario || 0)}
                     </span>
                   </div>
                 </div>

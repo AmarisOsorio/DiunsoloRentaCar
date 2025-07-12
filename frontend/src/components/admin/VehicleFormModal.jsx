@@ -20,6 +20,7 @@ const VehicleFormModal = ({
     formData,
     loading,
     error,
+    fieldErrors,
     uploadingImages,
     handleInputChange,
     handleImageUpload,
@@ -30,7 +31,8 @@ const VehicleFormModal = ({
     removeImageLateral,
     submitForm,
     resetForm,
-    setError
+    setError,
+    scrollToField
   } = useVehicleForm(vehicle, (savedVehicle) => {
     onSuccess(savedVehicle);
     // No cerrar automáticamente aquí, dejar que el padre maneje el cierre
@@ -39,15 +41,46 @@ const VehicleFormModal = ({
   const { marcas, loading: marcasLoading, error: marcasError } = useMarcas();
 
   useEffect(() => {
+    console.log('🔄 Modal isOpen changed:', isOpen, 'vehicle:', vehicle);
     if (!isOpen) {
+      // Al cerrar el modal, limpiar todo
       resetForm();
       setError(null);
+    } else {
+      // Al abrir el modal, asegurar estado limpio si es para crear
+      if (!vehicle) {
+        console.log('🆕 Opening modal for new vehicle, resetting form');
+        resetForm();
+        setError(null);
+      }
     }
-  }, [isOpen, resetForm, setError]);
+  }, [isOpen, vehicle, resetForm, setError]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await submitForm();
+    console.log('🚀 Form submission started');
+    console.log('📝 Modal type:', vehicle ? 'EDIT' : 'CREATE');
+    console.log('📝 Vehicle data:', vehicle);
+    console.log('📝 Current formData:', formData);
+    console.log('📝 Current fieldErrors before submit:', fieldErrors);
+    
+    const result = await submitForm();
+    console.log('📋 Submit result:', result);
+    
+    // Si hay errores de validación, hacer scroll al primer campo con error
+    if (!result.success && result.firstErrorField) {
+      console.log('❌ Form submission failed, scrolling to field:', result.firstErrorField);
+      console.log('📝 Current fieldErrors after submit:', fieldErrors);
+      console.log('📝 Is field error from server:', result.fieldError);
+      
+      // Hacer scroll al campo con error después de un pequeño delay para que se actualice el DOM
+      setTimeout(() => {
+        console.log('🎯 Executing scroll to field:', result.firstErrorField);
+        scrollToField(result.firstErrorField);
+      }, result.fieldError ? 300 : 200); // Más delay para errores del servidor
+    } else if (result.success) {
+      console.log('✅ Form submitted successfully!');
+    }
   };
 
   const handleFileChange = (e) => {
@@ -76,6 +109,16 @@ const VehicleFormModal = ({
   };
 
   if (!isOpen) return null;
+
+  // Componente helper para mostrar errores de campo
+  const FieldError = ({ fieldName }) => {
+    if (!fieldErrors[fieldName]) return null;
+    return (
+      <span className="field-error">
+        {fieldErrors[fieldName]}
+      </span>
+    );
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -116,8 +159,10 @@ const VehicleFormModal = ({
                   value={formData.nombreVehiculo}
                   onChange={(e) => handleInputChange('nombreVehiculo', e.target.value)}
                   placeholder="Ej: Toyota Corolla Plateado"
+                  className={fieldErrors.nombreVehiculo ? 'error' : ''}
                   required
                 />
+                <FieldError fieldName="nombreVehiculo" />
               </div>
 
               <div className="form-row">
@@ -127,6 +172,7 @@ const VehicleFormModal = ({
                     id="idMarca"
                     value={formData.idMarca}
                     onChange={(e) => handleInputChange('idMarca', e.target.value)}
+                    className={fieldErrors.idMarca ? 'error' : ''}
                     required
                     disabled={marcasLoading}
                   >
@@ -140,6 +186,7 @@ const VehicleFormModal = ({
                   {marcasError && (
                     <span className="field-error">Error al cargar marcas</span>
                   )}
+                  <FieldError fieldName="idMarca" />
                 </div>
                 <div className="form-group">
                   <label htmlFor="modelo">Modelo *</label>
@@ -149,8 +196,10 @@ const VehicleFormModal = ({
                     value={formData.modelo}
                     onChange={(e) => handleInputChange('modelo', e.target.value)}
                     placeholder="Ej: Corolla"
+                    className={fieldErrors.modelo ? 'error' : ''}
                     required
                   />
+                  <FieldError fieldName="modelo" />
                 </div>
               </div>
 
@@ -162,8 +211,10 @@ const VehicleFormModal = ({
                   value={formData.clase}
                   onChange={(e) => handleInputChange('clase', e.target.value)}
                   placeholder="Ej: Sedán, SUV, Pickup, etc."
+                  className={fieldErrors.clase ? 'error' : ''}
                   required
                 />
+                <FieldError fieldName="clase" />
               </div>
 
               <div className="form-row">
@@ -188,8 +239,10 @@ const VehicleFormModal = ({
                     placeholder="Ej: 2020"
                     pattern="[0-9]{4}"
                     title="Ingrese un año válido de 4 dígitos"
+                    className={fieldErrors.anio ? 'error' : ''}
                     required
                   />
+                  <FieldError fieldName="anio" />
                 </div>
                 <div className="form-group">
                   <label htmlFor="color">Color *</label>
@@ -199,8 +252,10 @@ const VehicleFormModal = ({
                     value={formData.color}
                     onChange={(e) => handleInputChange('color', e.target.value)}
                     placeholder="Ej: Plateado"
+                    className={fieldErrors.color ? 'error' : ''}
                     required
                   />
+                  <FieldError fieldName="color" />
                 </div>
               </div>
             </div>
@@ -221,8 +276,10 @@ const VehicleFormModal = ({
                     pattern="[A-Za-z0-9]{6,8}"
                     title="La placa debe tener entre 6 y 8 caracteres alfanuméricos"
                     maxLength="8"
+                    className={fieldErrors.placa ? 'error' : ''}
                     required
                   />
+                  <FieldError fieldName="placa" />
                 </div>
                 <div className="form-group">
                   <label htmlFor="capacidad">Capacidad *</label>
@@ -245,8 +302,10 @@ const VehicleFormModal = ({
                     max="50"
                     placeholder="Número de pasajeros"
                     title="La capacidad debe ser entre 1 y 50 pasajeros"
+                    className={fieldErrors.capacidad ? 'error' : ''}
                     required
                   />
+                  <FieldError fieldName="capacidad" />
                 </div>
               </div>
               
@@ -258,7 +317,9 @@ const VehicleFormModal = ({
                   value={formData.numeroMotor}
                   onChange={(e) => handleInputChange('numeroMotor', e.target.value)}
                   placeholder="Número de motor del vehículo"
+                  className={fieldErrors.numeroMotor ? 'error' : ''}
                 />
+                <FieldError fieldName="numeroMotor" />
               </div>
 
               <div className="form-group">
@@ -269,7 +330,9 @@ const VehicleFormModal = ({
                   value={formData.numeroChasisGrabado}
                   onChange={(e) => handleInputChange('numeroChasisGrabado', e.target.value)}
                   placeholder="Número de chasis grabado"
+                  className={fieldErrors.numeroChasisGrabado ? 'error' : ''}
                 />
+                <FieldError fieldName="numeroChasisGrabado" />
               </div>
 
               <div className="form-group">
@@ -280,7 +343,9 @@ const VehicleFormModal = ({
                   value={formData.numeroVinChasis}
                   onChange={(e) => handleInputChange('numeroVinChasis', e.target.value)}
                   placeholder="Número VIN del vehículo"
+                  className={fieldErrors.numeroVinChasis ? 'error' : ''}
                 />
+                <FieldError fieldName="numeroVinChasis" />
               </div>
             </div>
 
@@ -305,8 +370,10 @@ const VehicleFormModal = ({
                   step="0.01"
                   placeholder="0.00"
                   title="Ingrese el precio diario en USD (ej: 25.50)"
+                  className={fieldErrors.precioPorDia ? 'error' : ''}
                   required
                 />
+                <FieldError fieldName="precioPorDia" />
               </div>
 
               <div className="form-group">
@@ -315,12 +382,14 @@ const VehicleFormModal = ({
                   id="estado"
                   value={formData.estado}
                   onChange={(e) => handleInputChange('estado', e.target.value)}
+                  className={fieldErrors.estado ? 'error' : ''}
                   required
                 >
                   <option value="Disponible">Disponible</option>
                   <option value="Reservado">Reservado</option>
                   <option value="Mantenimiento">En Mantenimiento</option>
                 </select>
+                <FieldError fieldName="estado" />
               </div>
             </div>
 
@@ -329,8 +398,9 @@ const VehicleFormModal = ({
               <h3>Imágenes del Vehículo</h3>
               
               {/* Imagen Vista 3/4 */}
-              <div className="form-group">
-                <label htmlFor="imagenVista3_4" className={`upload-label ${formData.imagenVista3_4 ? 'has-image' : ''}`}>
+              <div className="form-group vista-3-4-section" data-field="imagenVista3_4">
+                <h4>Vista 3/4 (Imagen Principal) *</h4>
+                <label htmlFor="imagenVista3_4" className={`upload-label ${formData.imagenVista3_4 ? 'has-image' : ''} ${fieldErrors.imagenVista3_4 ? 'error' : ''}`}>
                   {formData.imagenVista3_4 ? (
                     <div className="upload-preview">
                       <img 
@@ -377,11 +447,13 @@ const VehicleFormModal = ({
                   Esta imagen se mostrará como ícono principal en las tarjetas de vehículos. 
                   Use una imagen clara del vehículo desde un ángulo 3/4 frontal.
                 </p>
+                <FieldError fieldName="imagenVista3_4" />
               </div>
 
               {/* Imagen Lateral */}
-              <div className="form-group">
-                <label htmlFor="imagenLateral" className={`upload-label ${formData.imagenLateral ? 'has-image' : ''}`}>
+              <div className="form-group lateral-section" data-field="imagenLateral">
+                <h4>Imagen Lateral *</h4>
+                <label htmlFor="imagenLateral" className={`upload-label ${formData.imagenLateral ? 'has-image' : ''} ${fieldErrors.imagenLateral ? 'error' : ''}`}>
                   {formData.imagenLateral ? (
                     <div className="upload-preview">
                       <img 
@@ -427,13 +499,14 @@ const VehicleFormModal = ({
                 <p className="field-description">
                   Imagen del perfil lateral completo del vehículo para mostrar detalles del diseño.
                 </p>
+                <FieldError fieldName="imagenLateral" />
               </div>
 
               {/* Galería de Imágenes */}
-              <div className="form-group gallery-section">
+              <div className="form-group gallery-section" data-field="imagenes">
                 <h4>Galería de Imágenes Adicionales</h4>
                 <div className="gallery-upload-area">
-                  <label htmlFor="images" className="gallery-upload-label">
+                  <label htmlFor="images" className={`gallery-upload-label ${fieldErrors.imagenes ? 'error' : ''}`}>
                     <FaUpload className="upload-icon" />
                     <span className="upload-text">
                       {uploadingImages ? 'Subiendo Imágenes...' : 'Agregar Imágenes a la Galería'}
@@ -454,6 +527,7 @@ const VehicleFormModal = ({
                   Múltiples imágenes adicionales: interior, motor, detalles especiales, etc. 
                   Recomendado: 1024x768px cada una - JPG, PNG.
                 </p>
+                <FieldError fieldName="imagenes" />
 
                 {formData.imagenes && formData.imagenes.length > 0 && (
                   <div className="gallery-carousel">

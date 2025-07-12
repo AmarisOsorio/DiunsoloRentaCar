@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff, FaCar } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff, FaCar, FaWrench, FaClock } from 'react-icons/fa';
 import './styles/VehicleCard.css';
 
 const VehicleCard = ({ 
@@ -36,6 +36,47 @@ const VehicleCard = ({
     return vehicle.estado === "Disponible";
   };
 
+  const getStatusInfo = (estado) => {
+    switch (estado) {
+      case 'Disponible':
+        return { 
+          icon: <FaToggleOn />, 
+          color: '#047857', // Verde oscuro
+          bgColor: '#d1fae5', // Verde claro
+          text: 'Disponible',
+          next: 'Mantenimiento',
+          nextColor: '#d97706'
+        };
+      case 'Reservado':
+        return { 
+          icon: <FaClock />, 
+          color: '#1e40af', // Azul oscuro
+          bgColor: '#dbeafe', // Azul claro
+          text: 'Reservado',
+          next: 'Disponible',
+          nextColor: '#047857'
+        };
+      case 'Mantenimiento':
+        return { 
+          icon: <FaWrench />, 
+          color: '#d97706', // Naranja/amarillo oscuro
+          bgColor: '#fef3c7', // Naranja/amarillo claro
+          text: 'Mantenimiento',
+          next: 'Disponible',
+          nextColor: '#047857'
+        };
+      default:
+        return { 
+          icon: <FaToggleOff />, 
+          color: '#4b5563', // Gris más oscuro
+          bgColor: '#f3f4f6', // Gris claro
+          text: 'Desconocido',
+          next: 'Disponible',
+          nextColor: '#047857'
+        };
+    }
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-US', {
       style: 'currency',
@@ -45,6 +86,7 @@ const VehicleCard = ({
 
   const imageUrl = getImageUrl(vehicle);
   const isAvailable = isVehicleAvailable(vehicle);
+  const statusInfo = getStatusInfo(vehicle.estado);
 
   return (
     <div className={`vehicle-card ${!isAvailable ? 'unavailable' : ''}`}>
@@ -62,23 +104,69 @@ const VehicleCard = ({
           </div>
         )}
         <div className="vehicle-card-status">
-          <span className={`status-badge ${isAvailable ? 'available' : 'unavailable'}`}>
-            {vehicle.estado || 'Desconocido'}
+          <span 
+            className={`status-badge`}
+            style={{ 
+              backgroundColor: statusInfo.bgColor,
+              color: statusInfo.color,
+              border: `1px solid ${statusInfo.color}`,
+              fontWeight: '600'
+            }}
+          >
+            {statusInfo.icon} {statusInfo.text}
           </span>
         </div>
       </div>
 
       <div className="vehicle-card-content">
         <h3 className="vehicle-card-title">{vehicle.nombreVehiculo}</h3>
+        
         <div className="vehicle-card-details">
-          <p><strong>Marca:</strong> {vehicle.marca}</p>
-          <p><strong>Modelo:</strong> {vehicle.modelo}</p>
-          <p><strong>Año:</strong> {vehicle.anio}</p>
-          <p><strong>Placa:</strong> {vehicle.placa}</p>
-          <p><strong>Capacidad:</strong> {vehicle.capacidad} personas</p>
-          <p className="vehicle-card-price">
-            <strong>Precio:</strong> {formatPrice(vehicle.precioPorDia || vehicle.precioDiario || 0)}/día
-          </p>
+          <div className="vehicle-details-compact">
+            {/* Fila 1: Marca (campo largo) - fila completa */}
+            <div className="detail-row detail-row-full">
+              <div className="detail-item detail-item-full">
+                <span className="detail-label">Marca:</span>
+                <span className="detail-value">{vehicle.marca}</span>
+              </div>
+            </div>
+            
+            {/* Fila 2: Modelo (campo largo) - fila completa */}
+            <div className="detail-row detail-row-full">
+              <div className="detail-item detail-item-full">
+                <span className="detail-label">Modelo:</span>
+                <span className="detail-value">{vehicle.modelo}</span>
+              </div>
+            </div>
+            
+            {/* Fila 3: Placa (campo largo) - fila completa */}
+            <div className="detail-row detail-row-full">
+              <div className="detail-item detail-item-full">
+                <span className="detail-label">Placa:</span>
+                <span className="detail-value">{vehicle.placa}</span>
+              </div>
+            </div>
+            
+            {/* Fila 4: Año y Capacidad (campos cortos) - dos en una fila */}
+            <div className="detail-row detail-row-compact">
+              <div className="detail-item detail-item-compact">
+                <span className="detail-label">Año:</span>
+                <span className="detail-value">{vehicle.anio}</span>
+              </div>
+              <div className="detail-item detail-item-compact">
+                <span className="detail-label">Capacidad:</span>
+                <span className="detail-value">{vehicle.capacidad}</span>
+              </div>
+            </div>
+            
+            {/* Fila 5: Precio (separada con borde superior) */}
+            <div className="detail-price-row">
+              <span className="detail-label">Precio:</span>
+              <span className="detail-value price-highlight">
+                {formatPrice(vehicle.precioPorDia || vehicle.precioDiario || 0)}/día
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="vehicle-card-actions">
@@ -99,11 +187,18 @@ const VehicleCard = ({
           </button>
           <button 
             className="btn-action btn-toggle"
-            onClick={() => onToggleStatus(vehicle._id, isAvailable ? 'Reservado' : 'Disponible')}
+            onClick={() => onToggleStatus(vehicle._id, statusInfo.next)}
             disabled={loading}
-            title={isAvailable ? 'Marcar como no disponible' : 'Marcar como disponible'}
+            title={`Cambiar de "${statusInfo.text}" a "${statusInfo.next}"`}
+            style={{ 
+              opacity: loading ? 0.6 : 1
+            }}
           >
-            {isAvailable ? <FaToggleOn /> : <FaToggleOff />}
+            {loading ? (
+              <div className="spinner-small"></div>
+            ) : (
+              statusInfo.icon
+            )}
           </button>
           <button 
             className="btn-action btn-delete"

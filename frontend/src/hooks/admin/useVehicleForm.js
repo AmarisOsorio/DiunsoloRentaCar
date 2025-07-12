@@ -23,6 +23,7 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [uploadingImages, setUploadingImages] = useState(false);
 
   // Efecto para actualizar el formulario cuando cambien los datos iniciales
@@ -52,6 +53,7 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
       setFormData(newFormData);
       // Limpiar errores cuando se cargan nuevos datos
       setError(null);
+      setFieldErrors({});
     } else if (!initialData) {
       // Si no hay initialData (crear nuevo), resetear formulario
       console.log('No initial data - resetting form');
@@ -74,6 +76,7 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
         imagenLateral: null
       });
       setError(null);
+      setFieldErrors({}); // Limpiar errores de campo también
     }
   }, [initialData]); // Reaccionar a cualquier cambio en initialData
 
@@ -146,8 +149,18 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
       ...prev,
       [field]: value
     }));
+    
+    // Limpiar error específico del campo cuando el usuario empiece a escribir
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: null
+      }));
+    }
+    
+    // Si había un error general, limpiarlo también
     if (error) setError(null);
-  }, [error]);
+  }, [error, fieldErrors]);
 
   const handleImageUpload = useCallback(async (files) => {
     try {
@@ -224,111 +237,174 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
   }, []);
 
   const validateForm = useCallback(() => {
+    console.log('🔍 Starting form validation');
+    console.log('📝 Current formData:', formData);
+    console.log('📝 Is creating new vehicle:', !initialData);
+    
+    const errors = {};
+    let hasErrors = false;
+    
     const requiredFields = [
       'nombreVehiculo', 'idMarca', 'modelo', 'clase', 'anio', 'placa', 
-      'color', 'capacidad', 'numeroMotor', 'numeroChasisGrabado', 
-      'numeroVinChasis', 'precioPorDia'
+      'color', 'capacidad', 'precioPorDia'
     ];
     
+    const fieldNames = {
+      nombreVehiculo: 'Nombre del Vehículo',
+      idMarca: 'Marca',
+      modelo: 'Modelo',
+      clase: 'Clase',
+      anio: 'Año',
+      placa: 'Placa',
+      color: 'Color',
+      capacidad: 'Capacidad',
+      numeroMotor: 'Número de Motor',
+      numeroChasisGrabado: 'Número de Chasis Grabado',
+      numeroVinChasis: 'Número VIN/Chasis',
+      precioPorDia: 'Precio por Día',
+      imagenVista3_4: 'Imagen Vista 3/4',
+      imagenLateral: 'Imagen Lateral',
+      imagenes: 'Galería de Imágenes'
+    };
+    
+    // Validar campos requeridos
     for (const field of requiredFields) {
       if (!formData[field] || formData[field].toString().trim() === '') {
-        const fieldNames = {
-          nombreVehiculo: 'Nombre del Vehículo',
-          idMarca: 'Marca',
-          modelo: 'Modelo',
-          clase: 'Clase',
-          anio: 'Año',
-          placa: 'Placa',
-          color: 'Color',
-          capacidad: 'Capacidad',
-          numeroMotor: 'Número de Motor',
-          numeroChasisGrabado: 'Número de Chasis Grabado',
-          numeroVinChasis: 'Número VIN/Chasis',
-          precioPorDia: 'Precio por Día'
-        };
-        setError(`El campo "${fieldNames[field] || field}" es requerido`);
-        return false;
+        errors[field] = `${fieldNames[field]} es requerido`;
+        hasErrors = true;
       }
     }
 
-    // Validar que las imágenes requeridas estén presentes
+    // Validar placa (solo si tiene valor)
+    if (formData.placa && formData.placa.trim() !== '') {
+      const placaRegex = /^[A-Za-z0-9]{6,8}$/;
+      if (!placaRegex.test(formData.placa)) {
+        errors.placa = 'La placa debe tener entre 6 y 8 caracteres alfanuméricos';
+        hasErrors = true;
+      }
+    }
+
+    // Validar año (solo si tiene valor)
+    if (formData.anio && formData.anio.toString().trim() !== '') {
+      const anioStr = String(formData.anio).trim();
+      const anioNum = parseInt(anioStr);
+      
+      if (anioStr.length !== 4 || !/^\d{4}$/.test(anioStr)) {
+        errors.anio = 'El año debe tener exactamente 4 dígitos';
+        hasErrors = true;
+      } else if (isNaN(anioNum) || anioNum < 1900 || anioNum > new Date().getFullYear() + 1) {
+        errors.anio = `El año debe ser entre 1900 y ${new Date().getFullYear() + 1}`;
+        hasErrors = true;
+      }
+    }
+
+    // Validar capacidad (solo si tiene valor)
+    if (formData.capacidad && formData.capacidad.toString().trim() !== '') {
+      const capacidadNum = parseInt(formData.capacidad);
+      if (isNaN(capacidadNum) || capacidadNum < 1 || capacidadNum > 50) {
+        errors.capacidad = 'La capacidad debe ser entre 1 y 50 personas';
+        hasErrors = true;
+      }
+    }
+
+    // Validar precio (solo si tiene valor)
+    if (formData.precioPorDia && formData.precioPorDia.toString().trim() !== '') {
+      const precioNum = parseFloat(formData.precioPorDia);
+      if (isNaN(precioNum) || precioNum <= 0) {
+        errors.precioPorDia = 'El precio debe ser un número válido mayor a 0';
+        hasErrors = true;
+      } else if (precioNum > 9999.99) {
+        errors.precioPorDia = 'El precio diario no puede exceder $9,999.99';
+        hasErrors = true;
+      }
+    }
+
+    // Validar campos opcionales con formato específico
+    if (formData.numeroMotor && formData.numeroMotor.trim() !== '' && formData.numeroMotor.trim().length < 3) {
+      errors.numeroMotor = 'El número de motor debe tener al menos 3 caracteres';
+      hasErrors = true;
+    }
+
+    if (formData.numeroChasisGrabado && formData.numeroChasisGrabado.trim() !== '' && formData.numeroChasisGrabado.trim().length < 3) {
+      errors.numeroChasisGrabado = 'El número de chasis debe tener al menos 3 caracteres';
+      hasErrors = true;
+    }
+
+    if (formData.numeroVinChasis && formData.numeroVinChasis.trim() !== '' && formData.numeroVinChasis.trim().length < 3) {
+      errors.numeroVinChasis = 'El número VIN debe tener al menos 3 caracteres';
+      hasErrors = true;
+    }
+
+    // Validar imágenes requeridas
     if (!formData.imagenVista3_4) {
-      setError('La imagen vista 3/4 es requerida');
-      return false;
+      errors.imagenVista3_4 = 'La imagen vista 3/4 es requerida';
+      hasErrors = true;
     }
 
     if (!formData.imagenLateral) {
-      setError('La imagen lateral es requerida');
-      return false;
+      errors.imagenLateral = 'La imagen lateral es requerida';
+      hasErrors = true;
     }
 
-    // Verificar que las imágenes sean válidas (ahora con URLs de Cloudinary)
+    // Verificar validez de imágenes (solo si existen)
     if (formData.imagenVista3_4 && 
         typeof formData.imagenVista3_4 !== 'string' && 
         !formData.imagenVista3_4.url) {
-      setError('La imagen vista 3/4 no es válida');
-      return false;
+      errors.imagenVista3_4 = 'La imagen vista 3/4 no es válida';
+      hasErrors = true;
     }
 
     if (formData.imagenLateral && 
         typeof formData.imagenLateral !== 'string' && 
         !formData.imagenLateral.url) {
-      setError('La imagen lateral no es válida');
-      return false;
+      errors.imagenLateral = 'La imagen lateral no es válida';
+      hasErrors = true;
     }
 
-    // Validación de formato de placa
-    const placaRegex = /^[A-Za-z0-9]{6,8}$/;
-    if (!placaRegex.test(formData.placa)) {
-      setError('La placa debe tener entre 6 y 8 caracteres alfanuméricos');
-      return false;
+    // Validar galería de imágenes (opcional, pero si existe debe ser válida)
+    if (formData.imagenes && formData.imagenes.length > 10) {
+      errors.imagenes = 'Máximo 10 imágenes permitidas en la galería';
+      hasErrors = true;
     }
 
-    // Validación específica para el año
-    const anioStr = String(formData.anio).trim();
-    const anioNum = parseInt(anioStr);
+    // Actualizar estados de error
+    console.log('🔍 Validation errors found:', errors);
+    console.log('🔍 Has errors:', hasErrors);
     
-    console.log('Validating año:', { 
-      original: formData.anio, 
-      asString: anioStr, 
-      length: anioStr.length, 
-      asNumber: anioNum 
-    });
+    setFieldErrors(errors);
     
-    // Validar que el año tenga exactamente 4 dígitos
-    if (anioStr.length !== 4 || !/^\d{4}$/.test(anioStr)) {
-      setError('El año debe tener exactamente 4 dígitos');
-      return false;
-    }
-    
-    if (isNaN(anioNum) || anioNum < 1900 || anioNum > new Date().getFullYear() + 1) {
-      setError(`El año debe ser un número válido entre 1900 y ${new Date().getFullYear() + 1}`);
-      return false;
+    if (hasErrors) {
+      // Ordenar los campos por orden de aparición en el formulario
+      const fieldOrder = [
+        'nombreVehiculo', 'idMarca', 'modelo', 'clase', 'anio', 'placa', 
+        'color', 'capacidad', 'numeroMotor', 'numeroChasisGrabado', 
+        'numeroVinChasis', 'precioPorDia', 'estado', 
+        'imagenVista3_4', 'imagenLateral', 'imagenes'
+      ];
+      
+      const firstErrorField = fieldOrder.find(field => errors[field]) || Object.keys(errors)[0];
+      const firstError = errors[firstErrorField];
+      const fieldDisplayName = fieldNames[firstErrorField] || firstErrorField;
+      
+      console.log('🚨 First error field:', firstErrorField);
+      console.log('🚨 First error message:', firstError);
+      
+      setError(`Error en "${fieldDisplayName}": ${firstError}`);
+      return { isValid: false, firstErrorField };
     }
 
-    if (formData.capacidad < 1 || formData.capacidad > 50) {
-      setError('La capacidad debe ser entre 1 y 50 personas');
-      return false;
-    }
-
-    // Validación específica para el precio
-    const precioNum = parseFloat(formData.precioPorDia);
-    if (isNaN(precioNum) || precioNum <= 0) {
-      setError('El precio diario debe ser un número válido mayor a 0');
-      return false;
-    }
-    
-    // Validar que el precio no sea excesivamente alto
-    if (precioNum > 9999.99) {
-      setError('El precio diario no puede exceder $9,999.99');
-      return false;
-    }
-
-    return true;
+    setError(null);
+    return { isValid: true, firstErrorField: null };
   }, [formData]);
 
   const submitForm = useCallback(async () => {
-    if (!validateForm()) return { success: false };
+    const validationResult = validateForm();
+    if (!validationResult.isValid) {
+      return { 
+        success: false, 
+        firstErrorField: validationResult.firstErrorField 
+      };
+    }
 
     try {
       setLoading(true);
@@ -424,8 +500,33 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
         if (errorData.error && errorData.error.code === 11000) {
           // Error de duplicación de MongoDB
           if (errorData.error.keyPattern && errorData.error.keyPattern.placa) {
-            throw new Error(`Ya existe un vehículo con la placa "${errorData.error.keyValue.placa}". Por favor, use una placa diferente.`);
+            const errorMsg = `Ya existe un vehículo con la placa "${errorData.error.keyValue.placa}". Por favor, use una placa diferente.`;
+            console.log('🚨 Duplicate placa error detected:', errorMsg);
+            
+            // Marcar el campo placa con error
+            setFieldErrors({ placa: 'Esta placa ya está registrada' });
+            setError(errorMsg);
+            
+            return { 
+              success: false, 
+              error: errorMsg, 
+              firstErrorField: 'placa',
+              fieldError: true 
+            };
           }
+        }
+        
+        // Verificar si hay otros errores de campo específicos
+        if (errorData.field) {
+          console.log('🚨 Server field error detected:', errorData.field, errorData.message);
+          setFieldErrors({ [errorData.field]: errorData.message });
+          setError(errorData.message);
+          return { 
+            success: false, 
+            error: errorData.message, 
+            firstErrorField: errorData.field,
+            fieldError: true 
+          };
         }
         
         // Error genérico del servidor
@@ -435,15 +536,64 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
 
       const result = await response.json();
       onSuccess(result.vehiculo);
-      return { success: true, data: result.vehiculo };
-    } catch (err) {
-      console.error('Error saving vehicle:', err);
-      const errorMessage = err.message || 'Error al guardar el vehículo';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
+      return { success: true, data: result.vehiculo };      } catch (err) {
+        console.error('Error saving vehicle:', err);
+        const errorMessage = err.message || 'Error al guardar el vehículo';
+        
+        // Verificar si el error contiene información sobre campos específicos
+        const errorMessageLower = errorMessage.toLowerCase();
+        
+        // Detección especial para errores de placa duplicada
+        if (errorMessageLower.includes('placa') && (
+            errorMessageLower.includes('existe') || 
+            errorMessageLower.includes('duplicado') || 
+            errorMessageLower.includes('duplicate') ||
+            errorMessageLower.includes('ya está')
+        )) {
+          console.log('🚨 Duplicate placa error detected in message:', errorMessage);
+          setFieldErrors({ placa: 'Esta placa ya está registrada en el sistema' });
+          setError(errorMessage);
+          return { 
+            success: false, 
+            error: errorMessage, 
+            firstErrorField: 'placa',
+            fieldError: true 
+          };
+        }
+        
+        // Verificar otros campos comunes en mensajes de error
+        const fieldChecks = [
+          { field: 'nombreVehiculo', keywords: ['nombre'] },
+          { field: 'modelo', keywords: ['modelo'] },
+          { field: 'marca', keywords: ['marca'] },
+          { field: 'idMarca', keywords: ['marca'] },
+          { field: 'anio', keywords: ['año', 'anio'] },
+          { field: 'color', keywords: ['color'] },
+          { field: 'capacidad', keywords: ['capacidad'] },
+          { field: 'precioPorDia', keywords: ['precio'] },
+          { field: 'placa', keywords: ['placa'] }
+        ];
+        
+        for (const check of fieldChecks) {
+          if (check.keywords.some(keyword => errorMessage.toLowerCase().includes(keyword))) {
+            console.log(`🚨 ${check.field} error detected in message:`, errorMessage);
+            setFieldErrors({ [check.field]: `Error en ${check.field}` });
+            setError(errorMessage);
+            return { 
+              success: false, 
+              error: errorMessage, 
+              firstErrorField: check.field,
+              fieldError: true 
+            };
+          }
+        }
+        
+        // Error genérico
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setLoading(false);
+      }
   }, [formData, initialData, onSuccess, validateForm]);
 
   const resetForm = useCallback(() => {
@@ -466,16 +616,182 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
       imagenLateral: null
     });
     setError(null);
+    setFieldErrors({});
   }, []);
 
   const setErrorCallback = useCallback((error) => {
     setError(error);
   }, []);
 
+  const scrollToField = useCallback((fieldName) => {
+    console.log('🔄 scrollToField called with:', fieldName);
+    
+    // Usar setTimeout para asegurar que el DOM se haya actualizado
+    setTimeout(() => {
+      let element = null;
+      let containerElement = null;
+      
+      // 1. Buscar primero por ID (para campos normales)
+      element = document.getElementById(fieldName);
+      if (element) {
+        containerElement = element.closest('.form-group');
+        console.log('✅ Found element by ID:', fieldName);
+      }
+      
+      // 2. Si no se encuentra, buscar campos de imagen por data-field
+      if (!element) {
+        console.log('🔍 Searching by data-field for:', fieldName);
+        const sectionElement = document.querySelector(`[data-field="${fieldName}"]`);
+        if (sectionElement) {
+          element = sectionElement;
+          containerElement = sectionElement;
+          console.log('✅ Found element by data-field:', fieldName);
+        }
+      }
+      
+      // 3. Búsqueda alternativa para campos de imagen específicos
+      if (!element) {
+        console.log('🔍 Alternative search for image fields:', fieldName);
+        if (fieldName === 'imagenVista3_4') {
+          element = document.querySelector('.vista-3-4-section h4') || 
+                   document.querySelector('.vista-3-4-section') ||
+                   document.querySelector('label[for="imagenVista3_4"]');
+          containerElement = document.querySelector('.vista-3-4-section');
+        } else if (fieldName === 'imagenLateral') {
+          element = document.querySelector('.lateral-section h4') || 
+                   document.querySelector('.lateral-section') ||
+                   document.querySelector('label[for="imagenLateral"]');
+          containerElement = document.querySelector('.lateral-section');
+        } else if (fieldName === 'imagenes') {
+          element = document.querySelector('.gallery-section h4') || 
+                   document.querySelector('.gallery-section') ||
+                   document.querySelector('label[for="images"]');
+          containerElement = document.querySelector('.gallery-section');
+        }
+        
+        if (element) {
+          console.log('✅ Found element by alternative search:', fieldName);
+        }
+      }
+      
+      // 4. Búsqueda genérica como último recurso
+      if (!element) {
+        console.log('🔍 Generic search for:', fieldName);
+        element = document.querySelector(`label[for="${fieldName}"]`) ||
+                 document.querySelector(`[name="${fieldName}"]`) ||
+                 document.querySelector(`.${fieldName}`);
+        if (element) {
+          containerElement = element.closest('.form-group');
+          console.log('✅ Found element by generic search:', fieldName);
+        }
+      }
+      
+      if (!element) {
+        console.error('❌ No se encontró el elemento para el campo:', fieldName);
+        return;
+      }
+      
+      console.log('📍 Element found:', element);
+      console.log('📦 Container found:', containerElement);
+      
+      // Buscar el contenedor scrolleable del modal
+      const modalContainer = document.querySelector('.vehicle-form-modal');
+      const scrollContainer = document.querySelector('.vehicle-form');
+      
+      console.log('🏠 Modal container:', modalContainer);
+      console.log('📜 Scroll container:', scrollContainer);
+      
+      if (scrollContainer && element) {
+        try {
+          // Calcular posiciones
+          const elementRect = element.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const currentScrollTop = scrollContainer.scrollTop;
+          
+          // Calcular la posición del elemento relativa al inicio del scroll container
+          const elementOffsetTop = element.offsetTop;
+          
+          // Calcular scroll target para centrar el elemento
+          const containerHeight = containerRect.height;
+          const targetScrollTop = elementOffsetTop - (containerHeight * 0.3); // 30% desde arriba
+          
+          console.log('📏 Scroll calculation:', {
+            elementOffsetTop,
+            containerHeight,
+            currentScrollTop,
+            targetScrollTop: Math.max(0, targetScrollTop)
+          });
+          
+          // Hacer scroll suave
+          scrollContainer.scrollTo({
+            top: Math.max(0, targetScrollTop),
+            behavior: 'smooth'
+          });
+          
+          console.log('✅ Scroll ejecutado exitosamente');
+          
+        } catch (error) {
+          console.error('❌ Error en cálculo de scroll:', error);
+          // Fallback simple
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      } else {
+        console.warn('⚠️ No se encontró scroll container, usando fallback');
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+      
+      // Añadir efecto visual de resaltado
+      const targetElement = containerElement || element;
+      if (targetElement) {
+        console.log('✨ Añadiendo efecto de resaltado a:', targetElement);
+        
+        // Remover clase anterior si existe
+        targetElement.classList.remove('scroll-highlight');
+        
+        // Forzar reflow y añadir clase
+        setTimeout(() => {
+          targetElement.classList.add('scroll-highlight');
+          console.log('🎨 Clase scroll-highlight añadida');
+          
+          // Remover después de la animación
+          setTimeout(() => {
+            targetElement.classList.remove('scroll-highlight');
+            console.log('🎨 Clase scroll-highlight removida');
+          }, 2500);
+        }, 50);
+      }
+      
+      // Enfocar el campo si es un input/select/textarea
+      if (element.tagName && ['INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName.toUpperCase())) {
+        setTimeout(() => {
+          console.log('🎯 Enfocando elemento:', element);
+          try {
+            element.focus();
+            if ((element.type === 'text' || element.type === 'number') && element.select) {
+              element.select();
+            }
+          } catch (error) {
+            console.warn('⚠️ Error al enfocar elemento:', error);
+          }
+        }, 800); // Esperar a que termine el scroll
+      }
+      
+    }, 300); // Delay inicial para asegurar que el DOM esté actualizado
+  }, []);
+
   return {
     formData,
     loading,
     error,
+    fieldErrors,
     uploadingImages,
     handleInputChange,
     handleImageUpload,
@@ -486,6 +802,7 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
     removeImageLateral,
     submitForm,
     resetForm,
-    setError: setErrorCallback
+    setError: setErrorCallback,
+    scrollToField
   };
 };

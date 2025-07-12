@@ -17,8 +17,61 @@ const Particle = ({ idx }) => {
   return <div className="success-check-particle" style={style} />;
 };
 
-const SuccessCheckAnimation = ({ message = '¡Éxito!', subtitle, onClose, duration = 1800, showClose = false }) => {
+const SuccessCheckAnimation = ({ 
+  message = '¡Éxito!', 
+  subtitle, 
+  onClose, 
+  duration = 1800, 
+  showClose = false,
+  operation = 'default', // 'create', 'edit', 'delete', 'logout', 'default'
+  itemName = '', // nombre del item para mensajes personalizados
+  entityType = 'elemento' // tipo de entidad
+}) => {
   const overlayRef = useRef();
+
+  // Generar mensajes dinámicos basados en la operación
+  const getMessages = () => {
+    if (message !== '¡Éxito!' || subtitle) {
+      // Si se proporcionan mensajes personalizados, usarlos
+      return { title: message, subtitle };
+    }
+
+    switch (operation) {
+      case 'create':
+        return {
+          title: `¡${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Creado!`,
+          subtitle: itemName 
+            ? `"${itemName}" ha sido agregado exitosamente`
+            : `El ${entityType} ha sido creado correctamente`
+        };
+      case 'edit':
+        return {
+          title: `¡${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Actualizado!`,
+          subtitle: itemName 
+            ? `"${itemName}" ha sido actualizado exitosamente`
+            : `El ${entityType} ha sido actualizado correctamente`
+        };
+      case 'delete':
+        return {
+          title: `¡${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Eliminado!`,
+          subtitle: itemName 
+            ? `"${itemName}" ha sido eliminado del sistema`
+            : `El ${entityType} ha sido eliminado correctamente`
+        };
+      case 'logout':
+        return {
+          title: '¡Sesión Cerrada!',
+          subtitle: 'Has salido correctamente del sistema'
+        };
+      default:
+        return {
+          title: '¡Éxito!',
+          subtitle: 'La operación se completó correctamente'
+        };
+    }
+  };
+
+  const messages = getMessages();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -46,8 +99,8 @@ const SuccessCheckAnimation = ({ message = '¡Éxito!', subtitle, onClose, durat
             {Array.from({ length: PARTICLE_COUNT }).map((_, i) => <Particle key={i} idx={i} />)}
           </div>
         </div>
-        <h2 className="success-check-title">{message}</h2>
-        {subtitle && <p className="success-check-subtitle">{subtitle}</p>}
+        <h2 className="success-check-title">{messages.title}</h2>
+        {messages.subtitle && <p className="success-check-subtitle">{messages.subtitle}</p>}
       </div>
     </div>
   );

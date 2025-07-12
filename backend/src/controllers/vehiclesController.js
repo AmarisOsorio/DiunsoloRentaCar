@@ -17,7 +17,28 @@ const vehiclesController = {};
 vehiclesController.getVehicles = async (req, res) => {
   try {
     const vehicles = await vehiclesModel.find();
-    res.json(vehicles);
+    
+    // Obtener nombres de marcas para cada vehículo
+    const vehiclesWithMarcas = await Promise.all(
+      vehicles.map(async (vehicle) => {
+        let nombreMarca = 'N/A';
+        try {
+          if (vehicle.idMarca) {
+            const marca = await marcasModel.findById(vehicle.idMarca);
+            nombreMarca = marca ? marca.nombreMarca : 'N/A';
+          }
+        } catch (error) {
+          console.log('Error al obtener marca para vehículo:', vehicle._id, error);
+        }
+        
+        // Convertir a objeto plain y agregar marca
+        const vehicleObj = vehicle.toObject();
+        vehicleObj.marca = nombreMarca;
+        return vehicleObj;
+      })
+    );
+    
+    res.json(vehiclesWithMarcas);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener vehículos: ", error });
   }
@@ -42,7 +63,23 @@ vehiclesController.getVehicleById = async (req, res) => {
     if (!vehicle) {
       return res.status(404).json({ message: "Vehículo no encontrado" });
     }
-    res.json(vehicle);
+    
+    // Obtener nombre de la marca
+    let nombreMarca = 'N/A';
+    try {
+      if (vehicle.idMarca) {
+        const marca = await marcasModel.findById(vehicle.idMarca);
+        nombreMarca = marca ? marca.nombreMarca : 'N/A';
+      }
+    } catch (error) {
+      console.log('Error al obtener marca para vehículo:', vehicle._id, error);
+    }
+    
+    // Convertir a objeto plain y agregar marca
+    const vehicleObj = vehicle.toObject();
+    vehicleObj.marca = nombreMarca;
+    
+    res.json(vehicleObj);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener vehículo: ", error });
   }
@@ -231,6 +268,7 @@ vehiclesController.addVehicle = async (req, res) => {
     await newVehicle.save();
     res.status(201).json({ 
       message: "Vehículo agregado exitosamente",
+      vehiculo: newVehicle,
       contratoGenerado: !!contratoArrendamientoPdfUrl,
       contratoUrl: contratoArrendamientoPdfUrl
     });
@@ -243,8 +281,16 @@ vehiclesController.addVehicle = async (req, res) => {
 //Delete
 vehiclesController.deleteVehicle = async (req, res) => {
   try {
+    const vehicleToDelete = await vehiclesModel.findById(req.params.id);
+    if (!vehicleToDelete) {
+      return res.status(404).json({ message: "Vehículo no encontrado" });
+    }
+    
     await vehiclesModel.findByIdAndDelete(req.params.id);
-    res.json({ message: "Vehículo eliminado exitosamente: " });
+    res.json({ 
+      message: "Vehículo eliminado exitosamente",
+      vehiculo: vehicleToDelete 
+    });
   } catch (error) {
     res.status(500).json({ message: "Error al eliminar vehículo: ", error });
   }
@@ -255,6 +301,7 @@ vehiclesController.updateVehicle = async (req, res) => {
   try {
     console.log('🔄 Actualizando vehículo:', req.params.id);
     console.log('📝 Datos recibidos:', req.body);
+    console.log('📝 Headers:', req.headers);
     
     // Extraer datos del body - ahora manejamos tanto FormData como JSON
     let {
@@ -276,6 +323,17 @@ vehiclesController.updateVehicle = async (req, res) => {
       contratoArrendamientoPdf,
       estado
     } = req.body;
+
+    // Validar estados permitidos
+    const validStates = ['Disponible', 'Reservado', 'Mantenimiento'];
+    if (estado && !validStates.includes(estado)) {
+      console.log('❌ Estado inválido:', estado);
+      return res.status(400).json({ 
+        message: `Estado inválido: ${estado}. Estados válidos: ${validStates.join(', ')}` 
+      });
+    }
+
+    console.log('✅ Estado válido:', estado);
 
     // Procesar imagenes si viene como string JSON
     if (typeof imagenes === 'string') {
@@ -344,6 +402,66 @@ vehiclesController.updateVehicle = async (req, res) => {
       message: "Error al actualizar vehículo", 
       error: error.message,
       details: error
+    });
+  }
+};
+
+//Update Status Only - Patch
+vehiclesController.updateVehicleStatus = async (req, res) => {
+  try {
+    console.log('🔄 Iniciando actualización de estado del vehículo');
+    console.log('📝 Vehicle ID recibido:', req.params.id);
+    console.log('📝 Longitud del ID:', req.params.id?.length);
+    console.log('📝 Body completo:', JSON.stringify(req.body, null, 2));
+    console.log('📝 Nuevo estado:', req.body.estado);
+    console.log('📝 Tipo de estado:', typeof req.body.estado);
+    
+    const { estado } = req.body;
+    
+    // Validar que el ID tenga el formato correcto de MongoDB ObjectId
+    if (!req.params.id || req.params.id.length !== 24) {
+      console.log('❌ ID de vehículo inválido:', req.params.id);
+      return res.status(400).json({ 
+        message: `ID de vehículo inválido: ${req.params.id}` 
+      });
+    }
+    
+    // Validar estados permitidos
+    const validStates = ['Disponible', 'Reservado', 'Mantenimiento'];
+    if (!estado || !validStates.includes(estado)) {
+      console.log('❌ Estado inválido:', estado);
+      return res.status(400).json({ 
+        message: `Estado inválido: ${estado}. Estados válidos: ${validStates.join(', ')}` 
+      });
+    }
+
+    console.log('✅ Validaciones pasadas, actualizando vehículo...');
+
+    const updatedVehicle = await vehiclesModel.findByIdAndUpdate(
+      req.params.id,
+      { estado },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedVehicle) {
+      console.log('❌ Vehículo no encontrado con ID:', req.params.id);
+      return res.status(404).json({ message: "Vehículo no encontrado" });
+    }
+    
+    console.log('✅ Estado del vehículo actualizado exitosamente:', updatedVehicle.estado);
+    console.log('✅ Vehículo completo:', JSON.stringify(updatedVehicle, null, 2));
+    
+    res.json({ 
+      message: "Estado del vehículo actualizado exitosamente", 
+      vehiculo: updatedVehicle 
+    });
+  } catch (error) {
+    console.error('❌ Error completo al actualizar estado del vehículo:', error);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({ 
+      message: "Error al actualizar estado del vehículo", 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
