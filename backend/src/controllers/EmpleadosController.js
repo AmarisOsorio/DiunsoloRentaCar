@@ -1,16 +1,37 @@
-// Controlador para el modelo Empleados
+// Procesar imagen si existe
+    let fotoURL = null;// Controlador para el modelo Empleados
 import EmpleadosModel from "../models/Empleados.js";
 import bcryptjs from "bcryptjs";
-import { v2 as cloudinary } from "cloudinary";
-import { config } from "../config.js"; // Asumiendo que tienes el mismo config.js
+import cloudinary from 'cloudinary';
 
-// CLOUDINARY SETUP - igual que en tu BlogController
-cloudinary.config({
-    cloud_name: config.cloudinary.cloudinary_name,
-    api_key: config.cloudinary.cloudinary_api_key,
-    api_secret: config.cloudinary.cloudinary_api_secret,
-    secure: true
+// CLOUDINARY SETUP - Configuración correcta
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// Función para subir buffer a Cloudinary
+async function uploadBufferToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.v2.uploader.upload_stream(
+      { 
+        folder: folder,
+        resource_type: 'image',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Error en Cloudinary upload_stream:', error);
+          return reject(error);
+        }
+        console.log('Cloudinary upload exitoso:', result.public_id);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
+}
 
 const EmpleadosController = {};
 
@@ -29,49 +50,71 @@ EmpleadosController.getEmpleadoById = async (req, res) => {
 
 EmpleadosController.RegisterEmpleado = async (req, res) => {
   try {
-    let { nombre, apellido, correoElectronico, contrasena, dui, telefono, rol } = req.body;
+    console.log('=== DATOS RECIBIDOS EN BACKEND ===');
+    console.log('Body:', req.body);
+    console.log('File:', req.file ? {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      buffer: req.file.buffer ? 'Buffer presente' : 'Sin buffer'
+    } : 'Sin archivo');
     
-    console.log('Datos recibidos:', req.body);
-    console.log('Archivo recibido:', req.file ? 'Sí' : 'No');
-
-   
-    let fotoURL = "";
-    if (req.file) {
-      try {
-        console.log('Subiendo imagen desde:', req.file.path);
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "empleados",
-          allowed_formats: ["jpg", "png", "jpeg", "gif"]
-        });
-        fotoURL = result.secure_url;
-        console.log('Imagen subida exitosamente:', fotoURL);
-      } catch (uploadError) {
-        console.error('Error subiendo imagen:', uploadError);
-        return res.status(400).json({ 
-          message: 'Error al subir la imagen: ' + uploadError.message 
-        });
-      }
-    }
+    let { nombre, apellido, correoElectronico, contrasena, dui, telefono, rol } = req.body;
     
     // Validar campos requeridos
     if (!nombre || !apellido || !correoElectronico || !contrasena || !dui || !telefono) {
+      console.log('❌ Faltan campos requeridos');
       return res.status(400).json({ 
         message: "Todos los campos son requeridos" 
       });
     }
     
-    // Normalizar teléfono a 0000-0000 y validar
+    // Verificar si ya existe el correo
+    const existsEmail = await EmpleadosModel.findOne({ correoElectronico });
+    if (existsEmail) {
+      return res.status(400).json({ 
+        message: "Ya existe un empleado con ese correo electrónico" 
+      });
+    }
+    
+    // Verificar si ya existe el DUI
+    const existsDUI = await EmpleadosModel.findOne({ dui });
+    if (existsDUI) {
+      return res.status(400).json({ 
+        message: "Ya existe un empleado con ese DUI" 
+      });
+    }
+    
+    // Procesar imagen si existe
+    let fotoURL = "";
+    if (req.file && req.file.buffer) {
+      try {
+        console.log('📤 Subiendo imagen a Cloudinary...');
+        console.log('Tamaño del buffer:', req.file.buffer.length);
+        console.log('Tipo MIME:', req.file.mimetype);
+        
+        fotoURL = await uploadBufferToCloudinary(
+          req.file.buffer,
+          'diunsolo/empleados'
+        );
+        
+        console.log('✅ Imagen subida exitosamente:', fotoURL);
+      } catch (uploadError) {
+        console.error('❌ Error subiendo imagen a Cloudinary:', uploadError);
+        // No fallar la creación del empleado si falla la imagen
+        console.log('⚠️ Continuando sin imagen...');
+      }
+    } else {
+      console.log('ℹ️ No se recibió imagen o no tiene buffer');
+    }
+    
+    // Normalizar teléfono
     if (telefono) {
       let clean = (telefono + '').replace(/[^0-9]/g, '');
-      console.log('Teléfono limpio:', clean);
-      
       if (clean.length === 8) {
         telefono = clean.slice(0, 4) + '-' + clean.slice(4);
       }
-      
-      console.log('Teléfono formateado:', telefono);
-      
-      // Validación de formato y primer dígito
       const regex = /^[267]\d{3}-\d{4}$/;
       if (!regex.test(telefono)) {
         return res.status(400).json({ 
@@ -83,39 +126,47 @@ EmpleadosController.RegisterEmpleado = async (req, res) => {
     // Encriptar contraseña
     const passwordHash = await bcryptjs.hash(contrasena, 10);
 
-    // Crear datos del empleado
+    // Crear empleado
     const empleadoData = {
       nombre, 
       apellido, 
       correoElectronico, 
-      contrasena: passwordHash, 
+      contrasena: passwordHash,
       dui, 
       telefono, 
       rol: rol || 'Empleado'
     };
 
-    // Solo agregar foto si existe
     if (fotoURL) {
       empleadoData.foto = fotoURL;
     }
 
-    console.log('Datos a guardar:', empleadoData);
+    console.log('💾 Datos del empleado a guardar:', {
+      ...empleadoData,
+      contrasena: '[OCULTA]',
+      foto: empleadoData.foto ? 'URL presente' : 'Sin foto'
+    });
 
     const newEmpleado = new EmpleadosModel(empleadoData);
-    await newEmpleado.save(); // Agregué await aquí
+    await newEmpleado.save();
+
+    console.log('✅ Empleado guardado exitosamente');
 
     res.status(201).json({ 
       message: "Nuevo empleado registrado", 
       empleado: newEmpleado 
     });
   } catch (error) {
-    console.error('Error al registrar empleado:', error);
+    console.error('❌ Error al registrar empleado:', error);
     
-    // Manejar errores específicos de MongoDB
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
+      let friendlyField = field;
+      if (field === 'correoElectronico') friendlyField = 'correo electrónico';
+      if (field === 'dui') friendlyField = 'DUI';
+      
       return res.status(400).json({ 
-        message: `Ya existe un empleado con ese ${field}` 
+        message: `Ya existe un empleado con ese ${friendlyField}` 
       });
     }
     
@@ -132,24 +183,65 @@ EmpleadosController.updateEmpleado = async (req, res) => {
     const { id } = req.params;
     let { nombre, apellido, correoElectronico, contrasena, dui, telefono, rol } = req.body;
     
-    console.log('Actualizando empleado:', id, req.body);
-    console.log('Archivo recibido para actualización:', req.file ? 'Sí' : 'No');
+    console.log('=== ACTUALIZANDO EMPLEADO ===');
+    console.log('ID:', id);
+    console.log('Body:', req.body);
+    console.log('File:', req.file ? {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      buffer: req.file.buffer ? 'Buffer presente' : 'Sin buffer'
+    } : 'Sin archivo');
 
-    // Procesar imagen si existe - igual que en el registro
+    // Verificar que el empleado existe
+    const currentEmpleado = await EmpleadosModel.findById(id);
+    if (!currentEmpleado) {
+      return res.status(404).json({ message: "Empleado no encontrado" });
+    }
+
+    // Procesar imagen si existe
     let fotoURL = undefined; // undefined para no actualizar si no se envía
-    if (req.file) {
+    if (req.file && req.file.buffer) {
       try {
-        console.log('Subiendo nueva imagen desde:', req.file.path);
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "empleados",
-          allowed_formats: ["jpg", "png", "jpeg", "gif"]
-        });
-        fotoURL = result.secure_url;
-        console.log('Nueva imagen subida exitosamente:', fotoURL);
+        console.log('📤 Subiendo nueva imagen a Cloudinary...');
+        console.log('Tamaño del buffer:', req.file.buffer.length);
+        
+        fotoURL = await uploadBufferToCloudinary(
+          req.file.buffer,
+          'diunsolo/empleados'
+        );
+        
+        console.log('✅ Nueva imagen subida exitosamente:', fotoURL);
       } catch (uploadError) {
-        console.error('Error subiendo nueva imagen:', uploadError);
+        console.error('❌ Error subiendo nueva imagen:', uploadError);
+        // No fallar la actualización si falla la imagen
+        console.log('⚠️ Continuando sin actualizar imagen...');
+      }
+    }
+    
+    // Verificar duplicados si se está cambiando el correo
+    if (correoElectronico && correoElectronico !== currentEmpleado.correoElectronico) {
+      const existsEmail = await EmpleadosModel.findOne({ 
+        correoElectronico, 
+        _id: { $ne: id } 
+      });
+      if (existsEmail) {
         return res.status(400).json({ 
-          message: 'Error al subir la nueva imagen: ' + uploadError.message 
+          message: "Ya existe un empleado con ese correo electrónico" 
+        });
+      }
+    }
+    
+    // Verificar duplicados si se está cambiando el DUI
+    if (dui && dui !== currentEmpleado.dui) {
+      const existsDUI = await EmpleadosModel.findOne({ 
+        dui, 
+        _id: { $ne: id } 
+      });
+      if (existsDUI) {
+        return res.status(400).json({ 
+          message: "Ya existe un empleado con ese DUI" 
         });
       }
     }
@@ -190,6 +282,12 @@ EmpleadosController.updateEmpleado = async (req, res) => {
       updateData.foto = fotoURL;
     }
 
+    console.log('💾 Datos a actualizar:', {
+      ...updateData,
+      contrasena: updateData.contrasena ? '[ACTUALIZADA]' : '[SIN CAMBIOS]',
+      foto: updateData.foto ? 'URL nueva' : 'Sin cambios'
+    });
+
     const updated = await EmpleadosModel.findByIdAndUpdate(
       id,
       updateData,
@@ -200,18 +298,24 @@ EmpleadosController.updateEmpleado = async (req, res) => {
       return res.status(404).json({ message: "Empleado no encontrado" });
     }
     
+    console.log('✅ Empleado actualizado exitosamente');
+    
     res.json({ 
       message: "Empleado actualizado", 
       empleado: updated 
     });
   } catch (error) {
-    console.error('Error al actualizar empleado:', error);
+    console.error('❌ Error al actualizar empleado:', error);
     
     // Manejar errores específicos de MongoDB
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
+      let friendlyField = field;
+      if (field === 'correoElectronico') friendlyField = 'correo electrónico';
+      if (field === 'dui') friendlyField = 'DUI';
+      
       return res.status(400).json({ 
-        message: `Ya existe un empleado con ese ${field}` 
+        message: `Ya existe un empleado con ese ${friendlyField}` 
       });
     }
     
@@ -226,15 +330,20 @@ EmpleadosController.updateEmpleado = async (req, res) => {
 EmpleadosController.deleteEmpleado = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    console.log('🗑️ Eliminando empleado:', id);
+    
     const deleted = await EmpleadosModel.findByIdAndDelete(id);
     
     if (!deleted) {
       return res.status(404).json({ message: "Empleado no encontrado" });
     }
     
+    console.log('✅ Empleado eliminado exitosamente');
+    
     res.json({ message: "Empleado eliminado" });
   } catch (error) {
-    console.error('Error al eliminar empleado:', error);
+    console.error('❌ Error al eliminar empleado:', error);
     res.status(500).json({ 
       message: "Error al eliminar empleado", 
       error: error.message 
@@ -245,10 +354,12 @@ EmpleadosController.deleteEmpleado = async (req, res) => {
 // GET ALL
 EmpleadosController.getEmpleados = async (req, res) => {
   try {
-    const Empleados = await EmpleadosModel.find();
+    console.log('📋 Obteniendo todos los empleados');
+    const Empleados = await EmpleadosModel.find().sort({ createdAt: -1 });
+    console.log(`✅ Se encontraron ${Empleados.length} empleados`);
     res.json(Empleados);
   } catch (error) {
-    console.error('Error al obtener empleados:', error);
+    console.error('❌ Error al obtener empleados:', error);
     res.status(500).json({ 
       message: "Error al obtener empleados", 
       error: error.message 

@@ -128,6 +128,12 @@ const ClienteForm = ({ cliente, onSubmit, onClose, onDelete, loading }) => {
   const handleDocumentChange = (e, documentType) => {
     const file = e.target.files[0];
     if (file) {
+      console.log(`📁 Archivo seleccionado para ${documentType}:`, {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+
       if (!file.type.startsWith('image/')) {
         setErrors(prev => ({
           ...prev,
@@ -195,23 +201,44 @@ const ClienteForm = ({ cliente, onSubmit, onClose, onDelete, loading }) => {
     }
 
     try {
+      console.log('=== PREPARANDO ENVÍO DE FORMULARIO CLIENTE ===');
       const submitData = new FormData();
       
+      // Agregar campos de texto al FormData
       Object.keys(formData).forEach(key => {
         const value = formData[key];
-        if (value !== undefined && value !== null) {
+        if (value !== undefined && value !== null && value !== '') {
+          // Para contraseña en modo edición, solo agregar si no está vacía
           if (key === 'contraseña' && cliente && !value.trim()) {
+            console.log('⏭️ Omitiendo contraseña vacía en edición');
             return;
           }
+          console.log(`✅ Agregando campo: ${key} = ${value}`);
           submitData.append(key, value);
         }
       });
 
+      // Agregar las imágenes de documentos si existen
       Object.keys(documentImages).forEach(key => {
         if (documentImages[key]) {
+          console.log(`📷 Agregando imagen ${key}:`, {
+            name: documentImages[key].name,
+            size: documentImages[key].size,
+            type: documentImages[key].type
+          });
           submitData.append(key, documentImages[key]);
         }
       });
+
+      // Debug: mostrar todo el contenido del FormData
+      console.log('=== CONTENIDO FINAL DEL FORMDATA ===');
+      for (let [key, value] of submitData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: [File] ${value.name} (${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
 
       const result = await onSubmit(submitData);
       
@@ -219,6 +246,7 @@ const ClienteForm = ({ cliente, onSubmit, onClose, onDelete, loading }) => {
         setErrors({ submit: result.error });
       }
     } catch (error) {
+      console.error('❌ Error en handleSubmit:', error);
       setErrors({ submit: 'Error inesperado: ' + error.message });
     }
   };
@@ -305,15 +333,6 @@ const ClienteForm = ({ cliente, onSubmit, onClose, onDelete, loading }) => {
         <p className="cliente-form-subtitle">
           Información del Cliente
         </p>
-      </div>
-
-      <div className="cliente-photo-section">
-        <div className="cliente-photo-placeholder">
-          <User className="cliente-photo-icon" />
-          <div className="cliente-photo-add">
-            <Plus className="cliente-photo-add-icon" />
-          </div>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="cliente-form">
@@ -403,7 +422,7 @@ const ClienteForm = ({ cliente, onSubmit, onClose, onDelete, loading }) => {
           <h3 className="cliente-documents-title">Pasaporte/DUI (Opcional):</h3>
           <div className="cliente-document-uploads">
             {renderDocumentUpload('pasaporteFrente', 'Frente')}
-            {renderDocumentUpload('pasaporteReverso', 'Revés')}
+            {renderDocumentUpload('pasaporteReverso', 'Reverso')}
           </div>
         </div>
 
@@ -411,7 +430,7 @@ const ClienteForm = ({ cliente, onSubmit, onClose, onDelete, loading }) => {
           <h3 className="cliente-documents-title">Licencia (Opcional):</h3>
           <div className="cliente-document-uploads">
             {renderDocumentUpload('licenciaFrente', 'Frente')}
-            {renderDocumentUpload('licenciaReverso', 'Revés')}
+            {renderDocumentUpload('licenciaReverso', 'Reverso')}
           </div>
         </div>
 

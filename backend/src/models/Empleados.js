@@ -46,7 +46,7 @@ const empleadosSchema = new Schema({
     },
     foto: {
         type: String,
-        required: false, // Campo opcional
+        required: false, 
         default: null
     }
 }, {

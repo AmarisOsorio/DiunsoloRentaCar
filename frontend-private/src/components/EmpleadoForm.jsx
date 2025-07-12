@@ -171,51 +171,75 @@ const EmpleadoForm = ({ empleado, onSubmit, onClose, onDelete, loading }) => {
     console.log('=== INICIO ENVÍO FORMULARIO ===');
     console.log('Datos del formulario:', formData);
     console.log('Imagen seleccionada:', selectedImage);
+    console.log('Es edición?', !!empleado);
     
     if (!validateForm()) {
-      console.log('Errores de validación:', errors);
+      console.log('❌ Errores de validación:', errors);
       return;
     }
 
-    // Crear FormData para enviar archivos
-    const submitData = new FormData();
-    
-    // Agregar campos de texto - IMPORTANTE: verificar que los valores no sean undefined
-    Object.keys(formData).forEach(key => {
-      const value = formData[key];
-      if (value !== undefined && value !== null) {
-        // Para contraseña en modo edición, solo agregar si no está vacía
-        if (key === 'contrasena' && empleado && !value.trim()) {
-          console.log('Omitiendo contraseña vacía en edición');
-          return;
+    try {
+      // Crear FormData para enviar archivos
+      const submitData = new FormData();
+      
+      // Agregar campos de texto - VERIFICAR cada campo individualmente
+      Object.keys(formData).forEach(key => {
+        const value = formData[key];
+        console.log(`📝 Procesando campo ${key}:`, typeof value, value);
+        
+        if (value !== undefined && value !== null && value !== '') {
+          // Para contraseña en modo edición, solo agregar si no está vacía
+          if (key === 'contrasena' && empleado && !value.trim()) {
+            console.log('⏭️ Omitiendo contraseña vacía en edición');
+            return;
+          }
+          console.log(`✅ Agregando al FormData: ${key} = ${value}`);
+          submitData.append(key, value);
+        } else {
+          console.log(`❌ Campo ${key} omitido: valor inválido`);
         }
-        console.log(`Agregando al FormData: ${key} = ${value}`);
-        submitData.append(key, value);
-      }
-    });
+      });
 
-    // Agregar imagen si se seleccionó
-    if (selectedImage) {
-      console.log('Agregando imagen al FormData:', selectedImage.name);
-      submitData.append('foto', selectedImage);
-    }
-
-    // Debug: mostrar contenido del FormData
-    console.log('=== CONTENIDO FORMDATA ===');
-    for (let [key, value] of submitData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: [File] ${value.name} (${value.type}, ${value.size} bytes)`);
+      // Agregar imagen si se seleccionó
+      if (selectedImage) {
+        console.log('📷 Agregando imagen al FormData:', {
+          name: selectedImage.name,
+          size: selectedImage.size,
+          type: selectedImage.type
+        });
+        submitData.append('foto', selectedImage);
       } else {
-        console.log(`${key}: ${value}`);
+        console.log('📷 No hay imagen para agregar');
       }
-    }
 
-    console.log('Enviando datos al servidor...');
-    const result = await onSubmit(submitData);
-    console.log('Resultado del servidor:', result);
-    
-    if (!result.success && result.error) {
-      setErrors({ submit: result.error });
+      // Debug: mostrar TODO el contenido del FormData
+      console.log('=== CONTENIDO FORMDATA COMPLETO ===');
+      let formDataEmpty = true;
+      for (let [key, value] of submitData.entries()) {
+        formDataEmpty = false;
+        if (value instanceof File) {
+          console.log(`${key}: [File] ${value.name} (${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`${key}: "${value}" (tipo: ${typeof value})`);
+        }
+      }
+      
+      if (formDataEmpty) {
+        console.log('⚠️ FORMDATA ESTÁ VACÍO!');
+        setErrors({ submit: 'Error: No hay datos para enviar' });
+        return;
+      }
+
+      console.log('📤 Enviando datos al servidor...');
+      const result = await onSubmit(submitData);
+      console.log('📥 Resultado del servidor:', result);
+      
+      if (!result.success && result.error) {
+        setErrors({ submit: result.error });
+      }
+    } catch (error) {
+      console.error('❌ Error en handleSubmit:', error);
+      setErrors({ submit: 'Error inesperado: ' + error.message });
     }
   };
 
@@ -399,12 +423,13 @@ const EmpleadoForm = ({ empleado, onSubmit, onClose, onDelete, loading }) => {
                 className="empleado-form-submit-btn empleado-form-update-btn"
               >
                 <RotateCcw className="empleado-form-btn-icon" />
-                Actualizar Empleado
+                {loading ? 'Actualizando...' : 'Actualizar Empleado'}
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
                 className="empleado-form-submit-btn empleado-form-delete-btn"
+                disabled={loading}
               >
                 <Trash2 className="empleado-form-btn-icon" />
                 Eliminar Empleado
@@ -416,7 +441,8 @@ const EmpleadoForm = ({ empleado, onSubmit, onClose, onDelete, loading }) => {
               disabled={loading}
               className="empleado-form-submit-btn empleado-form-add-btn"
             >
-              Agregar Empleado
+              <Plus className="empleado-form-btn-icon" />
+              {loading ? 'Agregando...' : 'Agregar Empleado'}
             </button>
           )}
         </div>

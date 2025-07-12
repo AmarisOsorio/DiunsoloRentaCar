@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import path from "path";
 import { fileURLToPath } from "url";
+import cloudinary from 'cloudinary';
 
 import clientsModel from "../models/Clientes.js";
 import { config } from "../config.js";
@@ -11,13 +12,20 @@ import { config } from "../config.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// CLOUDINARY SETUP
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 const registerClientsController = {};
 
 function validarEdadMinima(fechaDeNacimiento) {
   try {
     const hoy = new Date();
     const fechaNacimiento = new Date(fechaDeNacimiento);
-    const edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
     const mesActual = hoy.getMonth();
     const mesNacimiento = fechaNacimiento.getMonth();
     
@@ -41,26 +49,49 @@ function validarEdadMinima(fechaDeNacimiento) {
   }
 }
 
+// Función para subir buffer a Cloudinary - AHORA FUNCIONAL
 async function uploadBufferToCloudinary(buffer, folder) {
-  return null;
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.v2.uploader.upload_stream(
+      { 
+        folder: folder,
+        resource_type: 'image',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Error en Cloudinary upload_stream:', error);
+          return reject(error);
+        }
+        console.log('Cloudinary upload exitoso:', result.public_id);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
 }
 
 registerClientsController.register = async (req, res) => {
   try {
-    let {
-      nombres,
-      apellidos,
-      fechaDeNacimiento,
-      correo,
-      contraseña: contraseñaRaw,
-      telefono
-    } = req.body;
+    console.log('=== INICIANDO REGISTRO DE CLIENTE ===');
+    console.log('Body recibido:', req.body);
+    console.log('Archivos recibidos:', req.files ? Object.keys(req.files) : 'Sin archivos');
+    
+    // Manejar diferentes formas de recibir los campos
+    let nombres = req.body.nombres || req.body.nombre;
+    let apellidos = req.body.apellidos || req.body.apellido;
+    let fechaDeNacimiento = req.body.fechaDeNacimiento;
+    let correo = req.body.correo;
+    let contraseñaRaw = req.body.contraseña;
+    let telefono = req.body.telefono;
 
+    // Variables para las URLs de las imágenes
     let licenciaFrenteUrl = null;
     let licenciaReversoUrl = null;
     let pasaporteFrenteUrl = null;
     let pasaporteReversoUrl = null;
 
+    // Normalizar teléfono
     if (telefono) {
       let clean = (telefono + '').replace(/[^0-9]/g, '');
       
@@ -108,12 +139,60 @@ registerClientsController.register = async (req, res) => {
           });
         }
         
+        // Procesar imágenes si se enviaron en la actualización
+        if (req.files) {
+          console.log('📤 Procesando imágenes para cliente existente no verificado...');
+          
+          try {
+            if (req.files.licenciaFrente && req.files.licenciaFrente[0]) {
+              console.log('Subiendo licencia frente...');
+              licenciaFrenteUrl = await uploadBufferToCloudinary(
+                req.files.licenciaFrente[0].buffer,
+                'diunsolo/licencias'
+              );
+            }
+            
+            if (req.files.licenciaReverso && req.files.licenciaReverso[0]) {
+              console.log('Subiendo licencia reverso...');
+              licenciaReversoUrl = await uploadBufferToCloudinary(
+                req.files.licenciaReverso[0].buffer,
+                'diunsolo/licencias'
+              );
+            }
+            
+            if (req.files.pasaporteFrente && req.files.pasaporteFrente[0]) {
+              console.log('Subiendo pasaporte frente...');
+              pasaporteFrenteUrl = await uploadBufferToCloudinary(
+                req.files.pasaporteFrente[0].buffer,
+                'diunsolo/pasaportes'
+              );
+            }
+            
+            if (req.files.pasaporteReverso && req.files.pasaporteReverso[0]) {
+              console.log('Subiendo pasaporte reverso...');
+              pasaporteReversoUrl = await uploadBufferToCloudinary(
+                req.files.pasaporteReverso[0].buffer,
+                'diunsolo/pasaportes'
+              );
+            }
+          } catch (uploadError) {
+            console.error('❌ Error subiendo imágenes:', uploadError);
+            // Continuar sin las imágenes en caso de error
+          }
+        }
+        
         const passwordHashUpdate = await bcryptjs.hash(contraseña, 10);
         existsClient.nombre = nombres;
         existsClient.apellido = apellidos;
         existsClient.fechaDeNacimiento = fechaDeNacimiento;
         existsClient.telefono = telefono;
         existsClient.contraseña = passwordHashUpdate;
+        
+        // Actualizar URLs de imágenes si se subieron
+        if (licenciaFrenteUrl) existsClient.licenciaFrente = licenciaFrenteUrl;
+        if (licenciaReversoUrl) existsClient.licenciaReverso = licenciaReversoUrl;
+        if (pasaporteFrenteUrl) existsClient.pasaporteFrente = pasaporteFrenteUrl;
+        if (pasaporteReversoUrl) existsClient.pasaporteReverso = pasaporteReversoUrl;
         
         await existsClient.save();
         
@@ -160,6 +239,52 @@ registerClientsController.register = async (req, res) => {
       });
     }
 
+    // Procesar imágenes para nuevo cliente
+    if (req.files) {
+      console.log('📤 Procesando imágenes para nuevo cliente...');
+      
+      try {
+        if (req.files.licenciaFrente && req.files.licenciaFrente[0]) {
+          console.log('Subiendo licencia frente...');
+          licenciaFrenteUrl = await uploadBufferToCloudinary(
+            req.files.licenciaFrente[0].buffer,
+            'diunsolo/licencias'
+          );
+          console.log('✅ Licencia frente subida:', licenciaFrenteUrl);
+        }
+        
+        if (req.files.licenciaReverso && req.files.licenciaReverso[0]) {
+          console.log('Subiendo licencia reverso...');
+          licenciaReversoUrl = await uploadBufferToCloudinary(
+            req.files.licenciaReverso[0].buffer,
+            'diunsolo/licencias'
+          );
+          console.log('✅ Licencia reverso subida:', licenciaReversoUrl);
+        }
+        
+        if (req.files.pasaporteFrente && req.files.pasaporteFrente[0]) {
+          console.log('Subiendo pasaporte frente...');
+          pasaporteFrenteUrl = await uploadBufferToCloudinary(
+            req.files.pasaporteFrente[0].buffer,
+            'diunsolo/pasaportes'
+          );
+          console.log('✅ Pasaporte frente subido:', pasaporteFrenteUrl);
+        }
+        
+        if (req.files.pasaporteReverso && req.files.pasaporteReverso[0]) {
+          console.log('Subiendo pasaporte reverso...');
+          pasaporteReversoUrl = await uploadBufferToCloudinary(
+            req.files.pasaporteReverso[0].buffer,
+            'diunsolo/pasaportes'
+          );
+          console.log('✅ Pasaporte reverso subido:', pasaporteReversoUrl);
+        }
+      } catch (uploadError) {
+        console.error('❌ Error subiendo imágenes:', uploadError);
+        // Continuar con el registro aunque fallen las imágenes
+      }
+    }
+
     const passwordHash = await bcryptjs.hash(contraseña, 10);
     
     const newClient = new clientsModel({
@@ -169,9 +294,15 @@ registerClientsController.register = async (req, res) => {
       correo,
       contraseña: passwordHash,
       telefono,
+      // Agregar las URLs de las imágenes si existen
+      licenciaFrente: licenciaFrenteUrl,
+      licenciaReverso: licenciaReversoUrl,
+      pasaporteFrente: pasaporteFrenteUrl,
+      pasaporteReverso: pasaporteReversoUrl
     });
     
     await newClient.save();
+    console.log('✅ Cliente guardado exitosamente con imágenes');
     
     let verificationCode = '';
     for (let i = 0; i < 6; i++) {
@@ -214,6 +345,7 @@ registerClientsController.register = async (req, res) => {
       });
     });
   } catch (error) {
+    console.error('❌ Error en el registro:', error);
     res.status(500).json({ message: "Error en el registro: " + (error.message || 'Error desconocido') });
   }
 };
