@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
   const markReservationsAsValid = useCallback(() => {
     setReservasInvalidated(false);
   }, []);
+  
   useEffect(() => {
     localStorage.setItem('userType', userType || '');
     localStorage.setItem('isAuthenticated', isAuthenticated);
@@ -349,6 +350,58 @@ export const AuthProvider = ({ children }) => {
     }
   }, [API_URL]);
 
+  // Función para actualizar una reserva
+  const updateReservation = useCallback(async (reservaId, reservaData) => {
+    try {
+      console.log('🔄 [AuthContext] updateReservation llamado - ID:', reservaId, 'Data:', reservaData);
+      const res = await fetch(`${API_URL}/reservas/${reservaId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reservaData)
+      });
+      
+      const data = await res.json();
+      console.log('🔄 [AuthContext] updateReservation response:', data);
+      
+      if (res.ok) {
+        // Invalidar las reservas para que se recarguen
+        invalidateReservations();
+        return { success: true, message: data.message || 'Reserva actualizada correctamente' };
+      }
+      return { success: false, message: data.message || 'Error al actualizar la reserva' };
+    } catch (error) {
+      console.error('[updateReservation] error:', error);
+      return { success: false, message: 'Error de conexión' };
+    }
+  }, [API_URL, invalidateReservations]);
+
+  // Función para eliminar una reserva
+  const deleteReservation = useCallback(async (reservaId) => {
+    try {
+      console.log('🔄 [AuthContext] deleteReservation llamado - ID:', reservaId);
+      const res = await fetch(`${API_URL}/reservas/${reservaId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      const data = await res.json();
+      console.log('🔄 [AuthContext] deleteReservation response:', data);
+      
+      if (res.ok) {
+        // Invalidar las reservas para que se recarguen
+        invalidateReservations();
+        return { success: true, message: data.message || 'Reserva eliminada correctamente' };
+      }
+      return { success: false, message: data.message || 'Error al eliminar la reserva' };
+    } catch (error) {
+      console.error('[deleteReservation] error:', error);
+      return { success: false, message: 'Error de conexión' };
+    }
+  }, [API_URL, invalidateReservations]);
+
   return (
     <AuthContext.Provider value={{ 
       userType, 
@@ -370,6 +423,8 @@ export const AuthProvider = ({ children }) => {
       uploadDocument,
       deleteDocument,
       getUserReservations,
+      updateReservation,
+      deleteReservation,
       reservasInvalidated,
       invalidateReservations,
       markReservationsAsValid

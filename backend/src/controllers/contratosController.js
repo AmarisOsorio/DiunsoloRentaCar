@@ -3,7 +3,7 @@ import { Contratos } from "../models/Contratos.js";
 import reservasModel from "../models/Reservas.js";
 import clientesModel from "../models/Clientes.js";
 import vehiculosModel from "../models/Vehiculos.js";
-import ContractGenerator from "../utils/contractGenerator.js";
+import PdfGenerator from "../utils/pdfGenerator.js";
 
 // Obtener todos los contratos
 ContratosController.getContratos = async (req, res) => {
@@ -98,16 +98,8 @@ ContratosController.createContrato = async (req, res) => {
         
         // Generar el PDF del contrato automáticamente
         try {
-            const pdfBuffer = await ContractGenerator.generateContract(
-                nuevoContrato.toObject(),
-                reserva.vehiculoID,
-                reserva.clientID,
-                reserva
-            );
-            
-            // Guardar el PDF
-            const filename = `contrato_${reservationId}_${Date.now()}.pdf`;
-            const pdfUrl = await ContractGenerator.saveContractPDF(pdfBuffer, filename);
+            const pdfGenerator = new PdfGenerator();
+            const pdfUrl = await pdfGenerator.generateContratoArrendamiento(reserva.vehiculoID);
             
             // Actualizar el contrato con la URL del PDF generado
             nuevoContrato.documentos = {
@@ -255,16 +247,8 @@ ContratosController.regenerarPDF = async (req, res) => {
         }
         
         // Generar nuevo PDF
-        const pdfBuffer = await ContractGenerator.generateContract(
-            contrato.toObject(),
-            reserva.vehiculoID,
-            reserva.clientID,
-            reserva
-        );
-        
-        // Guardar el nuevo PDF
-        const filename = `contrato_${contrato.reservationId}_${Date.now()}.pdf`;
-        const pdfUrl = await ContractGenerator.saveContractPDF(pdfBuffer, filename);
+        const pdfGenerator = new PdfGenerator();
+        const pdfUrl = await pdfGenerator.generateContratoArrendamiento(reserva.vehiculoID);
         
         // Actualizar el contrato con la nueva URL del PDF
         contrato.documentos = {

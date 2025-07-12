@@ -4,6 +4,7 @@ const useVehicleModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVehiculo, setSelectedVehiculo] = useState(null);
   const [imagenActual, setImagenActual] = useState(0);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const openModal = (vehiculo) => {
     setSelectedVehiculo(vehiculo);
@@ -15,6 +16,14 @@ const useVehicleModal = () => {
     setIsOpen(false);
     setSelectedVehiculo(null);
     setImagenActual(0);
+  };
+
+  const openLoginModal = () => {
+    setShowLoginModal(true);
+  };
+
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
   };
 
   const getEstadoClass = (estado) => {
@@ -54,9 +63,12 @@ const useVehicleModal = () => {
     isOpen,
     selectedVehiculo,
     imagenActual,
+    showLoginModal,
     setImagenActual,
     openModal,
     closeModal,
+    openLoginModal,
+    closeLoginModal,
     getEstadoClass,
     cambiarImagen,
     handleBackdropClick
