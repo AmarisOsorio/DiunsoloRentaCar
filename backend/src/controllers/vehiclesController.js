@@ -17,28 +17,7 @@ const vehiclesController = {};
 vehiclesController.getVehicles = async (req, res) => {
   try {
     const vehicles = await vehiclesModel.find();
-    
-    // Obtener nombres de marcas para cada vehículo
-    const vehiclesWithMarcas = await Promise.all(
-      vehicles.map(async (vehicle) => {
-        let nombreMarca = 'N/A';
-        try {
-          if (vehicle.idMarca) {
-            const marca = await marcasModel.findById(vehicle.idMarca);
-            nombreMarca = marca ? marca.nombreMarca : 'N/A';
-          }
-        } catch (error) {
-          console.log('Error al obtener marca para vehículo:', vehicle._id, error);
-        }
-        
-        // Convertir a objeto plain y agregar marca
-        const vehicleObj = vehicle.toObject();
-        vehicleObj.marca = nombreMarca;
-        return vehicleObj;
-      })
-    );
-    
-    res.json(vehiclesWithMarcas);
+    res.json(vehicles);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener vehículos: ", error });
   }

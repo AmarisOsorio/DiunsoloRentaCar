@@ -44,12 +44,12 @@ const homeServices = [
     {
       iconName: Chofer,
       title: 'Servicio de chofer',
-      description: 'Servicio de chofer a disponibilidad y solicitud del cliente, Costo adicional'
+      description: 'Servicio de chofer disponible según solicitud del cliente, sujeto a disponibilidad y con un costo adicional.'
     },
     {
       iconName: EntregaExpress,
       title: 'Entrega express',
-      description: 'Si tienes una emergencia cuenta con nosotros realizamos viajes exprés al aeropuerto, costo adicional dependiendo de la ubicación'
+      description: 'Si tienes una emergencia realizamos viajes exprés al aeropuerto, costo adicional dependiendo de la ubicación'
     }
 ];
 
@@ -77,19 +77,17 @@ function HomePage() {
           </div>
         </header>
 
-
         <FamiliarSection 
           imageSrc={FamiliaDiunsolo}
           imageAlt="Familia Diunsolo"
         />
 
-
         <IntroSection 
           videoSrc={VideoDiunsolo}
         />
 
-
         <section className="services-section">
+          <h1 className='services-title-section'>Nuestros servicios</h1>
           <div className="services-grid">
             {homeServices.map((service, index) => (
               <ServicesCard

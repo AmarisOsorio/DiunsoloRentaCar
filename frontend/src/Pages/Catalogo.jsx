@@ -9,11 +9,9 @@ import useVehicleModal from '../hooks/components/modals/useVehicleModal';
 
 const Catalogo = () => {
   const { vehiculos, loading } = useCatalogo();
-
   const [filtros, setFiltros] = useState({
     marcas: [],
     tipos: [],
-    ordenamiento: 'alfabeticamente'
   });
 
   const handleFilterChange = (nuevosFiltros) => {
@@ -33,28 +31,26 @@ const Catalogo = () => {
   } = useVehicleModal();
 
   const vehiculosFiltrados = useMemo(() => {
-    if (!vehiculos || !Array.isArray(vehiculos)) return [];
+  if (!vehiculos || !Array.isArray(vehiculos)) return [];
 
-    let vehiculosFiltered = [...vehiculos];
+  let vehiculosFiltered = [...vehiculos];
 
+  // Filtro por marca
+  if (filtros.marcas.length > 0) {
+    vehiculosFiltered = vehiculosFiltered.filter(v =>
+      filtros.marcas.includes(v.idMarca?.nombreMarca.trim().toLowerCase())
+    );
+  }
 
-    // Filtro por marca
-    if (filtros.marcas.length > 0) {
-       vehiculosFiltered = vehiculosFiltered.filter(v =>
-         filtros.marcas.includes(v.marca?.trim().toLowerCase())
-       );
-    }
+  // Filtro por clase
+  if (filtros.tipos.length > 0) {
+    vehiculosFiltered = vehiculosFiltered.filter(v =>
+      filtros.tipos.includes(v.clase?.trim().toLowerCase())
+    );
+  }
 
-    // Filtro por tipo
-    if (filtros.tipos.length > 0) {
-      vehiculosFiltered = vehiculosFiltered.filter(v =>
-        filtros.tipos.includes(v.tipo)
-      );
-    }
-
-
-    return vehiculosFiltered;
-  }, [vehiculos, filtros]);
+  return vehiculosFiltered;
+}, [vehiculos, filtros]);
 
   if (loading) return <div className="marcas-loading">Cargando vehículos...</div>;
 
@@ -91,7 +87,7 @@ const Catalogo = () => {
             </div>
 
             <div className="vehiculos-grid">
-              {vehiculosFiltrados.length > 0 ? (
+              {Array.isArray(vehiculosFiltrados) && vehiculosFiltrados.length > 0 ? (
                 vehiculosFiltrados.map((vehiculo) => (
                   <VehiculoCard
                     key={vehiculo._id}

@@ -17,10 +17,10 @@ const GraficaVehiculosPorMarca = () => {
         const datos = await reservasService.getVehiculosPorMarca();
         console.log("Datos recibidos por marca:", datos);
 
-        const transformedData = datos.map((item) => ({
-          name: item._id || 'Sin marca',
-          value: item.totalReservas,
-        }));
+        const transformedData = datos.map(item => ({
+  name: item._id || 'Sin marca',
+  value: item.totalReservas,
+}));
 
         setData(transformedData);
         setError(null);
@@ -28,7 +28,7 @@ const GraficaVehiculosPorMarca = () => {
         console.error('Error al obtener datos de vehículos por marca:', err);
         setError('Error al cargar los datos');
         
-        // Fallback a datos simulados en caso de error
+        //Datos simulados en caso de error
         const mockData = [
           { name: 'Toyota', value: 25 },
           { name: 'Honda', value: 18 },

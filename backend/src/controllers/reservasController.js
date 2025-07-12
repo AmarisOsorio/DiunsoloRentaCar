@@ -240,51 +240,76 @@ ReservasController.getUserReservations = async (req, res) => {
 /************************* VEHICULOS MAS RENTADOS POR MARCAS *******************************/
 
 ReservasController.getVehiculosMasRentadosPorMarca = async (req, res) => {
-    try {
-        const resultado = await reservasModel.aggregate([
-            {
-                $lookup: {
-                    from: "vehiculos", 
-                    localField: "vehiculoID",
-                    foreignField: "_id",
-                    as: "vehiculo"
-                }
-            },
-            {
-                $unwind: "$vehiculo"
-            },
-            {
-                $group: {
-                    _id: "$vehiculo.marca",
-                    totalReservas: { $sum: 1 },
-                    ingresoTotal: { $sum: "$precioPorDia" },
-                    vehiculosRentados: { $addToSet: "$vehiculo.nombreVehiculo" }
-                }
-            },
-            {
-                $addFields: {
-                    cantidadVehiculosUnicos: { $size: "$vehiculosRentados" }
-                }
-            },
-            {
-                $sort: { totalReservas: -1 }
-            },
-            {
-                $limit: 5
-            }
-        ]);
+  try {
+    const resultado = await reservasModel.aggregate([
+      {
+        $match: {
+          vehiculoID: { $exists: true, $ne: null }
+        }
+      },
+      {
+        $lookup: {
+          from: "vehiculos",
+          localField: "vehiculoID",
+          foreignField: "_id",
+          as: "vehiculo"
+        }
+      },
+      { $unwind: "$vehiculo" },
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        console.log("Error: " + error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+      {
+        $lookup: {
+          from: "marcas",
+          let: { idMarcaStr: "$vehiculo.idMarca" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", { $toObjectId: "$$idMarcaStr" }]
+                }
+              }
+            },
+            {
+              $project: { nombreMarca: 1, _id: 0 }
+            }
+          ],
+          as: "marca"
+        }
+      },
+      { $unwind: "$marca" },
+
+      {
+  $group: {
+    _id: "$marca.nombreMarca",  // agrupar por nombre de marca
+    totalReservas: { $sum: 1 }, // total reservas
+    cantidadVehiculosUnicos: { $addToSet: "$vehiculo._id" }  // conjunto de IDs únicos de vehículos
+  }
+},
+{
+  $addFields: {
+    cantidadVehiculosUnicos: { $size: "$cantidadVehiculosUnicos" } // tamaño del conjunto (cantidad vehículos únicos)
+  }
+},
+      {
+        $sort: { totalReservas: -1 }
+      },
+      {
+        $limit: 5
+      }
+    ]);
+
+    console.log("Resultado final:", resultado);
+    res.status(200).json(resultado);
+  } catch (error) {
+    console.error("Error en getVehiculosMasRentadosPorMarca:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 
-/************************* VEHICULOS MAS RENTADOS POR MODELOS *******************************/
 
-// En tu reservasController.js, corrige este método:
+
+/************************* VEHICULOS MAS RENTADOS POR MODELOS *******************************/
 
 ReservasController.getVehiculosMasRentadosPorModelo = async (req, res) => {
     try {
