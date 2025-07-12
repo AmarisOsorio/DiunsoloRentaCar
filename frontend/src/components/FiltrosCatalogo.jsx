@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './styles/FiltrosCatalogo.css';
 
-const tiposVehiculo = ['Gama alta', 'SUVs', 'Todo terreno', 'Vans'];
-
 const FiltrosCatalogo = ({ vehiculos, onFilterChange }) => {
   const [filtros, setFiltros] = useState({
     marcas: [],
     tipos: [],
   });
 
-  const marcasDisponibles = vehiculos ? 
-  [...new Set(vehiculos.map(v => v.marca?.trim().toLowerCase()))].sort() : [];
+  //Capitalizar el texto para que lo encuentre ya sea que lo hayan escrito con Mayusculas o Minusculas
+  const capitalizar = (texto) =>
+    texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : '';
 
+  const marcasDisponibles = vehiculos
+  ? [...new Set(vehiculos.map(v => v.idMarca?.nombreMarca?.trim().toLowerCase()))].sort()
+  : [];
+
+  const clasesDisponibles = vehiculos
+    ? [...new Set(vehiculos.map(v => v.clase?.trim().toLowerCase()))].sort()
+    : [];
+
+ 
   const handleCheckboxChange = (tipo, valor) => {
     const yaSeleccionado = filtros[tipo].includes(valor);
     const nuevosValores = yaSeleccionado
@@ -23,17 +31,16 @@ const FiltrosCatalogo = ({ vehiculos, onFilterChange }) => {
     onFilterChange(nuevosFiltros);
   };
 
-  const limpiarFiltros = () => {
-    const filtrosLimpios = { marcas: [], tipos: [] };
-    setFiltros(filtrosLimpios);
-    onFilterChange(filtrosLimpios);
-  };
+  //Para ver que datos son los que recibo en la consola
+  useEffect(() => {
+  console.log('Vehiculos recibidos:', vehiculos);
+  }, [vehiculos]);
 
   return (
     <div className="filtros-container">
       <div className="filtro-seccion">
         <h4 className="filtro-titulo">Marca</h4>
-        {marcasDisponibles.map((marca , index) => (
+        {marcasDisponibles.map((marca, index) => (
           <label key={`${marca}-${index}`} className="filtro-checkbox">
             <input
               type="checkbox"
@@ -41,14 +48,14 @@ const FiltrosCatalogo = ({ vehiculos, onFilterChange }) => {
               checked={filtros.marcas.includes(marca)}
               onChange={() => handleCheckboxChange('marcas', marca)}
             />
-            {marca}
+            {capitalizar(marca)}
           </label>
         ))}
       </div>
 
       <div className="filtro-seccion">
         <h4 className="filtro-titulo">Tipo</h4>
-        {tiposVehiculo.map((tipo , index) => (
+        {clasesDisponibles.map((tipo, index) => (
           <label key={`${tipo}-${index}`} className="filtro-checkbox">
             <input
               type="checkbox"
@@ -56,14 +63,12 @@ const FiltrosCatalogo = ({ vehiculos, onFilterChange }) => {
               checked={filtros.tipos.includes(tipo)}
               onChange={() => handleCheckboxChange('tipos', tipo)}
             />
-            {tipo}
+            {capitalizar(tipo)}
           </label>
         ))}
       </div>
 
-      <button className="btn-limpiar-filtros" onClick={limpiarFiltros}>
-        Limpiar filtros
-      </button>
+    
     </div>
   );
 };

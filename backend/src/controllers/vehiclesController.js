@@ -16,7 +16,7 @@ const vehiclesController = {};
 //Select - Get [All]
 vehiclesController.getVehicles = async (req, res) => {
   try {
-    const vehicles = await vehiclesModel.find();
+    const vehicles = await vehiclesModel.find().populate('idMarca');
     res.json(vehicles);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener vehículos: ", error });
