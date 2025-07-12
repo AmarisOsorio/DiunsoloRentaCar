@@ -1,0 +1,298 @@
+/* EmpleadoForm.css - Modal Design */
+.empleado-form-modal-content {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Header */
+.empleado-form-header {
+  background: #f8fafc;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.empleado-form-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Employee Photo Section */
+.empleado-photo-section {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.empleado-photo-placeholder {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.empleado-photo-placeholder:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.empleado-photo-icon {
+  width: 48px;
+  height: 48px;
+  color: #94a3b8;
+}
+
+.empleado-photo-add {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 32px;
+  height: 32px;
+  background: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.empleado-photo-add:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.empleado-photo-add-icon {
+  width: 16px;
+  height: 16px;
+  color: white;
+}
+
+/* Image Preview Styles */
+.empleado-photo-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.empleado-photo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.empleado-photo-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #ef4444;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.empleado-photo-remove:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.empleado-photo-remove-icon {
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+/* Form */
+.empleado-form {
+  padding: 20px;
+}
+
+.empleado-form-field {
+  margin-bottom: 20px;
+}
+
+.empleado-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.empleado-form-input,
+.empleado-form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  background: white;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.empleado-form-input:focus,
+.empleado-form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.empleado-form-input.error,
+.empleado-form-select.error {
+  border-color: #ef4444;
+}
+
+.empleado-form-input::placeholder {
+  color: #9ca3af;
+}
+
+.empleado-form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  appearance: none;
+}
+
+.empleado-form-error {
+  display: block;
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.empleado-form-submit-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.empleado-form-submit-error p {
+  color: #dc2626;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Action Buttons */
+.empleado-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.empleado-form-submit-btn {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.empleado-form-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.empleado-form-add-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.empleado-form-add-btn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.empleado-form-update-btn {
+  background: #10b981;
+  color: white;
+}
+
+.empleado-form-update-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.empleado-form-delete-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.empleado-form-delete-btn:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.empleado-form-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .empleado-form-container {
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+  
+  .empleado-form-header {
+    padding: 16px;
+  }
+  
+  .empleado-photo-section {
+    padding: 20px;
+  }
+  
+  .empleado-photo-placeholder {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .empleado-photo-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .empleado-form {
+    padding: 16px;
+  }
+}
