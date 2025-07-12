@@ -42,10 +42,15 @@ export const useReservas = (shouldFetch = false) => {
         setReservas(result.reservas);
         setError(null);
         markReservationsAsValid();
+        setLoading(false);
         return;
+      } else {
+        // El servidor respondió pero con error o sin datos
+        console.log('⚠️ getUserReservations falló:', result.message);
+        throw new Error(result.message || 'Error al obtener reservas');
       }
     } catch (error) {
-      console.log('❌ Error al cargar reservas reales:', error);
+      console.log('❌ Error al cargar reservas reales:', error.message);
     }
     
     // Fallback: usar datos de prueba

@@ -15,9 +15,9 @@ import contratosRoutes from "./src/routes/contratos.js";
 import pdfViewerRoutes from "./src/routes/pdfViewer.js";
 import marcasRoutes from "./src/routes/marcas.js";
 
+import EmpleadosRoutes from "./src/routes/Empleados.js";
 
 import contactRoutes from "./src/routes/contact.js";
-
 import profileRoutes from "./src/routes/profile.js";
 
 import { fileURLToPath } from 'url';
@@ -29,7 +29,6 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
@@ -38,9 +37,9 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // Cambia a true si usas HTTPS
+    secure: false,
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 30 // 30 minutos
+    maxAge: 1000 * 60 * 30
   }
 }));
 app.use(cors({
@@ -48,31 +47,24 @@ app.use(cors({
   credentials: true
 }));
 
-// Servir la carpeta uploads como estática
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use("/api/registerClients", registerClients);
+app.use("/api/register-clients", registerClients);
+app.use("/api/clients", clientsRoutes);
+app.use("/api/empleados", EmpleadosRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/passwordRecovery", passwordRecoveryRoutes);
-app.use("/api/clients", clientsRoutes);
 app.use("/api/send-welcome", sendWelcome);
 
-app.use("/api", uploadImageRoutes);
+app.use("/api/upload", uploadImageRoutes);
 app.use("/api", contactRoutes);
-
 app.use("/api/vehicles", vehiclesRoutes);
 app.use("/api/marcas", marcasRoutes);
 app.use("/api/profile", profileRoutes);
-
-
-
-
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/contratos", contratosRoutes);
 app.use("/api/mantenimientos", mantenimientosRoutes); 
 app.use("/api/pdf", pdfViewerRoutes);
-
-
 
 export default app;
