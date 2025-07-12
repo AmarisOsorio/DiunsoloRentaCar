@@ -252,50 +252,99 @@ vehiclesController.deleteVehicle = async (req, res) => {
 
 //Update - Put
 vehiclesController.updateVehicle = async (req, res) => {
-  const {
-    imagenes,
-    nombreVehiculo,
-    precioPorDia,
-    placa,
-    idMarca,
-    clase,
-    color,
-    anio,
-    capacidad,
-    modelo,
-    numeroMotor,
-    numeroChasisGrabado,
-    numeroVinChasis,
-    contratoArrendamientoPdf,
-    estado
-  } = req.body;
-
   try {
+    console.log('🔄 Actualizando vehículo:', req.params.id);
+    console.log('📝 Datos recibidos:', req.body);
+    
+    // Extraer datos del body - ahora manejamos tanto FormData como JSON
+    let {
+      imagenes,
+      imagenVista3_4,
+      imagenLateral,
+      nombreVehiculo,
+      precioPorDia,
+      placa,
+      idMarca,
+      clase,
+      color,
+      anio,
+      capacidad,
+      modelo,
+      numeroMotor,
+      numeroChasisGrabado,
+      numeroVinChasis,
+      contratoArrendamientoPdf,
+      estado
+    } = req.body;
+
+    // Procesar imagenes si viene como string JSON
+    if (typeof imagenes === 'string') {
+      try {
+        imagenes = JSON.parse(imagenes);
+      } catch (e) {
+        console.log('❌ Error parsing imagenes JSON:', e);
+        imagenes = [];
+      }
+    }
+
+    // Preparar datos para actualización
+    const updateData = {
+      nombreVehiculo,
+      precioPorDia: parseFloat(precioPorDia),
+      placa: placa?.toUpperCase(),
+      idMarca,
+      clase,
+      color,
+      anio: parseInt(anio),
+      capacidad: parseInt(capacidad),
+      modelo,
+      numeroMotor,
+      numeroChasisGrabado,
+      numeroVinChasis,
+      estado
+    };
+
+    // Agregar imágenes solo si están presentes
+    if (imagenes && Array.isArray(imagenes) && imagenes.length > 0) {
+      updateData.imagenes = imagenes;
+    }
+    
+    if (imagenVista3_4) {
+      updateData.imagenVista3_4 = imagenVista3_4;
+    }
+    
+    if (imagenLateral) {
+      updateData.imagenLateral = imagenLateral;
+    }
+
+    if (contratoArrendamientoPdf) {
+      updateData.contratoArrendamientoPdf = contratoArrendamientoPdf;
+    }
+
+    console.log('📊 Datos para actualizar:', updateData);
+
     const updatedVehicle = await vehiclesModel.findByIdAndUpdate(
       req.params.id,
-      {
-        imagenes,
-        nombreVehiculo,
-        precioPorDia,
-        placa,
-        idMarca,
-        clase,
-        color,
-        anio,
-        capacidad,
-        modelo,
-        numeroMotor,
-        numeroChasisGrabado,
-        numeroVinChasis,
-        contratoArrendamientoPdf,
-        estado
-      },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
+
+    if (!updatedVehicle) {
+      return res.status(404).json({ message: "Vehículo no encontrado" });
+    }
     
-    res.json({ message: "Vehículo actualizado exitosamente: ", updatedVehicle });
+    console.log('✅ Vehículo actualizado exitosamente');
+    res.json({ 
+      message: "Vehículo actualizado exitosamente", 
+      vehiculo: updatedVehicle 
+    });
   } catch (error) {
-    res.status(400).json({ message: "Error al actualizar vehículo: ", error });
+    console.error('❌ Error al actualizar vehículo:', error);
+    res.status(500).json({ 
+      message: "Error al actualizar vehículo", 
+      error: error.message,
+      details: error
+    });
   }
 };
 

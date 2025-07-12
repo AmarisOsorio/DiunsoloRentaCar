@@ -209,6 +209,9 @@ const AdminVehicles = () => {
       
       if (result.success) {
         console.log('Setting vehicle data for edit:', result.data);
+        console.log('Vehicle keys:', Object.keys(result.data));
+        console.log('Vehicle idMarca:', result.data.idMarca);
+        console.log('Vehicle marca:', result.data.marca);
         setSelectedVehicle(result.data);
         setShowFormModal(true);
       } else {

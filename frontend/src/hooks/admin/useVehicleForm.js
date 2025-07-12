@@ -7,14 +7,14 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
     idMarca: initialData?.idMarca || initialData?.marca || '', // Changed from 'marca' to 'idMarca'
     modelo: initialData?.modelo || '',
     clase: initialData?.clase || '',
-    anio: initialData?.anio || '',
+    anio: initialData?.anio ? String(initialData.anio) : '',
     placa: initialData?.placa || '',
     color: initialData?.color || '',
-    capacidad: initialData?.capacidad || '',
+    capacidad: initialData?.capacidad ? String(initialData.capacidad) : '',
     numeroMotor: initialData?.numeroMotor || '',
     numeroChasisGrabado: initialData?.numeroChasisGrabado || '',
     numeroVinChasis: initialData?.numeroVinChasis || '',
-    precioPorDia: initialData?.precioPorDia || '',
+    precioPorDia: initialData?.precioPorDia ? String(initialData.precioPorDia) : '',
     estado: initialData?.estado || 'Disponible',
     imagenes: initialData?.imagenes || [],
     imagenVista3_4: initialData?.imagenVista3_4 || null,
@@ -27,21 +27,22 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
 
   // Efecto para actualizar el formulario cuando cambien los datos iniciales
   useEffect(() => {
-    if (initialData) {
+    console.log('useVehicleForm - initialData changed:', initialData);
+    if (initialData && initialData._id) {
       console.log('Updating form with initial data:', initialData);
       const newFormData = {
         nombreVehiculo: initialData?.nombreVehiculo || '',
         idMarca: initialData?.idMarca || initialData?.marca || '',
         modelo: initialData?.modelo || '',
         clase: initialData?.clase || '',
-        anio: initialData?.anio || '',
+        anio: initialData?.anio ? String(initialData.anio) : '',
         placa: initialData?.placa || '',
         color: initialData?.color || '',
-        capacidad: initialData?.capacidad || '',
+        capacidad: initialData?.capacidad ? String(initialData.capacidad) : '',
         numeroMotor: initialData?.numeroMotor || '',
         numeroChasisGrabado: initialData?.numeroChasisGrabado || '',
         numeroVinChasis: initialData?.numeroVinChasis || '',
-        precioPorDia: initialData?.precioPorDia || '',
+        precioPorDia: initialData?.precioPorDia ? String(initialData.precioPorDia) : '',
         estado: initialData?.estado || 'Disponible',
         imagenes: initialData?.imagenes || [],
         imagenVista3_4: initialData?.imagenVista3_4 || null,
@@ -51,8 +52,30 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
       setFormData(newFormData);
       // Limpiar errores cuando se cargan nuevos datos
       setError(null);
+    } else if (!initialData) {
+      // Si no hay initialData (crear nuevo), resetear formulario
+      console.log('No initial data - resetting form');
+      setFormData({
+        nombreVehiculo: '',
+        idMarca: '',
+        modelo: '',
+        clase: '',
+        anio: '',
+        placa: '',
+        color: '',
+        capacidad: '',
+        numeroMotor: '',
+        numeroChasisGrabado: '',
+        numeroVinChasis: '',
+        precioPorDia: '',
+        estado: 'Disponible',
+        imagenes: [],
+        imagenVista3_4: null,
+        imagenLateral: null
+      });
+      setError(null);
     }
-  }, [initialData?._id]); // Solo reaccionar cuando cambie el ID del vehículo
+  }, [initialData]); // Reaccionar a cualquier cambio en initialData
 
   // Log para debug del formData
   useEffect(() => {
@@ -262,15 +285,24 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
     }
 
     // Validación específica para el año
-    const anioNum = parseInt(formData.anio);
-    if (isNaN(anioNum) || anioNum < 1900 || anioNum > new Date().getFullYear() + 1) {
-      setError(`El año debe ser un número válido entre 1900 y ${new Date().getFullYear() + 1}`);
+    const anioStr = String(formData.anio).trim();
+    const anioNum = parseInt(anioStr);
+    
+    console.log('Validating año:', { 
+      original: formData.anio, 
+      asString: anioStr, 
+      length: anioStr.length, 
+      asNumber: anioNum 
+    });
+    
+    // Validar que el año tenga exactamente 4 dígitos
+    if (anioStr.length !== 4 || !/^\d{4}$/.test(anioStr)) {
+      setError('El año debe tener exactamente 4 dígitos');
       return false;
     }
-
-    // Validar que el año tenga exactamente 4 dígitos
-    if (formData.anio.length !== 4) {
-      setError('El año debe tener exactamente 4 dígitos');
+    
+    if (isNaN(anioNum) || anioNum < 1900 || anioNum > new Date().getFullYear() + 1) {
+      setError(`El año debe ser un número válido entre 1900 y ${new Date().getFullYear() + 1}`);
       return false;
     }
 
@@ -365,6 +397,12 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
         ? `/api/vehicles/${initialData._id}` 
         : '/api/vehicles';
       const method = initialData ? 'PUT' : 'POST';
+
+      console.log('📤 Sending request:', { endpoint, method });
+      console.log('📦 FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`  ${key}:`, value);
+      }
 
       const response = await fetch(endpoint, {
         method: method,

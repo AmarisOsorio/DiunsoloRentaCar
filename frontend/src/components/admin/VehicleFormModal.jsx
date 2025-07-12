@@ -13,7 +13,8 @@ const VehicleFormModal = ({
   // Log para debug
   useEffect(() => {
     console.log('VehicleFormModal - vehicle prop changed:', vehicle);
-  }, [vehicle]);
+    console.log('VehicleFormModal - isOpen:', isOpen);
+  }, [vehicle, isOpen]);
 
   const {
     formData,
@@ -169,23 +170,24 @@ const VehicleFormModal = ({
                 <div className="form-group">
                   <label htmlFor="anio">Año *</label>
                   <input
-                    type="number"
+                    type="text"
                     id="anio"
                     value={formData.anio}
                     onChange={(e) => handleInputChange('anio', e.target.value)}
                     onKeyDown={(e) => {
-                      // Prevenir entrada de 'e', 'E', '+', '-', '.'
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      // Prevenir entrada de caracteres no numéricos
+                      if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
                     onInput={(e) => {
-                      // Limpiar cualquier carácter no numérico que pueda haber pasado
+                      // Limpiar cualquier carácter no numérico
                       e.target.value = e.target.value.replace(/[^0-9]/g, '');
                     }}
-                    min="1900"
-                    max={new Date().getFullYear() + 1}
+                    maxLength="4"
                     placeholder="Ej: 2020"
+                    pattern="[0-9]{4}"
+                    title="Ingrese un año válido de 4 dígitos"
                     required
                   />
                 </div>
