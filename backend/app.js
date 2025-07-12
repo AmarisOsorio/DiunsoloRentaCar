@@ -58,7 +58,7 @@ app.use("/api/passwordRecovery", passwordRecoveryRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/send-welcome", sendWelcome);
 
-app.use("/api/upload", uploadImageRoutes);
+app.use("/api", uploadImageRoutes);
 app.use("/api", contactRoutes);
 
 app.use("/api/vehicles", vehiclesRoutes);

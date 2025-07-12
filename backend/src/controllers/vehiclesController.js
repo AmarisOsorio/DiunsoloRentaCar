@@ -56,7 +56,7 @@ vehiclesController.addVehicle = async (req, res) => {
     let imagenLateral = '';
 
     // Si llegan archivos, súbelos a Cloudinary directamente desde memoria
-    if (req.files) {
+    if (req.files && Object.keys(req.files).length > 0) {
       console.log('📁 Subiendo imágenes a Cloudinary...');
       
       // Función helper para subir archivos desde buffer
@@ -103,20 +103,44 @@ vehiclesController.addVehicle = async (req, res) => {
         console.log('✅ Imagen lateral subida a Cloudinary');
       }
     }
-    // Si llegan imagenes en el body (como string o array de URLs)
-    else if (req.body && req.body.imagenes) {
-      if (Array.isArray(req.body.imagenes)) {
-        imagenes = req.body.imagenes;
-      } else if (typeof req.body.imagenes === 'string') {
-        try {
-          const parsed = JSON.parse(req.body.imagenes);
-          imagenes = Array.isArray(parsed) ? parsed : [req.body.imagenes];
-        } catch {
-          imagenes = [req.body.imagenes];
+    // Si llegan imagenes como URLs en el body (FormData con strings)
+    else {
+      console.log('📦 Procesando imágenes desde body...');
+      console.log('� Full body data:', req.body);
+      
+      // Procesar imagenes galería
+      if (req.body.imagenes) {
+        if (Array.isArray(req.body.imagenes)) {
+          imagenes = req.body.imagenes;
+        } else if (typeof req.body.imagenes === 'string') {
+          try {
+            const parsed = JSON.parse(req.body.imagenes);
+            imagenes = Array.isArray(parsed) ? parsed : [req.body.imagenes];
+          } catch {
+            imagenes = [req.body.imagenes];
+          }
         }
       }
+      
+      // Procesar imágenes principales
       imagenVista3_4 = req.body.imagenVista3_4 || '';
       imagenLateral = req.body.imagenLateral || '';
+      
+      console.log('📄 Body data processed:');
+      console.log('- imagenVista3_4:', imagenVista3_4);
+      console.log('- imagenLateral:', imagenLateral);
+      console.log('- imagenes:', imagenes);
+    }
+
+    // Procesar body data como fallback (para auto-upload con URLs)
+    if (!imagenVista3_4 && req.body.imagenVista3_4) {
+      imagenVista3_4 = req.body.imagenVista3_4;
+      console.log('📄 Using imagenVista3_4 from body as fallback:', imagenVista3_4);
+    }
+    
+    if (!imagenLateral && req.body.imagenLateral) {
+      imagenLateral = req.body.imagenLateral;
+      console.log('📄 Using imagenLateral from body as fallback:', imagenLateral);
     }
 
     if (!Array.isArray(imagenes)) imagenes = [];
@@ -139,7 +163,12 @@ vehiclesController.addVehicle = async (req, res) => {
     } = req.body;
 
     // Validar que existan las imágenes principales
+    console.log('🔍 Validating images:');
+    console.log('- imagenVista3_4:', imagenVista3_4, 'length:', imagenVista3_4?.length);
+    console.log('- imagenLateral:', imagenLateral, 'length:', imagenLateral?.length);
+    
     if (!imagenVista3_4 || !imagenLateral) {
+      console.log('❌ Validation failed - missing images');
       return res.status(400).json({ message: "Faltan imagenVista3/4 o imagenLateral" });
     }
 

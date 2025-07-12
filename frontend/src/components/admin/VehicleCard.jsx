@@ -8,7 +8,8 @@ const VehicleCard = ({
   onDelete, 
   onView, 
   onToggleStatus,
-  loading = false 
+  loading = false,
+  loadingEdit = false
 }) => {
   const [imageError, setImageError] = useState(false);
 
@@ -89,11 +90,12 @@ const VehicleCard = ({
             <FaEye />
           </button>
           <button 
-            className="btn-action btn-edit"
+            className={`btn-action btn-edit ${loadingEdit ? 'loading' : ''}`}
             onClick={() => onEdit(vehicle)}
             title="Editar vehículo"
+            disabled={loadingEdit}
           >
-            <FaEdit />
+            {loadingEdit ? <div className="spinner-small"></div> : <FaEdit />}
           </button>
           <button 
             className="btn-action btn-toggle"

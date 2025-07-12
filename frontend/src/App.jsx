@@ -12,6 +12,7 @@ import PerfilWrapper from './Pages/PerfilWrapper';
 import AdminDashboard from './Pages/admin/AdminDashboard';
 import AdminVehicles from './Pages/admin/AdminVehicles';
 import AdminUsers from './Pages/admin/AdminUsers';
+import ProtectedClientRoute from './components/ProtectedClientRoute';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
 import RegisterModal from './components/modals/RegisterModal';
@@ -44,11 +45,31 @@ const AppContent = () => {
       <Navbar />
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/contacto" element={<Contacto />} />
-          <Route path="/terminos" element={<TerminosCondiciones />} />
-          <Route path="/perfil" element={<PerfilWrapper />} />
+          <Route path="/" element={
+            <ProtectedClientRoute>
+              <Home />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/catalogo" element={
+            <ProtectedClientRoute>
+              <Catalogo />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/contacto" element={
+            <ProtectedClientRoute>
+              <Contacto />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/terminos" element={
+            <ProtectedClientRoute>
+              <TerminosCondiciones />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/perfil" element={
+            <ProtectedClientRoute>
+              <PerfilWrapper />
+            </ProtectedClientRoute>
+          } />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/vehiculos" element={<AdminVehicles />} />
           <Route path="/admin/usuarios" element={<AdminUsers />} />

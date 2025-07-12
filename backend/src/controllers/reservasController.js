@@ -220,4 +220,97 @@ ReservasController.getUserReservations = async (req, res) => {
     }
 };
 
+
+/************************* VEHICULOS MAS RENTADOS POR MARCAS *******************************/
+
+ReservasController.getVehiculosMasRentadosPorMarca = async (req, res) => {
+    try {
+        const resultado = await reservasModel.aggregate([
+            {
+                $lookup: {
+                    from: "vehiculos", 
+                    localField: "vehiculoID",
+                    foreignField: "_id",
+                    as: "vehiculo"
+                }
+            },
+            {
+                $unwind: "$vehiculo"
+            },
+            {
+                $group: {
+                    _id: "$vehiculo.marca",
+                    totalReservas: { $sum: 1 },
+                    ingresoTotal: { $sum: "$precioPorDia" },
+                    vehiculosRentados: { $addToSet: "$vehiculo.nombreVehiculo" }
+                }
+            },
+            {
+                $addFields: {
+                    cantidadVehiculosUnicos: { $size: "$vehiculosRentados" }
+                }
+            },
+            {
+                $sort: { totalReservas: -1 }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+
+        res.status(200).json(resultado);
+    } catch (error) {
+        console.log("Error: " + error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+/************************* VEHICULOS MAS RENTADOS POR MODELOS *******************************/
+
+// En tu reservasController.js, corrige este método:
+
+ReservasController.getVehiculosMasRentadosPorModelo = async (req, res) => {
+    try {
+        const resultado = await reservasModel.aggregate([
+            {
+                $lookup: {
+                    from: "vehiculos", 
+                    localField: "vehiculoID",
+                    foreignField: "_id",
+                    as: "vehiculo"
+                }
+            },
+            {
+                $unwind: "$vehiculo"
+            },
+            {
+                $group: {
+                    _id: "$vehiculo.modelo", 
+                    totalReservas: { $sum: 1 },
+                    ingresoTotal: { $sum: "$precioPorDia" },
+                    vehiculosRentados: { $addToSet: "$vehiculo.nombreVehiculo" }
+                }
+            },
+            {
+                $addFields: {
+                    cantidadVehiculosUnicos: { $size: "$vehiculosRentados" }
+                }
+            },
+            {
+                $sort: { totalReservas: -1 }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+
+        res.status(200).json(resultado);
+    } catch (error) {
+        console.log("Error: " + error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
 export default ReservasController;

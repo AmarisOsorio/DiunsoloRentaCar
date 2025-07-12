@@ -4,7 +4,7 @@
   border-radius: 12px;
   width: 90vw;
   max-width: 900px;
-  max-height: 90vh;
+  max-height: 95vh;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -51,30 +51,36 @@
 .vehicle-form {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .form-error {
   background: #fee2e2;
   color: #dc2626;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   border-left: 4px solid #dc2626;
+  font-size: 0.9rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex: 1;
 }
 
 .form-section {
   background: #f9fafb;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
+  height: fit-content;
 }
 
 .form-section.full-width {
@@ -104,7 +110,7 @@
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-row {
@@ -181,20 +187,20 @@
   gap: 0.5rem;
   background: #ffffff;
   color: #374151;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 500;
   border: 2px dashed #d1d5db;
   width: 100%;
-  max-width: 350px;
+  max-width: 320px;
   justify-content: center;
   aspect-ratio: 4 / 3;
   flex-direction: column;
   text-align: center;
   position: relative;
-  min-height: 160px;
+  min-height: 140px;
 }
 
 .upload-label:hover {
@@ -328,18 +334,18 @@
 
 /* Estilos para la galería */
 .gallery-section {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .gallery-section h4 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
   color: #374151;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .gallery-upload-area {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .gallery-upload-label {
@@ -381,14 +387,14 @@
 }
 
 .gallery-carousel {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .gallery-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   gap: 1rem;
 }
 
@@ -397,7 +403,7 @@
   align-items: center;
   gap: 0.5rem;
   background: #009BDB;
-  color: white;
+  color: white !important;
   padding: 0.75rem 1.25rem;
   border-radius: 8px;
   cursor: pointer;
@@ -410,6 +416,7 @@
 
 .add-more-gallery-btn:hover {
   background: #0284c7;
+  color: white !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 155, 219, 0.25);
 }
@@ -420,9 +427,9 @@
 
 .gallery-preview {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .gallery-image-item {
@@ -496,8 +503,11 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  margin: 0 -1.5rem -1.5rem -1.5rem;
+  flex-shrink: 0;
 }
 
 .btn-cancel,
@@ -558,7 +568,7 @@
 @media (max-width: 768px) {
   .vehicle-form-modal {
     width: 95vw;
-    max-height: 95vh;
+    max-height: 90vh;
   }
 
   .vehicle-form-header {
@@ -570,16 +580,20 @@
   }
 
   .vehicle-form {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 
   .form-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .form-section {
+    padding: 1rem;
   }
 
   /* Resetear el grid interno solo para la tercera sección en móviles */
@@ -589,13 +603,13 @@
   }
 
   .form-grid > .form-section:nth-child(3) h3 {
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 1rem 0;
   }
-
-
 
   .form-actions {
     flex-direction: column;
+    padding: 1rem;
+    margin: 0 -1rem -1rem -1rem;
   }
 
   .btn-cancel,

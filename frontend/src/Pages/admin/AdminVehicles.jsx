@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// import { useAdminAuth } from '../../hooks/admin/useAdminAuth';
+import { useAdminAuth } from '../../hooks/admin/useAdminAuth';
 // import { useVehicles } from '../../hooks/admin/useVehicles';
 import VehicleCard from '../../components/admin/VehicleCard';
 import DeleteConfirmModal from '../../components/admin/DeleteConfirmModal';
 import VehicleFormModal from '../../components/admin/VehicleFormModal';
 import VehicleDetailsModal from '../../components/admin/VehicleDetailsModal';
+import SuccessModal from '../../components/admin/SuccessModal';
 import './styles/AdminPage.css';
 import './styles/AdminVehicles.css';
 import { FaCar, FaPlus, FaSearch, FaFilter, FaTimes } from 'react-icons/fa';
 
 const AdminVehicles = () => {
-  // Comentado temporalmente para testing
-  // const isAuthorized = useAdminAuth();
-  const isAuthorized = true; // Temporal para debug
+  // Protección de rutas para administradores
+  const isAuthorized = useAdminAuth();
+  // const isAuthorized = true; // Temporal para debug
   
   // Hook temporal directo para debug
   const [vehicles, setVehicles] = useState([]);
@@ -52,6 +53,30 @@ const AdminVehicles = () => {
   useEffect(() => {
     fetchVehicles();
   }, [fetchVehicles]);
+
+  const getVehicleById = useCallback(async (id) => {
+    try {
+      console.log('Getting vehicle by ID:', id);
+      const response = await fetch(`/api/vehicles/${id}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al cargar los datos del vehículo');
+      }
+      
+      const vehicleData = await response.json();
+      console.log('Vehicle data received:', vehicleData);
+      return { success: true, data: vehicleData };
+    } catch (err) {
+      console.error('Error fetching vehicle by ID:', err);
+      return { success: false, error: err.message };
+    }
+  }, []);
 
   const deleteVehicle = useCallback(async (id) => {
     try {
@@ -119,6 +144,21 @@ const AdminVehicles = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [statusLoading, setStatusLoading] = useState(false);
+  
+  // Estados para el modal de éxito
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successOperation, setSuccessOperation] = useState(null);
+  const [successVehicleName, setSuccessVehicleName] = useState('');
+  
+  // Estado para la carga de datos del vehículo en edición
+  const [loadingVehicleId, setLoadingVehicleId] = useState(null);
+
+  // Función helper para mostrar modal de éxito
+  const showSuccess = useCallback((operation, vehicleName) => {
+    setSuccessOperation(operation);
+    setSuccessVehicleName(vehicleName);
+    setShowSuccessModal(true);
+  }, []);
 
   if (!isAuthorized) {
     return (
@@ -160,9 +200,33 @@ const AdminVehicles = () => {
     setShowFormModal(true);
   };
 
-  const handleEditVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setShowFormModal(true);
+  const handleEditVehicle = async (vehicle) => {
+    setLoadingVehicleId(vehicle._id);
+    
+    try {
+      // Obtener los datos más actualizados del vehículo
+      const result = await getVehicleById(vehicle._id);
+      
+      if (result.success) {
+        console.log('Setting vehicle data for edit:', result.data);
+        setSelectedVehicle(result.data);
+        setShowFormModal(true);
+      } else {
+        console.error('Error loading vehicle data:', result.error);
+        // Si falla, usar los datos que ya tenemos
+        setSelectedVehicle(vehicle);
+        setShowFormModal(true);
+        alert('No se pudieron cargar los datos más recientes del vehículo, usando datos en caché');
+      }
+    } catch (error) {
+      console.error('Error in handleEditVehicle:', error);
+      // Fallback: usar los datos que ya tenemos
+      setSelectedVehicle(vehicle);
+      setShowFormModal(true);
+      alert('Error al cargar los datos del vehículo');
+    } finally {
+      setLoadingVehicleId(null);
+    }
   };
 
   const handleViewVehicle = (vehicle) => {
@@ -179,8 +243,11 @@ const AdminVehicles = () => {
     if (vehicleToDelete) {
       const result = await deleteVehicle(vehicleToDelete._id);
       if (result.success) {
+        const vehicleName = vehicleToDelete.nombreVehiculo;
         setShowDeleteModal(false);
         setVehicleToDelete(null);
+        // Mostrar modal de éxito
+        showSuccess('delete', vehicleName);
       } else {
         alert(result.error || 'Error al eliminar el vehículo');
       }
@@ -189,8 +256,16 @@ const AdminVehicles = () => {
 
   const handleVehicleSuccess = useCallback((savedVehicle) => {
     fetchVehicles();
-    alert(`Vehículo ${savedVehicle.nombreVehiculo} ${selectedVehicle ? 'actualizado' : 'creado'} exitosamente`);
-  }, [fetchVehicles, selectedVehicle]);
+    const operation = selectedVehicle ? 'edit' : 'create';
+    const vehicleName = savedVehicle.nombreVehiculo;
+    
+    // Cerrar modal del formulario
+    setShowFormModal(false);
+    setSelectedVehicle(null);
+    
+    // Mostrar modal de éxito
+    showSuccess(operation, vehicleName);
+  }, [fetchVehicles, selectedVehicle, showSuccess]);
 
   const handleToggleStatus = async (vehicleId, newStatus) => {
     setStatusLoading(true);
@@ -307,6 +382,7 @@ const AdminVehicles = () => {
                 onView={handleViewVehicle}
                 onToggleStatus={handleToggleStatus}
                 loading={statusLoading}
+                loadingEdit={loadingVehicleId === vehicle._id}
               />
             ))}
           </div>
@@ -339,6 +415,14 @@ const AdminVehicles = () => {
             setSelectedVehicle(null);
           }}
           vehicle={selectedVehicle}
+        />
+
+        <SuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          operation={successOperation}
+          vehicleName={successVehicleName}
+          autoCloseTime={4000}
         />
       </div>
     </div>

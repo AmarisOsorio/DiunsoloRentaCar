@@ -10,19 +10,29 @@ const VehicleFormModal = ({
   vehicle = null, 
   onSuccess = () => {} 
 }) => {
+  // Log para debug
+  useEffect(() => {
+    console.log('VehicleFormModal - vehicle prop changed:', vehicle);
+  }, [vehicle]);
+
   const {
     formData,
     loading,
     error,
+    uploadingImages,
     handleInputChange,
     handleImageUpload,
     removeImage,
+    handleImageVista3_4,
+    handleImageLateral,
+    removeImageVista3_4,
+    removeImageLateral,
     submitForm,
     resetForm,
     setError
   } = useVehicleForm(vehicle, (savedVehicle) => {
     onSuccess(savedVehicle);
-    onClose();
+    // No cerrar automáticamente aquí, dejar que el padre maneje el cierre
   });
 
   const { marcas, loading: marcasLoading, error: marcasError } = useMarcas();
@@ -44,6 +54,22 @@ const VehicleFormModal = ({
     if (files && files.length > 0) {
       handleImageUpload(files);
       // Limpiar el input para permitir seleccionar los mismos archivos nuevamente
+      e.target.value = '';
+    }
+  };
+
+  const handleVista3_4Change = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleImageVista3_4(file);
+      e.target.value = '';
+    }
+  };
+
+  const handleLateralChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleImageLateral(file);
       e.target.value = '';
     }
   };
@@ -70,6 +96,12 @@ const VehicleFormModal = ({
             </div>
           )}
 
+          {uploadingImages && (
+            <div className="form-error" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', borderLeftColor: '#1d4ed8' }}>
+              🔄 Subiendo imágenes a Cloudinary... Por favor espere.
+            </div>
+          )}
+
           <div className="form-grid">
             {/* Información básica */}
             <div className="form-section">
@@ -89,17 +121,17 @@ const VehicleFormModal = ({
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="marca">Marca *</label>
+                  <label htmlFor="idMarca">Marca *</label>
                   <select
-                    id="marca"
-                    value={formData.marca}
-                    onChange={(e) => handleInputChange('marca', e.target.value)}
+                    id="idMarca"
+                    value={formData.idMarca}
+                    onChange={(e) => handleInputChange('idMarca', e.target.value)}
                     required
                     disabled={marcasLoading}
                   >
                     <option value="">Seleccione una marca</option>
                     {marcas.map((marca) => (
-                      <option key={marca._id} value={marca.nombreMarca}>
+                      <option key={marca._id} value={marca._id}>
                         {marca.nombreMarca}
                       </option>
                     ))}
@@ -141,8 +173,19 @@ const VehicleFormModal = ({
                     id="anio"
                     value={formData.anio}
                     onChange={(e) => handleInputChange('anio', e.target.value)}
+                    onKeyDown={(e) => {
+                      // Prevenir entrada de 'e', 'E', '+', '-', '.'
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onInput={(e) => {
+                      // Limpiar cualquier carácter no numérico que pueda haber pasado
+                      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    }}
                     min="1900"
                     max={new Date().getFullYear() + 1}
+                    placeholder="Ej: 2020"
                     required
                   />
                 </div>
@@ -186,6 +229,16 @@ const VehicleFormModal = ({
                     id="capacidad"
                     value={formData.capacidad}
                     onChange={(e) => handleInputChange('capacidad', e.target.value)}
+                    onKeyDown={(e) => {
+                      // Prevenir entrada de 'e', 'E', '+', '-', '.'
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onInput={(e) => {
+                      // Limpiar cualquier carácter no numérico
+                      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    }}
                     min="1"
                     max="50"
                     placeholder="Número de pasajeros"
@@ -240,9 +293,16 @@ const VehicleFormModal = ({
                   id="precioPorDia"
                   value={formData.precioPorDia}
                   onChange={(e) => handleInputChange('precioPorDia', e.target.value)}
+                  onKeyDown={(e) => {
+                    // Prevenir entrada de 'e', 'E', '+', '-' 
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   min="0"
                   step="0.01"
                   placeholder="0.00"
+                  title="Ingrese el precio diario en USD (ej: 25.50)"
                   required
                 />
               </div>
@@ -272,7 +332,7 @@ const VehicleFormModal = ({
                   {formData.imagenVista3_4 ? (
                     <div className="upload-preview">
                       <img 
-                        src={formData.imagenVista3_4.preview || formData.imagenVista3_4} 
+                        src={formData.imagenVista3_4.url || formData.imagenVista3_4} 
                         alt="Vista 3/4"
                         className="preview-image"
                       />
@@ -286,7 +346,7 @@ const VehicleFormModal = ({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleInputChange('imagenVista3_4', null);
+                          removeImageVista3_4();
                         }}
                         title="Eliminar imagen"
                       >
@@ -296,7 +356,9 @@ const VehicleFormModal = ({
                   ) : (
                     <>
                       <FaUpload className="upload-icon" />
-                      <span className="upload-text">Imagen Vista 3/4 (Ícono Principal)</span>
+                      <span className="upload-text">
+                        {uploadingImages ? 'Subiendo...' : 'Imagen Vista 3/4 (Ícono Principal)'}
+                      </span>
                       <span className="upload-hint">Recomendado: 800x600px (4:3) - JPG, PNG</span>
                     </>
                   )}
@@ -305,19 +367,9 @@ const VehicleFormModal = ({
                   type="file"
                   id="imagenVista3_4"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      handleInputChange('imagenVista3_4', {
-                        file,
-                        preview: URL.createObjectURL(file),
-                        isNew: true
-                      });
-                      // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
-                      e.target.value = '';
-                    }
-                  }}
+                  onChange={handleVista3_4Change}
                   style={{ display: 'none' }}
+                  disabled={uploadingImages}
                 />
                 <p className="field-description">
                   Esta imagen se mostrará como ícono principal en las tarjetas de vehículos. 
@@ -331,7 +383,7 @@ const VehicleFormModal = ({
                   {formData.imagenLateral ? (
                     <div className="upload-preview">
                       <img 
-                        src={formData.imagenLateral.preview || formData.imagenLateral} 
+                        src={formData.imagenLateral.url || formData.imagenLateral} 
                         alt="Lateral"
                         className="preview-image"
                       />
@@ -345,7 +397,7 @@ const VehicleFormModal = ({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleInputChange('imagenLateral', null);
+                          removeImageLateral();
                         }}
                         title="Eliminar imagen"
                       >
@@ -355,7 +407,9 @@ const VehicleFormModal = ({
                   ) : (
                     <>
                       <FaUpload className="upload-icon" />
-                      <span className="upload-text">Imagen Lateral</span>
+                      <span className="upload-text">
+                        {uploadingImages ? 'Subiendo...' : 'Imagen Lateral'}
+                      </span>
                       <span className="upload-hint">Recomendado: 1200x800px (3:2) - JPG, PNG</span>
                     </>
                   )}
@@ -364,19 +418,9 @@ const VehicleFormModal = ({
                   type="file"
                   id="imagenLateral"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      handleInputChange('imagenLateral', {
-                        file,
-                        preview: URL.createObjectURL(file),
-                        isNew: true
-                      });
-                      // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
-                      e.target.value = '';
-                    }
-                  }}
+                  onChange={handleLateralChange}
                   style={{ display: 'none' }}
+                  disabled={uploadingImages}
                 />
                 <p className="field-description">
                   Imagen del perfil lateral completo del vehículo para mostrar detalles del diseño.
@@ -389,7 +433,9 @@ const VehicleFormModal = ({
                 <div className="gallery-upload-area">
                   <label htmlFor="images" className="gallery-upload-label">
                     <FaUpload className="upload-icon" />
-                    <span className="upload-text">Agregar Imágenes a la Galería</span>
+                    <span className="upload-text">
+                      {uploadingImages ? 'Subiendo Imágenes...' : 'Agregar Imágenes a la Galería'}
+                    </span>
                     <span className="upload-hint">Múltiples archivos - Máximo 10 imágenes</span>
                   </label>
                   <input
@@ -399,6 +445,7 @@ const VehicleFormModal = ({
                     accept="image/*"
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
+                    disabled={uploadingImages}
                   />
                 </div>
                 <p className="field-description">
@@ -412,7 +459,7 @@ const VehicleFormModal = ({
                       {formData.imagenes.map((img, index) => (
                         <div key={index} className="gallery-image-item">
                           <img 
-                            src={img.preview || img} 
+                            src={img.url || img} 
                             alt={`Galería ${index + 1}`}
                             onError={(e) => {
                               e.target.style.display = 'none';
@@ -463,16 +510,18 @@ const VehicleFormModal = ({
               type="button" 
               className="btn-cancel"
               onClick={onClose}
-              disabled={loading}
+              disabled={loading || uploadingImages}
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               className="btn-submit"
-              disabled={loading}
+              disabled={loading || uploadingImages}
             >
-              {loading ? 'Guardando...' : (vehicle ? 'Actualizar Vehículo' : 'Crear Vehículo')}
+              {loading ? 'Guardando...' : 
+               uploadingImages ? 'Subiendo imágenes...' : 
+               (vehicle ? 'Actualizar Vehículo' : 'Crear Vehículo')}
             </button>
           </div>
         </form>

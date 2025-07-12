@@ -1,5 +1,6 @@
 // Controlador para el modelo Clientes
 import ClientsModel from "../models/Clientes.js";
+import mongoose from "mongoose";
 
 
 const clientsController = {};
@@ -88,5 +89,35 @@ clientsController.checkEmailExists = async (req, res) => {
     res.status(500).json({ message: "Error al verificar el correo" });
   }
 };
+
+
+/************************* NUEVOS CLIENTES REGISTRADOS *******************************/
+
+clientsController.getNuevosClientesRegistrados = async (req, res) => {
+    try {
+        const resultado = await ClientsModel.aggregate([
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { 
+                            format: "%Y-%m-%d", 
+                            date: "$createdAt" 
+                        }
+                    },
+                    totalClientes: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: -1 }
+            }
+        ]);
+
+        res.status(200).json(resultado);
+    } catch (error) {
+        console.log("Error: " + error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 
 export default clientsController;

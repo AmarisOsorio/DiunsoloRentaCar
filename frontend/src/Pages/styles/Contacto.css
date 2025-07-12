@@ -1,3 +1,200 @@
+/* ==============================================
+   ESTILOS ORIGINALES DEL CATÁLOGO
+   ============================================== */
+.marcas-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-top: 2rem;
+}
+
+.marca-card {
+  background: #f4f8fc;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+  max-width: 350px;
+  transition: transform 0.2s;
+}
+
+.marca-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 6px 24px #0002;
+}
+
+.marca-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.marca-nombre {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1C318C;
+  text-align: center;
+}
+
+.marcas-loading {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+  margin-top: 2rem;
+}
+
+.catalogo-header {
+  width: 100%;
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalogo-header-overlay {
+  width: 100%;
+  height: 100%;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+}
+
+.catalogo-header-overlay h1 {
+  font-size: 2.6rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.catalogo-header-overlay p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+/* Grid original de vehículos mantenido exactamente igual */
+.vehiculos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.2rem 1rem;
+  justify-items: center;
+  align-items: stretch;
+}
+
+/* ==============================================
+   ESTILOS PARA EL LAYOUT CON FILTROS
+   ============================================== */
+.catalogo-content {
+  padding: 2rem;
+}
+
+.catalogo-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.catalogo-sidebar {
+  flex-shrink: 0;
+}
+
+.catalogo-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalogo-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.catalogo-header-info h2 {
+  color: #1C318C;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.resultados-count {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Mensaje cuando no hay vehículos */
+.no-vehiculos {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+}
+
+.no-vehiculos p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.no-vehiculos p:first-child {
+  font-weight: 600;
+  color: #333;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+/* Responsive manteniendo el diseño original */
+@media (max-width: 1200px) {
+  .catalogo-layout {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .catalogo-sidebar {
+    width: 100%;
+  }
+  
+  .vehiculos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .catalogo-content {
+    padding: 1rem;
+  }
+  
+  .catalogo-header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .vehiculos-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ==============================================
+   ESTILOS DE CONTACTO (AGREGADOS)
+   ============================================== */
+
 /* General container */
 .contacto-bg {
   background: #f9f9f9;
