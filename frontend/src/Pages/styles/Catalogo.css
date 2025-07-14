@@ -1,3 +1,317 @@
+@media (max-width: 900px) {
+  .vehiculos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 1rem;
+  }
+}
+@media (max-width: 600px) {
+  .vehiculos-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+/* Wrapper para botón y filtros en móvil */
+.filtros-mobile-wrapper {
+  position: static;
+  width: 100%;
+  z-index: 10;
+  margin-bottom: 0.5rem;
+}
+
+/* Filtros lista móvil compacta y con scroll horizontal */
+.filtros-lista-mobile {
+  position: static;
+  width: 100%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  border-radius: 8px;
+  padding: 0.5rem 0.25rem;
+  margin-top: 0.25rem;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Ajuste para los grupos de filtros dentro del contenedor */
+.filtros-lista-mobile .filtro-grupo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Checkboxes concatenados horizontalmente */
+.filtros-lista-mobile .filtro-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.filtros-lista-mobile label {
+  margin-right: 0.25rem;
+  font-size: 0.95em;
+}
+
+.btn-filtros-toggle-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .catalogo-layout {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .catalogo-sidebar {
+    display: none !important;
+  }
+  .catalogo-main {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+/* Filtros como lista debajo del botón en móvil */
+.filtros-lista-mobile {
+  position: relative;
+  width: 100%;
+  margin-top: 0.5rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.filtros-lista-mobile .filtros-container {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  border-radius: 8px;
+  width: 95vw;
+  max-width: 420px;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+}
+/* Filtros modal overlay para móvil: encima del grid y animado desde la izquierda */
+.filtros-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 20;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.filtros-modal-left {
+  animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Opcional: para que el filtros-container tenga fondo y sombra */
+.filtros-modal-overlay .filtros-container {
+  background: #fff;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  min-width: 280px;
+  max-width: 90vw;
+  height: 100vh;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+}
+@media (max-width: 768px) {
+  .catalogo-sidebar.hidden {
+    display: none !important;
+  }
+  .catalogo-sidebar.visible {
+    display: block !important;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    padding: 0;
+  }
+  .btn-filtros-toggle-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0;
+  }
+  .btn-filtros-toggle {
+    display: flex;
+    align-items: center;
+    background: #1a2980;
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px #0001;
+    transition: box-shadow 0.2s, background 0.2s;
+    cursor: pointer;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+  }
+  .btn-filtros-toggle:hover,
+  .btn-filtros-toggle.active {
+    background: #2e3192;
+    box-shadow: 0 4px 16px rgba(30, 60, 180, 0.15);
+  }
+  .btn-filtros-toggle-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-filtros-toggle-icon {
+    vertical-align: middle;
+  }
+}
+/* Header */
+
+.catalogo-header {
+  width: 100%;
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalogo-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(26, 165, 223, 0.5); 
+  z-index: 1;
+}
+
+.catalogo-header > * {
+  position: relative;
+  z-index: 2;
+}
+
+.catalogo-header-overlay {
+  width: 100%;
+  height: 100%;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+}
+
+.catalogo-header-overlay h1 {
+  font-size: 2.6rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.catalogo-header-overlay p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.catalogo-content {
+  padding: 2rem;
+}
+
+.catalogo-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  max-width: 1400px;
+  margin: 0 auto;
+  /* Asegura que el padre NO tenga overflow oculto */
+  overflow: visible;
+}
+
+.catalogo-sidebar {
+  flex-shrink: 0;
+  position: sticky;
+  top: 1.5rem;
+  z-index: 10;
+}
+
+.catalogo-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalogo-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+/* Asegura que resultados-filtros-row esté a la derecha */
+.catalogo-header-info {
+  flex-direction: row;
+}
+
+.resultados-filtros-row {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.catalogo-header-info h2 {
+  color: #1C318C;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.resultados-count {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+
+/* Marcas */
+
 .marcas-grid {
   display: flex;
   flex-direction: column;
@@ -45,44 +359,173 @@
   margin-top: 2rem;
 }
 
-.catalogo-header {
-  width: 100%;
-  height: 300px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.catalogo-header-overlay {
-  width: 100%;
-  height: 100%;
-  background: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  text-align: center;
-}
-
-.catalogo-header-overlay h1 {
-  font-size: 2.6rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-}
-
-.catalogo-header-overlay p {
-  font-size: 1.2rem;
-  margin: 0;
-}
-
+/* Grid de vehículos */
 .vehiculos-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2.2rem 1rem;
   justify-items: center;
   align-items: stretch;
+}
+@media (max-width: 1500px) {
+  .vehiculos-grid {
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  }
+}
+@media (max-width: 1200px) {
+  .vehiculos-grid {
+    grid-template-columns: repeat(auto-fit, minmax(540px, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .vehiculos-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Mensaje cuando no hay vehículos */
+.no-vehiculos {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+}
+
+.no-vehiculos p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.no-vehiculos p:first-child {
+  font-weight: 600;
+  color: #333;
+}
+
+/************************ R E S P O N S I V E***************************/
+
+@media (max-width: 1200px) {
+  .catalogo-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+  .catalogo-sidebar {
+    width: 100%;
+    min-width: 220px;
+    max-width: 320px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .catalogo-main {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+  }
+  .vehiculos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .vehiculos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+@media (max-width: 600px) {
+  .vehiculos-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+@media (max-width: 1500px) {
+  .catalogo-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .catalogo-sidebar.visible {
+    position: relative;
+    min-width: 220px;
+    max-width: 320px;
+    margin-right: 1rem;
+    margin-bottom: 0;
+    padding: 0;
+    display: block !important;
+    z-index: 10001;
+  }
+  .catalogo-main {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+  .catalogo-sidebar {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    padding: 0;
+  }
+  .catalogo-main {
+    width: 100%;
+    min-width: 0;
+  }
+  .catalogo-content {
+    padding: 0.5rem;
+  }
+  .catalogo-header-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  .vehiculos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+  }
+  .vehiculo-card {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* Estilos modernos para el botón de filtros en desktop */
+.btn-filtros-toggle {
+  background: #1a2980;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(30, 60, 180, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+  font-size: 1.08rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-filtros-toggle:hover,
+.btn-filtros-toggle.active {
+  background: #2e3192;
+  box-shadow: 0 4px 16px rgba(30, 60, 180, 0.15);
+}
+
+.btn-filtros-toggle-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-filtros-toggle-icon {
+  fill: #fff;
+  margin-right: 0.3rem;
 }

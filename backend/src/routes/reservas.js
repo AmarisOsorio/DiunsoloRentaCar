@@ -17,4 +17,11 @@ router.route("/:id")
   .put(ReservasController.updateReservas)
   .delete(ReservasController.deleteReservas);
 
+router.route("/vehiculos-rentados-marcas")
+  .get(ReservasController.getVehiculosMasRentadosPorMarca);
+
+router.route("/vehiculos-rentados-modelos")
+  .get(ReservasController.getVehiculosMasRentadosPorModelo);
+
+
 export default router;

@@ -50,7 +50,8 @@ const vehiculosSchema = new Schema({
         unique: true
     },
     idMarca: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: 'Marcas',
         required: true
     },
     clase: {

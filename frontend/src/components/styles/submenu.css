@@ -198,6 +198,7 @@ a{
   padding: 0.5rem 1.2rem;
   cursor: pointer;
   font-weight: bold;
+  text-align: center;
 }
 
 @media (min-width: 701px) {

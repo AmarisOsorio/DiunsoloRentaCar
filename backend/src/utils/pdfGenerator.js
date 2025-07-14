@@ -88,20 +88,48 @@ class PdfGenerator {
       console.log('🔧 Public ID que se usará:', publicId);
       console.log('☁️ Subiendo PDF a Cloudinary...');
       console.log('📊 Tamaño del PDF buffer:', pdfBuffer.length, 'bytes');
+      console.log('📊 Tipo de buffer:', typeof pdfBuffer);
+      console.log('📊 Es Buffer?:', Buffer.isBuffer(pdfBuffer));
+      console.log('📊 Es Uint8Array?:', pdfBuffer instanceof Uint8Array);
+      
+      // Verificar que el buffer tiene contenido válido
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new Error('PDF buffer está vacío o no válido');
+      }
+      
+      // Convertir a Buffer si es necesario
+      let finalBuffer = pdfBuffer;
+      if (!Buffer.isBuffer(pdfBuffer) && pdfBuffer instanceof Uint8Array) {
+        finalBuffer = Buffer.from(pdfBuffer);
+        console.log('🔧 Convertido Uint8Array a Buffer');
+      } else if (!Buffer.isBuffer(pdfBuffer)) {
+        throw new Error('PDF buffer no es un Buffer válido ni Uint8Array');
+      }
+      
+      // Verificar que comience con el header de PDF
+      const pdfHeader = finalBuffer.slice(0, 4).toString();
+      console.log('📊 PDF Header:', pdfHeader);
+      if (pdfHeader !== '%PDF') {
+        console.warn('⚠️ El buffer no parece ser un PDF válido');
+        console.warn('📊 Primeros 20 bytes:', finalBuffer.slice(0, 20));
+      }
       
       // Subir como raw 
       const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
+        const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: 'contratos',
             resource_type: 'raw',
             public_id: publicId,
             use_filename: false,
-            unique_filename: false // Cambiar a false para usar exactamente el public_id especificado
+            unique_filename: false,
+            // Agregar type para especificar que es un archivo
+            type: 'upload'
           },
           (error, result) => {
             if (error) {
               console.error('❌ Error subiendo a Cloudinary:', error);
+              console.error('❌ Error details:', JSON.stringify(error, null, 2));
               reject(error);
             } else {
               console.log('✅ Upload result completo:', {
@@ -109,20 +137,46 @@ class PdfGenerator {
                 secure_url: result.secure_url,
                 resource_type: result.resource_type,
                 bytes: result.bytes,
-                format: result.format
+                format: result.format,
+                version: result.version
               });
+              
+              // Verificar que se subió como archivo y no como enlace
+              if (result.resource_type !== 'raw') {
+                console.warn('⚠️ El archivo no se subió como raw, se subió como:', result.resource_type);
+              }
+              
+              if (result.bytes !== finalBuffer.length) {
+                console.warn('⚠️ El tamaño del archivo subido no coincide con el buffer original');
+                console.warn('Buffer original:', finalBuffer.length, 'bytes');
+                console.warn('Archivo subido:', result.bytes, 'bytes');
+              } else {
+                console.log('✅ Tamaños coinciden - archivo subido correctamente');
+              }
+              
               resolve(result);
             }
           }
-        ).end(pdfBuffer);
+        );
+        
+        // Escribir el buffer final al stream
+        uploadStream.end(finalBuffer);
       });
       
       // Usar directamente la URL de Cloudinary para evitar dependencia del backend
       console.log('✅ PDF subido a Cloudinary exitosamente');
       console.log('🔗 URL de Cloudinary:', uploadResult.secure_url);
       
-      // Devolver la URL directa de Cloudinary
-      return uploadResult.secure_url;
+      // Verificar que la URL generada apunta a un archivo real
+      const finalUrl = uploadResult.secure_url;
+      console.log('🔗 URL final generada:', finalUrl);
+      
+      // Crear también una URL con transformación para forzar descarga
+      const downloadUrl = finalUrl.replace('/upload/', '/upload/fl_attachment/');
+      console.log('🔗 URL de descarga:', downloadUrl);
+      
+      // Devolver la URL directa de Cloudinary (sin transformaciones para almacenamiento)
+      return finalUrl;
       
     } finally {
       await browser.close();
@@ -152,6 +206,47 @@ class PdfGenerator {
           console.error(`❌ Error eliminando archivo temporal ${file}:`, error);
         }
       }
+    }
+  }
+
+  // Función para verificar que la URL apunta a un archivo PDF real
+  async verifyPdfUrl(url) {
+    try {
+      console.log('🔍 Verificando URL de PDF:', url);
+      
+      // Hacer una petición HEAD para verificar el archivo sin descargarlo completo
+      const response = await fetch(url, { method: 'HEAD' });
+      
+      console.log('📊 Status de verificación:', response.status);
+      console.log('📊 Headers de respuesta:', Object.fromEntries(response.headers));
+      
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        const contentLength = response.headers.get('content-length');
+        
+        console.log('✅ Archivo verificado exitosamente');
+        console.log('📄 Content-Type:', contentType);
+        console.log('📊 Content-Length:', contentLength, 'bytes');
+        
+        return {
+          isValid: true,
+          contentType,
+          contentLength: parseInt(contentLength) || 0,
+          status: response.status
+        };
+      } else {
+        console.log('❌ Error verificando archivo:', response.status, response.statusText);
+        return {
+          isValid: false,
+          error: `HTTP ${response.status}: ${response.statusText}`
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error en verificación de URL:', error);
+      return {
+        isValid: false,
+        error: error.message
+      };
     }
   }
 

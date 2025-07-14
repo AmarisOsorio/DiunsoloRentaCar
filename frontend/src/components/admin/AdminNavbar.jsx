@@ -4,6 +4,7 @@ import './styles/AdminNavbar.css'; // Estilos específicos adicionales
 import diunsoloImg from '../../assets/diunsolologo.png';
 import { useAuth } from '../../context/AuthContext';
 import LogoutConfirmModal from '../modals/LogoutConfirmModal';
+import SuccessCheckAnimation from '../modals/SuccessCheckAnimation';
 import Submenu from '../submenu';
 import { FaChevronDown } from 'react-icons/fa';
 
@@ -185,8 +186,18 @@ const AdminNavbar = () => {
         isOpen={logoutModalOpen}
         onConfirm={handleLogoutConfirm}
         onCancel={handleLogoutCancel}
-        showSuccess={showLogoutSuccess}
+        showSuccess={false} // Desactivar el éxito interno del modal
       />
+      
+      {/* Animación de éxito para logout */}
+      {showLogoutSuccess && (
+        <SuccessCheckAnimation
+          operation="logout"
+          onClose={() => setShowLogoutSuccess(false)}
+          duration={2500}
+          showClose={true}
+        />
+      )}
     </nav>
   );
 };

@@ -16,6 +16,9 @@ const IntroSection = ({
             <video 
               className="intro-video"
               controls
+              autoPlay 
+              loop
+              muted
               poster={videoPoster}
               preload="metadata"
             >

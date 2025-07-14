@@ -1,194 +1,266 @@
 import React, { useState } from 'react';
-import '../styles/modals/VehiculoModal.css';
-import ReservationRequestModal from './ReservationRequestModal';
-import useReservationRequestModal from '../../hooks/components/modals/useReservationRequestModal';
-import { useAuth } from '../../context/AuthContext';
-import LoginModal from '../../components/modals/LoginModal';
+import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar, FaUsers, FaCog, FaImage } from 'react-icons/fa';
+import './styles/VehiculoModal.css';
 
-const VehiculoModal = ({ 
-  vehiculo, 
-  isOpen, 
-  onClose, 
-  imagenActual, 
-  setImagenActual, 
-  getEstadoClass, 
-  cambiarImagen, 
-  handleBackdropClick 
+const VehiculoModal = ({
+  vehiculo,
+  isOpen,
+  onClose,
+  imagenActual,
+  setImagenActual,
+  getEstadoClass,
+  cambiarImagen,
+  handleBackdropClick,
+  onSolicitarReserva
 }) => {
-  const { isAuthenticated } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  
-  const {
-    isOpen: isReservationOpen,
-    loading: reservationLoading,
-    error: reservationError,
-    success: reservationSuccess,
-    openModal: openReservationModal,
-    closeModal: closeReservationModal,
-    submitReservation
-  } = useReservationRequestModal();
-
-  const handleSolicitarReserva = () => {
-    if (!isAuthenticated) {
-      setShowLoginModal(true);
-      return;
-    }
-    openReservationModal();
-  };
-
-  const handleCloseLoginModal = () => {
-    setShowLoginModal(false);
-  };
-
-  const handleReservationSubmit = async (reservationData) => {
-    try {
-      await submitReservation(reservationData);
-      // La modal se cerrará automáticamente en caso de éxito
-    } catch (error) {
-      console.error('Error al enviar reserva:', error);
-    }
-  };
-
+  const [currentImageIndex, setCurrentImageIndex] = useState(imagenActual || 0);
   if (!isOpen || !vehiculo) return null;
 
-  return (
-    <>
-      <div className="modal-backdrop" onClick={handleBackdropClick}>
-        <div className="modal-container">
-          <button className="modal-close" onClick={onClose}>×</button>
-          
-          <div className="modal-content">
-            {/* Header del modal */}
-            <div className="modal-header">
-              <h2 className="vehiculo-title">{vehiculo.nombreVehiculo}</h2>
-              <div className={`vehiculo-estado-modal ${getEstadoClass(vehiculo.estado)}`}>
-                <span className="estado-icon">
-                  {getEstadoClass(vehiculo.estado) === 'disponible' ? '✓' :
-                   getEstadoClass(vehiculo.estado) === 'reservado' ? '⏱' : '🔧'}
-                </span>
-                {vehiculo.estado}
-              </div>
-            </div>
+  // Crear array unificado de imágenes con las vistas específicas y la galería
+  const createUnifiedImageArray = () => {
+    const unifiedImages = [];
+    const imageLabels = [];
+    if (vehiculo.imagenVista3_4) {
+      unifiedImages.push(vehiculo.imagenVista3_4);
+      imageLabels.push('Vista 3/4');
+    }
+    if (vehiculo.imagenLateral) {
+      unifiedImages.push(vehiculo.imagenLateral);
+      imageLabels.push('Vista Lateral');
+    }
+    if (vehiculo.imagenes && vehiculo.imagenes.length > 0) {
+      vehiculo.imagenes.forEach((img, index) => {
+        if (!unifiedImages.includes(img)) {
+          unifiedImages.push(img);
+          imageLabels.push(`Galería ${unifiedImages.length - (vehiculo.imagenVista3_4 ? 1 : 0) - (vehiculo.imagenLateral ? 1 : 0) + 1}`);
+        }
+      });
+    }
+    return { images: unifiedImages, labels: imageLabels };
+  };
 
-            {/* Contenido principal */}
-            <div className="modal-body">
-              {/* Sección de imagen */}
-              <div className="imagen-section">
-                <div className="imagen-container">
-                  {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
-                    <button 
-                      className="imagen-nav prev" 
-                      onClick={() => cambiarImagen('prev')}
-                    >
-                      &#8249;
-                    </button>
-                  )}
-                  
-                  <img 
-                    src={vehiculo.imagenes?.[imagenActual] || '/default-car.jpg'} 
-                    alt={vehiculo.nombreVehiculo}
-                    className="vehiculo-imagen-modal"
-                  />
-                  
-                  {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
-                    <button 
-                      className="imagen-nav next" 
-                      onClick={() => cambiarImagen('next')}
-                    >
-                      &#8250;
-                    </button>
-                  )}
+  const { images: allImages, labels: imageLabels } = createUnifiedImageArray();
+  const hasImages = allImages.length > 0;
+
+  // Función para determinar la clase CSS de la imagen actual
+  const getImageClass = (index) => {
+    if (index === 0 && vehiculo.imagenVista3_4) return 'view-threequarter';
+    if ((index === 0 && !vehiculo.imagenVista3_4 && vehiculo.imagenLateral) ||
+        (index === 1 && vehiculo.imagenVista3_4 && vehiculo.imagenLateral)) return 'view-lateral';
+    return 'view-gallery';
+  };
+
+  // Carrusel navegación
+  const nextImage = () => {
+    if (allImages.length > 1) {
+      setCurrentImageIndex((prev) =>
+        prev === allImages.length - 1 ? 0 : prev + 1
+      );
+      setImagenActual && setImagenActual(currentImageIndex === allImages.length - 1 ? 0 : currentImageIndex + 1);
+    }
+  };
+  const prevImage = () => {
+    if (allImages.length > 1) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? allImages.length - 1 : prev - 1
+      );
+      setImagenActual && setImagenActual(currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1);
+    }
+  };
+
+  // Estado visual
+  const getStatusInfo = (estado) => {
+    switch (estado?.toLowerCase()) {
+      case 'disponible':
+        return {
+          color: '#047857',
+          bgColor: '#d1fae5',
+          text: 'Disponible'
+        };
+      case 'reservado':
+        return {
+          color: '#1e40af',
+          bgColor: '#dbeafe',
+          text: 'Reservado'
+        };
+      case 'mantenimiento':
+        return {
+          color: '#d97706',
+          bgColor: '#fef3c7',
+          text: 'Mantenimiento'
+        };
+      default:
+        return {
+          color: '#6b7280',
+          bgColor: '#f3f4f6',
+          text: 'No disponible'
+        };
+    }
+  };
+  const statusInfo = getStatusInfo(vehiculo.estado);
+
+  return (
+    <div className="modal-overlay" onClick={handleBackdropClick}>
+      <div className="vehicle-details-modal" onClick={e => e.stopPropagation()}>
+        <div className="vehicle-details-header">
+          <h2>
+            <FaCar /> Detalles del Vehículo
+          </h2>
+          <button className="modal-close-btn" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="vehicle-details-content">
+          <div className="vehicle-gallery-section">
+            {hasImages ? (
+              <div className="unified-carousel-container">
+                <img
+                  src={allImages[currentImageIndex]}
+                  alt={vehiculo.marca + ' ' + vehiculo.modelo}
+                  className={getImageClass(currentImageIndex)}
+                />
+                {/* Contador de imágenes */}
+                <div className="image-counter-badge">
+                  {currentImageIndex + 1} / {allImages.length}
                 </div>
-                
-                {vehiculo.imagenes && vehiculo.imagenes.length > 1 && (
-                  <div className="imagen-thumbnails">
-                    {vehiculo.imagenes.map((imagen, index) => (
-                      <img
-                        key={index}
-                        src={imagen}
-                        alt={`${vehiculo.nombreVehiculo} ${index + 1}`}
-                        className={`thumbnail ${index === imagenActual ? 'active' : ''}`}
-                        onClick={() => setImagenActual(index)}
-                      />
-                    ))}
-                  </div>
+                {/* Navegación carrusel */}
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      className="carousel-nav-btn prev"
+                      onClick={prevImage}
+                      aria-label="Imagen anterior"
+                    >
+                      <FaChevronLeft />
+                    </button>
+                    <button
+                      className="carousel-nav-btn next"
+                      onClick={nextImage}
+                      aria-label="Imagen siguiente"
+                    >
+                      <FaChevronRight />
+                    </button>
+                    {/* Indicadores tipo dots */}
+                    <div className="carousel-indicators">
+                      {allImages.map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`indicator-dot ${idx === currentImageIndex ? 'active' : ''}`}
+                          onClick={() => { setCurrentImageIndex(idx); setImagenActual && setImagenActual(idx); }}
+                          aria-label={`Ir a ${imageLabels[idx] || `imagen ${idx + 1}`}`}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
-
-              {/* Sección de información */}
-              <div className="info-section">
-                <div className="specs-grid">
-                  <div className="spec-item">
-                    <div className="spec-icon">👥</div>
-                    <div>
-                      <div className="spec-label">Capacidad para {vehiculo.capacidad} personas</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="detalles-vehiculo">
-                  <h3 className="detalles-title">Detalles del Vehículo</h3>
-                  <div className="detalles-grid">
-                    <div className="detalle-item">
-                      <span className="detalle-label">Año:</span>
-                      <span className="detalle-valor">{vehiculo.anio}</span>
-                    </div>
-                    <div className="detalle-item">
-                      <span className="detalle-label">Clase:</span>
-                      <span className="detalle-valor">{vehiculo.clase}</span>
-                    </div>
-                    <div className="detalle-item">
-                      <span className="detalle-label">Modelo:</span>
-                      <span className="detalle-valor">{vehiculo.modelo}</span>
-                    </div>
-                    <div className="detalle-item">
-                      <span className="detalle-label">Color:</span>
-                      <span className="detalle-valor">{vehiculo.color}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  className="solicitar-reserva-btn"
-                  onClick={handleSolicitarReserva}
-                  disabled={vehiculo.estado !== 'Disponible'}
-                >
-                  {vehiculo.estado === 'Disponible' ? 
-                    (isAuthenticated ? 'Solicitar reserva' : 'Inicia sesión para reservar') : 
-                    'No disponible'
-                  }
-                </button>
+            ) : (
+              <div className="vehicle-no-image">
+                <FaImage />
+                <span>Sin imagen disponible</span>
               </div>
+            )}
+          </div>
+
+          <div className="vehicle-info-section">
+            <div className="vehicle-title">
+              <h3>{vehiculo.marca} {vehiculo.modelo}</h3>
+              <span className={`status-badge ${vehiculo.estado === 'Disponible' ? 'available' : 'unavailable'}`}>
+                {vehiculo.estado || 'Estado desconocido'}
+              </span>
+            </div>
+
+            <div className="vehicle-details-grid">
+
+              <div className="details-section">
+                <h4>
+                  <FaCar /> Información Básica
+                </h4>
+                <div className="details-list">
+                  <div className="detail-item">
+                    <span className="detail-label">Marca:</span>
+                    <span className="detail-value">{vehiculo.marca}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Modelo:</span>
+                    <span className="detail-value">{vehiculo.modelo}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Año:</span>
+                    <span className="detail-value">{vehiculo.anio}</span>
+                  </div>
+                  {vehiculo.clase && (
+                    <div className="detail-item">
+                      <span className="detail-label">Clase:</span>
+                      <span className="detail-value">{vehiculo.clase}</span>
+                    </div>
+                  )}
+                  {vehiculo.color && (
+                    <div className="detail-item">
+                      <span className="detail-label">Color:</span>
+                      <span className="detail-value">{vehiculo.color}</span>
+                    </div>
+                  )}
+                  <div className="detail-item">
+                    <span className="detail-label">Capacidad:</span>
+                    <span className="detail-value">{vehiculo.capacidad} personas</span>
+                  </div>
+                  {vehiculo.motor && (
+                    <div className="detail-item">
+                      <span className="detail-label">Motor:</span>
+                      <span className="detail-value">{vehiculo.motor}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {vehiculo.descripcion && (
+                <div className="details-section full-width">
+                  <h4>
+                    <FaCog /> Descripción
+                  </h4>
+                  <div className="details-list">
+                    <div className="detail-item">
+                      <span className="detail-label">Descripción:</span>
+                      <span className="detail-value">{vehiculo.descripcion}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Footer con botón de cerrar y solicitar reserva */}
+        <div className="vehicle-details-footer enhanced-footer">
+          <div className="footer-btn-group">
+            <button className="btn-close enhanced-btn" onClick={onClose}>
+              <FaTimes /> Cerrar
+            </button>
+            {vehiculo.estado?.toLowerCase() === 'disponible' && (
+              <button
+                className="rent-button enhanced-btn"
+                onClick={() => {
+                  console.log('Botón Solicitar Reserva presionado');
+                  if (typeof onSolicitarReserva === 'function') {
+                    console.log('Solicitar reserva para vehículo:', vehiculo?._id, vehiculo);
+                    onSolicitarReserva(vehiculo);
+                    onClose(); 
+                  } else {
+                    console.warn('onSolicitarReserva no está definido');
+                  }
+                }}
+                id="vehiculo-modal-solicitar-reserva"
+                type="button"
+              >
+                <FaCar /> Solicitar Reserva
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Modal de solicitud de reserva */}
-      <ReservationRequestModal
-        isOpen={isReservationOpen}
-        onClose={closeReservationModal}
-        vehiculo={vehiculo}
-        onSubmit={handleReservationSubmit}
-        loading={reservationLoading}
-        error={reservationError}
-        success={reservationSuccess}
-      />
-
-      {/* Modal de login */}
-      <LoginModal
-        open={showLoginModal}
-        onClose={handleCloseLoginModal}
-        onOpenRegister={() => {
-          // Puedes manejar la apertura del modal de registro aquí si es necesario
-          console.log('Abrir modal de registro');
-        }}
-        onOpenForgot={() => {
-          // Puedes manejar la apertura del modal de recuperación aquí si es necesario
-          console.log('Abrir modal de recuperación');
-        }}
-      />
-    </>
+    </div>
   );
 };
 
