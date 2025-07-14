@@ -123,31 +123,26 @@ const VehicleCard = ({
         
         <div className="vehicle-card-details">
           <div className="vehicle-details-compact">
-            {/* Fila 1: Marca (campo largo) - fila completa */}
-            <div className="detail-row detail-row-full">
-              <div className="detail-item detail-item-full">
-                <span className="detail-label">Marca:</span>
-                <span className="detail-value">{vehicle.marca}</span>
+            {/* Contenedor para marca y modelo lado a lado en móvil */}
+            <div className="mobile-brand-model-container">
+              {/* Marca */}
+              <div className="detail-row detail-row-full">
+                <div className="detail-item detail-item-full">
+                  <span className="detail-label">Marca:</span>
+                  <span className="detail-value">{vehicle.marca || vehicle.idMarca || 'Sin marca'}</span>
+                </div>
+              </div>
+              
+              {/* Modelo */}
+              <div className="detail-row detail-row-full">
+                <div className="detail-item detail-item-full">
+                  <span className="detail-label">Modelo:</span>
+                  <span className="detail-value">{vehicle.modelo}</span>
+                </div>
               </div>
             </div>
             
-            {/* Fila 2: Modelo (campo largo) - fila completa */}
-            <div className="detail-row detail-row-full">
-              <div className="detail-item detail-item-full">
-                <span className="detail-label">Modelo:</span>
-                <span className="detail-value">{vehicle.modelo}</span>
-              </div>
-            </div>
-            
-            {/* Fila 3: Placa (campo largo) - fila completa */}
-            <div className="detail-row detail-row-full">
-              <div className="detail-item detail-item-full">
-                <span className="detail-label">Placa:</span>
-                <span className="detail-value">{vehicle.placa}</span>
-              </div>
-            </div>
-            
-            {/* Fila 4: Año y Capacidad (campos cortos) - dos en una fila */}
+            {/* Año y Capacidad (campos cortos) - dos en una fila */}
             <div className="detail-row detail-row-compact">
               <div className="detail-item detail-item-compact">
                 <span className="detail-label">Año:</span>
@@ -159,7 +154,15 @@ const VehicleCard = ({
               </div>
             </div>
             
-            {/* Fila 5: Precio (separada con borde superior) */}
+            {/* Placa (campo largo) - fila completa */}
+            <div className="detail-row detail-row-full">
+              <div className="detail-item detail-item-full">
+                <span className="detail-label">Placa:</span>
+                <span className="detail-value">{vehicle.placa}</span>
+              </div>
+            </div>
+            
+            {/* Precio (separada con borde superior) */}
             <div className="detail-price-row">
               <span className="detail-label">Precio:</span>
               <span className="detail-value price-highlight">

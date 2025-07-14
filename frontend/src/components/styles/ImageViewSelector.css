@@ -194,21 +194,6 @@
   color: #6c757d;
 }
 
-.indicator::before {
-  content: '';
-  width: 14px; /* Larger indicator dot */
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid #ced4da; /* Softer border for empty state */
-  background-color: #f1f3f5; /* Light background for empty state */
-  transition: all 0.3s ease;
-}
-
-.indicator.filled::before {
-  background-color: #28a745; /* Green for filled state */
-  border-color: #28a745;
-}
-
 .indicator.filled {
   color: #28a745;
   font-weight: 600; /* Bolder for filled state */

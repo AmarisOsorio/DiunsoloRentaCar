@@ -365,93 +365,233 @@
   transform: translateY(-1px);
 }
 
+/* Por defecto en desktop, el contenedor no es flex */
+.mobile-brand-model-container {
+  display: block;
+}
+
 @media (max-width: 768px) {
+  .vehicle-card {
+    margin: 0 0.5rem;
+  }
+  
   .vehicle-card-content {
     padding: 1rem;
   }
   
   .vehicle-card-title {
-    font-size: 1.1rem;
+    font-size: 1.125rem;
     margin-bottom: 0.75rem;
+    line-height: 1.3;
   }
   
   .vehicle-details-compact {
-    gap: 0.25rem;
+    gap: 0.375rem;
   }
   
-  /* Filas completas mantienen su layout */
-  .detail-row-full {
+  /* Activar flex solo en móvil para marca y modelo lado a lado */
+  .mobile-brand-model-container {
+    display: flex !important;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+  }
+  
+  .mobile-brand-model-container .detail-row.detail-row-full {
+    flex: 1;
+    min-width: 0;
     display: flex;
+    flex-direction: column;
+  }
+  
+  .mobile-brand-model-container .detail-item.detail-item-full {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    width: 100%;
+  }
+  
+  .mobile-brand-model-container .detail-label {
+    font-size: 0.65rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  
+  .mobile-brand-model-container .detail-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
+    width: 100%;
+    text-align: left; /* Alineación a la izquierda */
+  }
+  
+  /* Placa mantiene fila completa */
+  .detail-row.detail-row-full:not(.mobile-brand-model-container .detail-row.detail-row-full) {
+    width: 100%;
+    display: flex;
+  }
+  
+  .detail-row.detail-row-full:not(.mobile-brand-model-container .detail-row.detail-row-full) .detail-item.detail-item-full {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+  
+  .detail-row.detail-row-full:not(.mobile-brand-model-container .detail-row.detail-row-full) .detail-label {
+    font-size: 0.65rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .detail-row.detail-row-full:not(.mobile-brand-model-container .detail-row.detail-row-full) .detail-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: left; /* Alineación a la izquierda para placa también */
+  }
+  
+  /* Fila compacta (año y capacidad) mejorada - asegurar que estén lado a lado */
+  .detail-row-compact {
+    margin-top: 0.5rem;
+    gap: 0.5rem;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between;
+  }
+  
+  .detail-item-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    max-width: calc(50% - 0.25rem);
+    flex: 1;
+  }
+  
+  .detail-item-compact .detail-label {
+    font-size: 0.65rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .detail-item-compact .detail-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    word-wrap: break-word;
+    white-space: normal;
+    text-align: left; /* Alineación a la izquierda */
+  }
+  
+  /* Precio destacado */
+  .detail-price-row {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .detail-price-row .detail-label {
+    font-size: 0.65rem;
+    color: #059669;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .price-highlight {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #059669 !important;
+  }
+  
+  .vehicle-card-actions {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  
+  .btn-action {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vehicle-card {
+    margin: 0 0.25rem;
+  }
+  
+  .vehicle-card-content {
+    padding: 0.875rem;
+  }
+  
+  .vehicle-card-title {
+    font-size: 1rem;
+    margin-bottom: 0.625rem;
+  }
+  
+  /* En pantallas muy pequeñas, todas las filas se vuelven verticales */
+  .detail-row-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    grid-template-columns: none;
+  }
+  
+  .detail-item-compact {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .detail-item-compact .detail-label {
+    font-size: 0.625rem;
+  }
+  
+  .detail-item-compact .detail-value {
+    font-size: 0.8rem;
+  }
+  
+  .detail-item-full .detail-label {
+    font-size: 0.625rem;
   }
   
   .detail-item-full .detail-value {
     font-size: 0.8rem;
   }
   
-  /* Fila compacta se mantiene en línea pero con menos gap */
-  .detail-row-compact {
-    gap: 0.25rem;
-  }
-  
-  .detail-item-compact {
-    max-width: calc(50% - 0.125rem); /* 50% para dos elementos en tablet */
-  }
-  
-  .detail-item-compact .detail-value {
-    font-size: 0.75rem;
-  }
-  
-  .detail-label {
-    font-size: 0.7rem;
-  }
-  
-  .detail-price-row {
-    margin-top: 0.375rem;
-    padding-top: 0.375rem;
+  .detail-price-row .detail-label {
+    font-size: 0.625rem;
   }
   
   .price-highlight {
-    font-size: 0.85rem !important;
+    font-size: 0.9rem !important;
   }
   
   .vehicle-card-actions {
-    flex-wrap: nowrap;
-    gap: 0.25rem;
-    padding-top: 0.75rem;
+    gap: 0.375rem;
   }
   
   .btn-action {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  /* En pantallas muy pequeñas, la fila compacta puede volverse vertical */
-  .detail-row-compact {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  
-  .detail-item-compact {
-    max-width: 100%;
-    width: 100%;
-  }
-  
-  .detail-item-full .detail-value {
-    font-size: 0.75rem;
-  }
-  
-  .detail-label {
-    font-size: 0.65rem;
-  }
-  
-  .btn-action {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
   }
 }
 

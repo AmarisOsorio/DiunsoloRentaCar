@@ -535,8 +535,29 @@ export const useVehicleForm = (initialData = null, onSuccess = () => {}) => {
       }
 
       const result = await response.json();
-      onSuccess(result.vehiculo);
-      return { success: true, data: result.vehiculo };      } catch (err) {
+      
+      // Mostrar información adicional sobre contratos actualizados si está disponible
+      if (result.contractsUpdated && result.contractsUpdated > 0) {
+        console.log(`✅ Se actualizaron ${result.contractsUpdated} contrato(s) relacionado(s)`);
+      }
+      
+      if (result.contractErrors && result.contractErrors.length > 0) {
+        console.warn('⚠️ Errores al actualizar algunos contratos:', result.contractErrors);
+      }
+      
+      onSuccess(result.vehiculo, {
+        contractsUpdated: result.contractsUpdated || 0,
+        contractErrors: result.contractErrors || [],
+        message: result.message
+      });
+      
+      return { 
+        success: true, 
+        data: result.vehiculo,
+        contractsUpdated: result.contractsUpdated || 0,
+        contractErrors: result.contractErrors || [],
+        message: result.message
+      };      } catch (err) {
         console.error('Error saving vehicle:', err);
         const errorMessage = err.message || 'Error al guardar el vehículo';
         

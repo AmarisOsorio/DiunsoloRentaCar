@@ -1,76 +1,97 @@
+
 import React, { useState, useEffect } from 'react';
+import { useMarcas } from '../hooks/useMarcas';
 import './styles/FiltrosCatalogo.css';
 
-const FiltrosCatalogo = ({ vehiculos, onFilterChange }) => {
+const FiltrosCatalogo = ({ vehiculos, onFilterChange, onClose, isMobile, ordenFiltros = ['marcas', 'tipos', 'estados'] }) => {
   const [filtros, setFiltros] = useState({
     marcas: [],
     tipos: [],
+    estados: [],
   });
 
-  //Capitalizar el texto para que lo encuentre ya sea que lo hayan escrito con Mayusculas o Minusculas
   const capitalizar = (texto) =>
     texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : '';
 
-  const marcasDisponibles = vehiculos
-  ? [...new Set(vehiculos.map(v => v.idMarca?.nombreMarca?.trim().toLowerCase()))].sort()
-  : [];
+  const { marcas: marcasDB } = useMarcas();
+  const marcasDisponibles = marcasDB.length > 0
+    ? marcasDB.map(m => m.nombreMarca?.trim())
+    : (vehiculos ? [...new Set(vehiculos.map(v => v.idMarca?.nombreMarca?.trim()))].sort() : []);
 
   const clasesDisponibles = vehiculos
     ? [...new Set(vehiculos.map(v => v.clase?.trim().toLowerCase()))].sort()
     : [];
 
- 
   const handleCheckboxChange = (tipo, valor) => {
     const yaSeleccionado = filtros[tipo].includes(valor);
     const nuevosValores = yaSeleccionado
       ? filtros[tipo].filter((v) => v !== valor)
       : [...filtros[tipo], valor];
-
     const nuevosFiltros = { ...filtros, [tipo]: nuevosValores };
     setFiltros(nuevosFiltros);
     onFilterChange(nuevosFiltros);
   };
 
-  //Para ver que datos son los que recibo en la consola
   useEffect(() => {
-  console.log('Vehiculos recibidos:', vehiculos);
+    // console.log('Vehiculos recibidos:', vehiculos);
   }, [vehiculos]);
+  const estadosDisponibles = ['Disponible', 'Reservado', 'Mantenimiento'];
 
-  return (
-    <div className="filtros-container">
-      <div className="filtro-seccion">
-        <h4 className="filtro-titulo">Marca</h4>
-        {marcasDisponibles.map((marca, index) => (
-          <label key={`${marca}-${index}`} className="filtro-checkbox">
-            <input
-              type="checkbox"
-              value={marca}
-              checked={filtros.marcas.includes(marca)}
-              onChange={() => handleCheckboxChange('marcas', marca)}
-            />
-            {capitalizar(marca)}
-          </label>
-        ))}
-      </div>
+  // isMobile ahora viene por props
+  const handleClose = onClose || (() => {});
 
-      <div className="filtro-seccion">
-        <h4 className="filtro-titulo">Tipo</h4>
-        {clasesDisponibles.map((tipo, index) => (
-          <label key={`${tipo}-${index}`} className="filtro-checkbox">
-            <input
-              type="checkbox"
-              value={tipo}
-              checked={filtros.tipos.includes(tipo)}
-              onChange={() => handleCheckboxChange('tipos', tipo)}
-            />
-            {capitalizar(tipo)}
-          </label>
-        ))}
-      </div>
+  // Renderiza los filtros en el orden especificado por ordenFiltros
+  const filtroMap = {
+    marcas: {
+      titulo: 'Marca',
+      opciones: marcasDisponibles,
+      tipo: 'marcas',
+      capitalizar: true,
+    },
+    tipos: {
+      titulo: 'Clase',
+      opciones: clasesDisponibles,
+      tipo: 'tipos',
+      capitalizar: true,
+    },
+    estados: {
+      titulo: 'Estado',
+      opciones: estadosDisponibles,
+      tipo: 'estados',
+      capitalizar: false,
+    },
+  };
 
-    
-    </div>
-  );
+  const renderFiltros = () =>
+    ordenFiltros.map((key) => {
+      const filtro = filtroMap[key];
+      if (!filtro) return null;
+      return (
+        <div className="filtro-seccion" key={key}>
+          <h4 className="filtro-titulo">{filtro.titulo}</h4>
+          <div className="filtro-grupo">
+            {filtro.opciones.map((opcion, index) => (
+              <label key={`${opcion}-${index}`} className="filtro-checkbox">
+                <input
+                  type="checkbox"
+                  value={opcion}
+                  checked={filtros[filtro.tipo].includes(opcion)}
+                  onChange={() => handleCheckboxChange(filtro.tipo, opcion)}
+                />
+                {filtro.capitalizar ? capitalizar(opcion) : opcion}
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    });
+
+  if (isMobile) {
+    return <>{renderFiltros()}</>;
+  }
+
+  // DESKTOP: filtros-container horizontal
+  return <div className="filtros-container">{renderFiltros()}</div>;
 };
 
 export default FiltrosCatalogo;

@@ -8,7 +8,7 @@ export const uploadImageToCloudinary = async (file, folder = 'vehiculos') => {
     formData.append('file', file);
     formData.append('folder', folder);
 
-    const response = await fetch('/api/upload-image', {
+    const response = await fetch('/api/upload/upload-image', {
       method: 'POST',
       credentials: 'include',
       body: formData
@@ -61,7 +61,7 @@ export const uploadMultipleImagesToCloudinary = async (files, folder = 'vehiculo
 
 export const deleteImageFromCloudinary = async (publicId) => {
   try {
-    const response = await fetch('/api/delete-image', {
+    const response = await fetch('/api/upload/delete-image', {
       method: 'DELETE',
       credentials: 'include',
       headers: {

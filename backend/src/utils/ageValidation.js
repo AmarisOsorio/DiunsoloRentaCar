@@ -32,7 +32,7 @@ export const esMayorDeEdad = (fechaNacimiento) => {
  * Valida fecha de nacimiento y retorna error si es menor de edad
  * @param {Date|string} fechaNacimiento - Fecha de nacimiento
  * @returns {object|null} - Objeto con error si es menor de edad, null si es válido
- */
+*/
 export const validarEdadMinima = (fechaNacimiento) => {
   const edad = calcularEdad(fechaNacimiento);
   

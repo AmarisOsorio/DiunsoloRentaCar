@@ -85,11 +85,14 @@
   font-weight: 500;
   transition: all 0.2s ease;
   min-width: 120px; /* Ancho mínimo */
+  text-align: center;
 }
 
 .btn-cancel:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: #f3f4f6;
+  border-color: #6b7280;
+  color: #111827;
+  transform: translateY(-1px);
 }
 
 .btn-confirm-delete {

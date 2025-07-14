@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaTimes, FaCar, FaCalendar, FaUsers, FaEnvelope, FaPhone, FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa';
 import { useAuth } from '../../../src/context/AuthContext';
 import '../styles/modals/ReservationRequest.css';
 
@@ -162,87 +163,121 @@ const ReservationRequestModal = ({
   // Obtener fecha mínima (hoy)
   const today = new Date().toISOString().split('T')[0];
 
-  return (
-    <div className="reservation-modal-backdrop" onClick={handleBackdropClick}>
-      <div className="reservation-modal-container">
-        <button className="reservation-modal-close" onClick={handleClose}>×</button>
-        
-        <div className="reservation-modal-content">
-          {/* Header */}
-          <div className="reservation-modal-header">
-            <h2 className="reservation-title">Solicitud de reserva</h2>
-            <div className="vehiculo-info">
-              <img 
-                src={vehiculo.imagenes?.[0] || '/default-car.jpg'} 
-                alt={vehiculo.nombreVehiculo}
-                className="vehiculo-thumbnail"
-              />
-              <div className="vehiculo-details">
-                <h3>{vehiculo.nombreVehiculo}</h3>
-                <p>{vehiculo.modelo} - {vehiculo.color}</p>
-                <p className="vehiculo-capacity">👥 {vehiculo.capacidad} personas</p>
-              </div>
-            </div>
-          </div>
+  // Galería de imágenes (similar a VehiculoModal)
+  const images = [vehiculo.imagenVista3_4, vehiculo.imagenLateral, ...(vehiculo.imagenes || [])].filter(Boolean);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const hasImages = images.length > 0;
+  const nextImage = () => {
+    if (images.length > 1) setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+  const prevImage = () => {
+    if (images.length > 1) setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
 
-          {/* Body */}
-          <div className="reservation-modal-body">
-            {!isAuthenticated ? (
-              <div className="error-message">
-                <span className="error-icon">⚠</span>
-                Debes iniciar sesión para realizar una reserva.
-              </div>
-            ) : success ? (
-              <div className="success-message">
-                <div className="success-icon">✓</div>
-                <h3>¡Solicitud enviada exitosamente!</h3>
-                <p>Tu solicitud de reserva ha sido enviada y está pendiente de aprobación.</p>
+  return (
+    <div className="modal-overlay" onClick={handleBackdropClick}>
+      <div className="vehicle-details-modal" onClick={e => e.stopPropagation()}>
+        <div className="vehicle-details-header">
+          <h2><FaCar /> Solicitud de reserva</h2>
+          <button className="modal-close-btn" onClick={handleClose}><FaTimes /></button>
+        </div>
+
+
+        <div className="vehicle-details-content">
+          {/* Galería de imágenes */}
+          <div className="vehicle-gallery-section">
+            {hasImages ? (
+              <div className="unified-carousel-container">
+                <img
+                  src={images[currentImageIndex]}
+                  alt={vehiculo.marca + ' ' + vehiculo.modelo}
+                  className="view-gallery"
+                />
+                <div className="image-counter-badge">
+                  {currentImageIndex + 1} / {images.length}
+                </div>
+                {images.length > 1 && (
+                  <>
+                    <button className="carousel-nav-btn prev" onClick={prevImage} aria-label="Imagen anterior"><FaChevronLeft /></button>
+                    <button className="carousel-nav-btn next" onClick={nextImage} aria-label="Imagen siguiente"><FaChevronRight /></button>
+                    <div className="carousel-indicators">
+                      {images.map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`indicator-dot ${idx === currentImageIndex ? 'active' : ''}`}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          aria-label={`Ir a imagen ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="reservation-form">
-                {/* Sección de datos del cliente */}
-                <div className="form-section">
-                  <h3 className="section-title">Datos del cliente beneficiario</h3>
-                  <p className="section-description">
-                    Ingresa los datos de la persona que usará el vehículo. 
-                    La reserva se asociará a tu cuenta, pero estos datos aparecerán en el contrato.
-                  </p>
-                  
-                  <div className="form-group">
-                    <label htmlFor="nombreCliente">Nombre completo</label>
-                    <input
-                      type="text"
-                      id="nombreCliente"
-                      name="nombreCliente"
-                      value={formData.nombreCliente}
-                      onChange={handleInputChange}
-                      required
-                      className={`form-input ${validationErrors.nombreCliente ? 'error' : ''}`}
-                      placeholder="Nombre completo del cliente"
-                    />
-                    {validationErrors.nombreCliente && (
-                      <div className="field-error">{validationErrors.nombreCliente}</div>
-                    )}
+              <div className="vehicle-no-image">
+                <FaImage />
+                <span>Sin imagen disponible</span>
+              </div>
+            )}
+          </div>
+
+          {/* Formulario de reserva */}
+          <div className="vehicle-info-section">
+            <div className="vehicle-title">
+              <h3>{vehiculo.marca} {vehiculo.modelo}</h3>
+              <span className={`status-badge ${vehiculo.estado === 'Disponible' ? 'available' : 'unavailable'}`}>
+                {vehiculo.estado || 'Estado desconocido'}
+              </span>
+            </div>
+            <div className="vehicle-details-grid">
+              <div className="details-section full-width">
+                {!isAuthenticated ? (
+                  <div className="error-message">
+                    <span className="error-icon">⚠</span>
+                    Debes iniciar sesión para realizar una reserva.
                   </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="telefonoCliente">Teléfono</label>
-                      <input
-                        type="tel"
-                        id="telefonoCliente"
-                        name="telefonoCliente"
-                        value={formData.telefonoCliente}
-                        onChange={handleInputChange}
-                        required
-                        className={`form-input ${validationErrors.telefonoCliente ? 'error' : ''}`}
-                        placeholder="Número de teléfono"
-                      />
-                      {validationErrors.telefonoCliente && (
-                        <div className="field-error">{validationErrors.telefonoCliente}</div>
-                      )}
+                ) : success ? (
+                  <div className="success-message">
+                    <div className="success-icon">✓</div>
+                    <h3>¡Solicitud enviada exitosamente!</h3>
+                    <p>Tu solicitud de reserva ha sido enviada y está pendiente de aprobación.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="reservation-form">
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="nombreCliente">Nombre completo</label>
+                        <input
+                          type="text"
+                          id="nombreCliente"
+                          name="nombreCliente"
+                          value={formData.nombreCliente}
+                          onChange={handleInputChange}
+                          required
+                          className={`form-input ${validationErrors.nombreCliente ? 'error' : ''}`}
+                          placeholder="Nombre completo del cliente"
+                        />
+                        {validationErrors.nombreCliente && (
+                          <div className="field-error">{validationErrors.nombreCliente}</div>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="telefonoCliente">Teléfono</label>
+                        <input
+                          type="tel"
+                          id="telefonoCliente"
+                          name="telefonoCliente"
+                          value={formData.telefonoCliente}
+                          onChange={handleInputChange}
+                          required
+                          className={`form-input ${validationErrors.telefonoCliente ? 'error' : ''}`}
+                          placeholder="Número de teléfono"
+                        />
+                        {validationErrors.telefonoCliente && (
+                          <div className="field-error">{validationErrors.telefonoCliente}</div>
+                        )}
+                      </div>
                     </div>
-
                     <div className="form-group">
                       <label htmlFor="correoElectronicoCliente">Correo electrónico</label>
                       <input
@@ -259,90 +294,100 @@ const ReservationRequestModal = ({
                         <div className="field-error">{validationErrors.correoElectronicoCliente}</div>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Sección de fechas de reserva */}
-                <div className="form-section">
-                  <h3 className="section-title">Fechas de la reserva</h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="fechaInicio">Fecha de inicio</label>
-                      <input
-                        type="date"
-                        id="fechaInicio"
-                        name="fechaInicio"
-                        value={formData.fechaInicio}
-                        onChange={handleInputChange}
-                        min={today}
-                        required
-                        className={`form-input ${validationErrors.fechaInicio ? 'error' : ''}`}
-                      />
-                      {validationErrors.fechaInicio && (
-                        <div className="field-error">{validationErrors.fechaInicio}</div>
-                      )}
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="fechaInicio">Fecha de inicio</label>
+                        <input
+                          type="date"
+                          id="fechaInicio"
+                          name="fechaInicio"
+                          value={formData.fechaInicio}
+                          onChange={handleInputChange}
+                          min={today}
+                          required
+                          className={`form-input ${validationErrors.fechaInicio ? 'error' : ''}`}
+                        />
+                        {validationErrors.fechaInicio && (
+                          <div className="field-error">{validationErrors.fechaInicio}</div>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="fechaDevolucion">Fecha de finalización</label>
+                        <input
+                          type="date"
+                          id="fechaDevolucion"
+                          name="fechaDevolucion"
+                          value={formData.fechaDevolucion}
+                          onChange={handleInputChange}
+                          min={formData.fechaInicio || today}
+                          required
+                          className={`form-input ${validationErrors.fechaDevolucion ? 'error' : ''}`}
+                        />
+                        {validationErrors.fechaDevolucion && (
+                          <div className="field-error">{validationErrors.fechaDevolucion}</div>
+                        )}
+                      </div>
                     </div>
-
                     <div className="form-group">
-                      <label htmlFor="fechaDevolucion">Fecha de finalización</label>
-                      <input
-                        type="date"
-                        id="fechaDevolucion"
-                        name="fechaDevolucion"
-                        value={formData.fechaDevolucion}
+                      <label htmlFor="comentarios">Comentarios adicionales (opcional)</label>
+                      <textarea
+                        id="comentarios"
+                        name="comentarios"
+                        value={formData.comentarios}
                         onChange={handleInputChange}
-                        min={formData.fechaInicio || today}
-                        required
-                        className={`form-input ${validationErrors.fechaDevolucion ? 'error' : ''}`}
+                        rows="3"
+                        className="form-textarea"
+                        placeholder="Agrega cualquier comentario o solicitud especial..."
                       />
-                      {validationErrors.fechaDevolucion && (
-                        <div className="field-error">{validationErrors.fechaDevolucion}</div>
-                      )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Comentarios adicionales */}
-                <div className="form-group">
-                  <label htmlFor="comentarios">Comentarios adicionales (opcional)</label>
-                  <textarea
-                    id="comentarios"
-                    name="comentarios"
-                    value={formData.comentarios}
-                    onChange={handleInputChange}
-                    rows="3"
-                    className="form-textarea"
-                    placeholder="Agrega cualquier comentario o solicitud especial..."
-                  />
-                </div>
-
-                {error && (
-                  <div className="error-message">
-                    <span className="error-icon">⚠</span>
-                    {error}
-                  </div>
+                    {error && (
+                      <div className="error-message">
+                        <span className="error-icon">⚠</span>
+                        {error}
+                      </div>
+                    )}
+                    <div className="form-actions">
+                      <button type="button" onClick={handleClose} className="btn-secondary" disabled={loading}>Cancelar</button>
+                      <button type="submit" className="btn-primary" disabled={loading || !isAuthenticated}>{loading ? 'Enviando...' : 'Enviar'}</button>
+                    </div>
+                  </form>
                 )}
-
-                <div className="form-actions">
-                  <button 
-                    type="button" 
-                    onClick={handleClose}
-                    className="btn-secondary"
-                    disabled={loading}
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="btn-primary"
-                    disabled={loading || !isAuthenticated}
-                  >
-                    {loading ? 'Enviando...' : 'Enviar'}
-                  </button>
+              </div>
+            </div>
+          </div>
+          {/* Información del vehículo abajo */}
+          <div className="vehicle-info-section vehicle-info-bottom">
+            <div className="details-section">
+              <h4><FaCar /> Información del vehículo</h4>
+              <div className="details-list">
+                <div className="detail-item">
+                  <span className="detail-label">Marca:</span>
+                  <span className="detail-value">{vehiculo.marca}</span>
                 </div>
-              </form>
-            )}
+                <div className="detail-item">
+                  <span className="detail-label">Modelo:</span>
+                  <span className="detail-value">{vehiculo.modelo}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Año:</span>
+                  <span className="detail-value">{vehiculo.anio}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Color:</span>
+                  <span className="detail-value">{vehiculo.color}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Capacidad:</span>
+                  <span className="detail-value">{vehiculo.capacidad} personas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="vehicle-details-footer enhanced-footer">
+          <div className="footer-btn-group">
+            <button className="btn-close enhanced-btn" onClick={handleClose}><FaTimes /> Cerrar</button>
           </div>
         </div>
       </div>
