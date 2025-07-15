@@ -41,6 +41,7 @@ const AdminVehicles = () => {
       
       const data = await response.json();
       console.log('Direct fetchVehicles - Data received:', data);
+      console.log('First vehicle marca:', data[0]?.marca);
       setVehicles(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching vehicles:', err);
@@ -181,14 +182,16 @@ const AdminVehicles = () => {
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [successOperation, setSuccessOperation] = useState(null);
   const [successVehicleName, setSuccessVehicleName] = useState('');
+  const [successContractsInfo, setSuccessContractsInfo] = useState('');
   
   // Estado para la carga de datos del vehículo en edición
   const [loadingVehicleId, setLoadingVehicleId] = useState(null);
 
   // Función helper para mostrar animación de éxito
-  const showSuccess = useCallback((operation, vehicleName) => {
+  const showSuccess = useCallback((operation, vehicleName, contractsInfo = '') => {
     setSuccessOperation(operation);
     setSuccessVehicleName(vehicleName);
+    setSuccessContractsInfo(contractsInfo);
     setShowSuccessAnimation(true);
   }, []);
 
@@ -265,6 +268,8 @@ const AdminVehicles = () => {
   };
 
   const handleViewVehicle = (vehicle) => {
+    console.log('handleViewVehicle called with:', vehicle);
+    console.log('Vehicle keys:', Object.keys(vehicle));
     setSelectedVehicle(vehicle);
     setShowDetailsModal(true);
   };
@@ -289,7 +294,7 @@ const AdminVehicles = () => {
     }
   };
 
-  const handleVehicleSuccess = useCallback((savedVehicle) => {
+  const handleVehicleSuccess = useCallback((savedVehicle, additionalInfo = {}) => {
     fetchVehicles();
     const operation = selectedVehicle ? 'edit' : 'create';
     const vehicleName = savedVehicle.nombreVehiculo;
@@ -298,8 +303,24 @@ const AdminVehicles = () => {
     setShowFormModal(false);
     setSelectedVehicle(null);
     
-    // Mostrar modal de éxito
-    showSuccess(operation, vehicleName);
+    // Crear mensaje informativo sobre contratos actualizados
+    let contractsInfo = '';
+    if (additionalInfo.contractsUpdated && additionalInfo.contractsUpdated > 0) {
+      contractsInfo = `Se actualizaron ${additionalInfo.contractsUpdated} contrato(s) relacionado(s)`;
+      console.log(`ℹ️ Contratos actualizados: ${additionalInfo.contractsUpdated}`);
+    }
+    
+    if (additionalInfo.contractErrors && additionalInfo.contractErrors.length > 0) {
+      if (contractsInfo) {
+        contractsInfo += `. Errores en ${additionalInfo.contractErrors.length} contrato(s)`;
+      } else {
+        contractsInfo = `Errores al actualizar ${additionalInfo.contractErrors.length} contrato(s)`;
+      }
+      console.warn('⚠️ Errores en contratos:', additionalInfo.contractErrors);
+    }
+    
+    // Mostrar modal de éxito con información de contratos
+    showSuccess(operation, vehicleName, contractsInfo);
   }, [fetchVehicles, selectedVehicle, showSuccess]);
 
   const handleToggleStatus = async (vehicleId, newStatus) => {
@@ -457,8 +478,9 @@ const AdminVehicles = () => {
             operation={successOperation}
             itemName={successVehicleName}
             entityType="vehículo"
+            subtitle={successContractsInfo}
             onClose={() => setShowSuccessAnimation(false)}
-            duration={2000}
+            duration={4000}
             showClose={true}
           />
         )}
