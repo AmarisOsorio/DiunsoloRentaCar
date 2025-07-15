@@ -46,7 +46,7 @@ export default function useContactoForm() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/contacto`, {
+      const response = await fetch(`${API_URL}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
