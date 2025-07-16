@@ -4,18 +4,15 @@ import './components/styles/Navbar.css';
 import './components/styles/Footer.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+
+//import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedClientRoute from './components/ProtectedClientRoute';
+
 import Home from './Pages/Home';
 import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
 import TerminosCondiciones from './Pages/TerminosCondiciones';
 import PerfilWrapper from './Pages/PerfilWrapper';
-
-
-/*import AdminDashboard from './Pages/admin/AdminDashboard';
-import AdminVehicles from './Pages/admin/AdminVehicles';
-import AdminUsers from './Pages/admin/AdminUsers';*/
-
-
 import ProtectedClientRoute from './components/ProtectedClientRoute';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
@@ -39,7 +36,7 @@ const AppContent = () => {
   };
 
   // Rutas donde no se debe mostrar el footer
-  const routesWithoutFooter = ['/perfil', '/admin', '/admin/vehiculos', '/admin/usuarios'];
+  const routesWithoutFooter = ['/perfil'];
   const shouldShowFooter = !routesWithoutFooter.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
