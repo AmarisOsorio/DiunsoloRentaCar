@@ -11,7 +11,7 @@ const ProtectedClientRoute = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
+  /*useEffect(() => {
     // Si el usuario está autenticado y es admin, redirigir al dashboard admin
     if (isAuthenticated && userType === 'admin') {
       console.log('Admin detectado intentando acceder a ruta de cliente, redirigiendo al dashboard admin');
@@ -23,10 +23,10 @@ const ProtectedClientRoute = ({ children }) => {
       navigate('/admin', { replace: true });
       return;
     }
-  }, [isAuthenticated, userType, navigate, location.pathname]);
+  }, [isAuthenticated, userType, navigate, location.pathname]);*/
 
   // Si es admin, no renderizar nada mientras se redirige
-  if (isAuthenticated && userType === 'admin') {
+  /*if (isAuthenticated && userType === 'admin') {
     return (
       <div style={{ 
         display: 'flex', 
@@ -38,7 +38,7 @@ const ProtectedClientRoute = ({ children }) => {
         <p>Redirigiendo al panel de administración...</p>
       </div>
     );
-  }
+  }*/
 
   // Si no es admin o no está autenticado, mostrar el contenido normal
   return children;

@@ -26,11 +26,8 @@ export default function useLogin(onClose) {
     try {
       const result = await login({ correo: email, contraseña: password });
       if (result.needVerification) {
-        // Cambia el orden: primero activa pendingShowVerify, luego desactiva loading
-        setPendingVerificationEmail(email);
-        setPendingVerificationPassword(password);
         setError(result.message || 'Tu cuenta no está verificada. Revisa tu correo.');
-        setPendingShowVerify(true); // Activa pendingShowVerify inmediatamente
+        setShowVerifyModal(true); // solo mostrar modal
         return;
       }
       if (result.message !== 'login exitoso') {
@@ -40,7 +37,43 @@ export default function useLogin(onClose) {
         setTimeout(() => {
           setShowLogged(false);
           onClose && onClose();
-          // Para admin, redirigir después de mostrar éxito
+        }, 2200);
+      }
+    } catch (err) {
+      setError('Error de red o servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  /*const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const result = await login({ correo: email, contraseña: password });
+      if (result.needVerification) {
+        // Cambia el orden: primero activa pendingShowVerify, luego desactiva loading
+        setPendingVerificationEmail(email);
+        setPendingVerificationPassword(password);
+        setError(result.message || 'Tu cuenta no está verificada. Revisa tu correo.');
+        setPendingShowVerify(true); // Activa pendingShowVerify inmediatamente
+        return;
+      }
+      if (result.message !== 'login exitoso') {
+        setError(result.message || 'Error al iniciar sesión');
+      }
+      if (result.userType === 'admin' || result.userType === 'Admin') {
+        setError('No tienes permiso para ingresar con este usuario.');
+        setLoading(false);
+        return;
+      } {
+        setShowLogged(true);
+        setTimeout(() => {
+          setShowLogged(false);
+          onClose && onClose();
+          // Para admin, redirigir después de mostrar éxito, esto es lo que había comentado
           if (result.userType === 'Admin' || result.userType === 'admin') {
             setTimeout(() => {
               window.location.href = '/admin';
@@ -56,7 +89,8 @@ export default function useLogin(onClose) {
       // Solo desactiva loading si no se va a mostrar verify
       if (!showVerifyModal && !pendingShowVerify) setLoading(false);
     }
-  };
+  };*/
+
 
   // Nuevo useEffect para mostrar verify y quitar loading
   useEffect(() => {
@@ -66,7 +100,8 @@ export default function useLogin(onClose) {
       setLoading(false); // Desactiva loading después de mostrar el modal de verificación
     }
   }, [pendingShowVerify]);
-  // Nueva función: verificar código y hacer login automático
+
+
   const handleVerifyAndLogin = async (code) => {
     try {
       const res = await fetch('/api/registerClients/verifyCodeEmail', {
@@ -77,15 +112,40 @@ export default function useLogin(onClose) {
       });
       const data = await res.json();
       if (data.message && data.message.toLowerCase().includes('verificado')) {
+        setShowVerifyModal(false);
+        setShowLogged(true);
+        setTimeout(() => {
+          setShowLogged(false);
+          window.location.href = '/';
+        }, 3500);
+      }
+      return data;
+    } catch {
+      return { message: 'Error verificando el código' };
+    }
+  };
+
+
+  // Nueva función: verificar código y hacer login automático(Versión anterior)
+  /*const handleVerifyAndLogin = async (code) => {
+    try {
+      const res = await fetch('/api/registerClients/verifyCodeEmail', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verificationCode: code })
+      });
+      const data = await res.json();
+      if (data.message && data.message.toLowerCase().includes('verificado')) {
         setShowVerifyModal(false); // Cierra el modal de verificación
-        
+
         try {
           // Intentar iniciar sesión automáticamente con las credenciales guardadas
-          const loginResult = await login({ 
-            correo: pendingVerificationEmail, 
-            contraseña: pendingVerificationPassword 
+          const loginResult = await login({
+            correo: pendingVerificationEmail,
+            contraseña: pendingVerificationPassword
           });
-          
+
           if (loginResult.message === 'login exitoso') {
             setShowLogged(true); // Muestra el modal de éxito
             setTimeout(() => {
@@ -123,7 +183,7 @@ export default function useLogin(onClose) {
     } catch (err) {
       return { message: 'Error verificando el código' };
     }
-  };
+  };*/
 
   return {
     email,

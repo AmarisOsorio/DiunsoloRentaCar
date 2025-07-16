@@ -9,9 +9,13 @@ import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
 import TerminosCondiciones from './Pages/TerminosCondiciones';
 import PerfilWrapper from './Pages/PerfilWrapper';
-import AdminDashboard from './Pages/admin/AdminDashboard';
+
+
+/*import AdminDashboard from './Pages/admin/AdminDashboard';
 import AdminVehicles from './Pages/admin/AdminVehicles';
-import AdminUsers from './Pages/admin/AdminUsers';
+import AdminUsers from './Pages/admin/AdminUsers';*/
+
+
 import ProtectedClientRoute from './components/ProtectedClientRoute';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
@@ -36,7 +40,7 @@ const AppContent = () => {
 
   // Rutas donde no se debe mostrar el footer
   const routesWithoutFooter = ['/perfil', '/admin', '/admin/vehiculos', '/admin/usuarios'];
-  const shouldShowFooter = !routesWithoutFooter.some(route => 
+  const shouldShowFooter = !routesWithoutFooter.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
 
@@ -70,9 +74,12 @@ const AppContent = () => {
               <PerfilWrapper />
             </ProtectedClientRoute>
           } />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/vehiculos" element={<AdminVehicles />} />
-          <Route path="/admin/usuarios" element={<AdminUsers />} />
+          {/**
+           * <Route path="/admin" element={<AdminDashboard />} />
+           * <Route path="/admin/vehiculos" element={<AdminVehicles />} />
+           * <Route path="/admin/usuarios" element={<AdminUsers />} />
+           */}
+
         </Routes>
         <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
         <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
