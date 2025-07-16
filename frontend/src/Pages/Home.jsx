@@ -1,6 +1,6 @@
 import React from 'react';
 import './styles/Home.css';
-import ServicesCard from '../components/ServicesCard';
+import ServicesCard from '../components/ourServices/ServicesCard';
 import VehiculoCard from '../components/VehiculoCard';
 import VehiculoModal from '../components/modals/VehiculoModal';
 import FamiliarSection from '../components/FamilySection';

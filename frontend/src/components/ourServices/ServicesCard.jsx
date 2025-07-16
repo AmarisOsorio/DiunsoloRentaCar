@@ -1,5 +1,5 @@
 import React from 'react';
-import '../components/styles/ServicesCard.css';
+import './ServicesCard.css';
 
 const ServicesCard = ({ iconName, title, description }) => {
   return (

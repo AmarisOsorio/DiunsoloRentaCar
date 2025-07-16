@@ -13,7 +13,6 @@ import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
 import TerminosCondiciones from './Pages/TerminosCondiciones';
 import PerfilWrapper from './Pages/PerfilWrapper';
-import ProtectedClientRoute from './components/ProtectedClientRoute';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
 import RegisterModal from './components/modals/RegisterModal';
