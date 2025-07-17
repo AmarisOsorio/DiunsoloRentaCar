@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import './components/styles/Navbar.css';
-import './components/styles/Footer.css';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+//import './components/styles/Navbar.css';
+//import './components/styles/Footer.css';
 
-//import ProtectedRoute from './components/ProtectedRoute';
-import ProtectedClientRoute from './components/ProtectedClientRoute';
+/*********** C O M P O N E N T S ***************/
 
-import Home from './Pages/Home';
-import Catalogo from './Pages/Catalogo';
-import Contacto from './Pages/Contacto';
-import TerminosCondiciones from './Pages/TerminosCondiciones';
-import PerfilWrapper from './Pages/PerfilWrapper';
+import Navbar from './components/navbar/Navbar';
+import Footer from './components/footer/Footer';
+import ProtectedClientRoute from './components/protectedRoutes/ProtectedClientRoute';
+import ProtectedRoute from './components/protectedRoutes/ProtectedRoute';
+
+/*********** M O D A L S ***************/
+import LoginModal from './components/modals/login/LoginModal';
+import RegisterModal from './components/modals/register/RegisterModal';
+import ForgotPasswordModal from './components/modals/forgotPassword/ForgotPasswordModal';
+
+/*********** P A G E S ***************/
+import Home from './Pages/home/Home';
+import Catalogo from './Pages/catalog/Catalogo';
+import Contacto from './Pages/contact/Contacto';
+import TerminosCondiciones from './Pages/termsAndConditions/TerminosCondiciones';
+import PerfilWrapper from './Pages/profile/PerfilWrapper';
 import './App.css';
-import LoginModal from './components/modals/LoginModal';
-import RegisterModal from './components/modals/RegisterModal';
-import ForgotPasswordModal from './components/modals/ForgotPasswordModal';
+
 import { AuthProvider } from './context/AuthContext';
 
 /**
