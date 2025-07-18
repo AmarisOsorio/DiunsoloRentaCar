@@ -1,12 +1,12 @@
 import React from 'react';
 import './Home.css';
-import ServicesCard from '../../components/ourServices/ServicesCard';
-import VehiculoCard from '../../components/cardVehicle/VehiculoCard';
-import VehiculoModal from '../../components/modals/vehicleModal/VehiculoModal';
-import useVehicleModal from '../../components/modals/vehicleModal/hooks/useVehicleModal';
-import FamiliarSection from '../../components/familySection/FamilySection';
-import IntroSection from '../../components/introSection/IntroSection';
-import GallerySection from '../../components/gallerySection/GallerySection';
+import ServicesCard from '../../components/home/ourServices/ServicesCard';
+import VehiculoCard from '../../components/catolog/cardVehicle/VehiculoCard';
+import VehiculoModal from '../../components/catolog/modals/vehicleModal/VehiculoModal';
+import useVehicleModal from '../../components/catolog/modals/vehicleModal/hooks/useVehicleModal';
+import FamiliarSection from '../../components/home/familySection/FamilySection';
+import IntroSection from '../../components/home/introSection/IntroSection';
+import GallerySection from '../../components/home/gallerySection/GallerySection';
 
 import useHomeVehiculos from './hooks/Home';
 

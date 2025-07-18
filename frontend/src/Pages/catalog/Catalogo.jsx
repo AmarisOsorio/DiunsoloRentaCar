@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import './Catalogo.css';
-import VehiculoCard from '../../components/cardVehicle/VehiculoCard.jsx';
-import VehiculoModal from '../../components/modals/vehicleModal/VehiculoModal.jsx';
-import FiltrosCatalogo from '../../components/filters/filters.jsx';
+import VehiculoCard from '../../components/catolog/cardVehicle/VehiculoCard.jsx';
+import VehiculoModal from '../../components/catolog/modals/vehicleModal/VehiculoModal.jsx';
+import FiltrosCatalogo from '../../components/catolog/filters/filters.jsx';
 import catalogBG from '../../assets/bannerCatalogo3.webp';
 import useCatalogo from './hooks/useCatalogo.js';
-import useVehicleModal from '../../components/modals/vehicleModal/hooks/useVehicleModal.js';
+import useVehicleModal from '../../components/catolog/modals/vehicleModal/hooks/useVehicleModal.js';
 
 const Catalogo = () => {
   const { vehiculos, loading } = useCatalogo();

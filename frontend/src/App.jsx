@@ -5,15 +5,15 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 
 /*********** C O M P O N E N T S ***************/
 
-import Navbar from './components/navbar/Navbar';
-import Footer from './components/footer/Footer';
-import ProtectedClientRoute from './components/protectedRoutes/ProtectedClientRoute';
-import ProtectedRoute from './components/protectedRoutes/ProtectedRoute';
+import Navbar from './components/navegation/navbar/Navbar';
+import Footer from './components/navegation/footer/Footer';
+import ProtectedClientRoute from './components/navegation/protectedRoutes/ProtectedClientRoute';
+import ProtectedRoute from './components/navegation/protectedRoutes/ProtectedRoute';
 
 /*********** M O D A L S ***************/
-import LoginModal from './components/modals/login/LoginModal';
-import RegisterModal from './components/modals/register/RegisterModal';
-import ForgotPasswordModal from './components/modals/forgotPassword/ForgotPasswordModal';
+import LoginModal from './components/home/modals/login/LoginModal';
+import RegisterModal from './components/home/modals/register/RegisterModal';
+import ForgotPasswordModal from './components/home/modals/forgotPassword/ForgotPasswordModal';
 
 /*********** P A G E S ***************/
 import Home from './Pages/home/Home';
