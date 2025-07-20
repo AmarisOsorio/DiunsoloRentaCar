@@ -8,7 +8,11 @@ import Home from './Pages/Home';
 import Catalogo from './Pages/Catalogo';
 import Contacto from './Pages/Contacto';
 import TerminosCondiciones from './Pages/TerminosCondiciones';
-import Perfil from './Pages/Perfil';
+import PerfilWrapper from './Pages/PerfilWrapper';
+import AdminDashboard from './Pages/admin/AdminDashboard';
+import AdminVehicles from './Pages/admin/AdminVehicles';
+import AdminUsers from './Pages/admin/AdminUsers';
+import ProtectedClientRoute from './components/ProtectedClientRoute';
 import './App.css';
 import LoginModal from './components/modals/LoginModal';
 import RegisterModal from './components/modals/RegisterModal';
@@ -31,19 +35,44 @@ const AppContent = () => {
   };
 
   // Rutas donde no se debe mostrar el footer
-  const routesWithoutFooter = ['/perfil'];
-  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
+  const routesWithoutFooter = ['/perfil', '/admin', '/admin/vehiculos', '/admin/usuarios'];
+  const shouldShowFooter = !routesWithoutFooter.some(route => 
+    location.pathname === route || location.pathname.startsWith(route + '/')
+  );
 
   return (
     <>
       <Navbar />
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/contacto" element={<Contacto />} />
-          <Route path="/terminos" element={<TerminosCondiciones />} />
-          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/" element={
+            <ProtectedClientRoute>
+              <Home />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/catalogo" element={
+            <ProtectedClientRoute>
+              <Catalogo />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/contacto" element={
+            <ProtectedClientRoute>
+              <Contacto />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/terminos" element={
+            <ProtectedClientRoute>
+              <TerminosCondiciones />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/perfil" element={
+            <ProtectedClientRoute>
+              <PerfilWrapper />
+            </ProtectedClientRoute>
+          } />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/vehiculos" element={<AdminVehicles />} />
+          <Route path="/admin/usuarios" element={<AdminUsers />} />
         </Routes>
         <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
         <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />

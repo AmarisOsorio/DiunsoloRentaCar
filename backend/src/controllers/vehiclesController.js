@@ -42,7 +42,23 @@ vehiclesController.getVehicleById = async (req, res) => {
     if (!vehicle) {
       return res.status(404).json({ message: "Vehículo no encontrado" });
     }
-    res.json(vehicle);
+    
+    // Obtener nombre de la marca
+    let nombreMarca = 'N/A';
+    try {
+      if (vehicle.idMarca) {
+        const marca = await marcasModel.findById(vehicle.idMarca);
+        nombreMarca = marca ? marca.nombreMarca : 'N/A';
+      }
+    } catch (error) {
+      console.log('Error al obtener marca para vehículo:', vehicle._id, error);
+    }
+    
+    // Convertir a objeto plain y agregar marca
+    const vehicleObj = vehicle.toObject();
+    vehicleObj.marca = nombreMarca;
+    
+    res.json(vehicleObj);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener vehículo: ", error });
   }
@@ -56,7 +72,7 @@ vehiclesController.addVehicle = async (req, res) => {
     let imagenLateral = '';
 
     // Si llegan archivos, súbelos a Cloudinary directamente desde memoria
-    if (req.files) {
+    if (req.files && Object.keys(req.files).length > 0) {
       console.log('📁 Subiendo imágenes a Cloudinary...');
       
       // Función helper para subir archivos desde buffer
@@ -103,20 +119,44 @@ vehiclesController.addVehicle = async (req, res) => {
         console.log('✅ Imagen lateral subida a Cloudinary');
       }
     }
-    // Si llegan imagenes en el body (como string o array de URLs)
-    else if (req.body && req.body.imagenes) {
-      if (Array.isArray(req.body.imagenes)) {
-        imagenes = req.body.imagenes;
-      } else if (typeof req.body.imagenes === 'string') {
-        try {
-          const parsed = JSON.parse(req.body.imagenes);
-          imagenes = Array.isArray(parsed) ? parsed : [req.body.imagenes];
-        } catch {
-          imagenes = [req.body.imagenes];
+    // Si llegan imagenes como URLs en el body (FormData con strings)
+    else {
+      console.log('📦 Procesando imágenes desde body...');
+      console.log('� Full body data:', req.body);
+      
+      // Procesar imagenes galería
+      if (req.body.imagenes) {
+        if (Array.isArray(req.body.imagenes)) {
+          imagenes = req.body.imagenes;
+        } else if (typeof req.body.imagenes === 'string') {
+          try {
+            const parsed = JSON.parse(req.body.imagenes);
+            imagenes = Array.isArray(parsed) ? parsed : [req.body.imagenes];
+          } catch {
+            imagenes = [req.body.imagenes];
+          }
         }
       }
+      
+      // Procesar imágenes principales
       imagenVista3_4 = req.body.imagenVista3_4 || '';
       imagenLateral = req.body.imagenLateral || '';
+      
+      console.log('📄 Body data processed:');
+      console.log('- imagenVista3_4:', imagenVista3_4);
+      console.log('- imagenLateral:', imagenLateral);
+      console.log('- imagenes:', imagenes);
+    }
+
+    // Procesar body data como fallback (para auto-upload con URLs)
+    if (!imagenVista3_4 && req.body.imagenVista3_4) {
+      imagenVista3_4 = req.body.imagenVista3_4;
+      console.log('📄 Using imagenVista3_4 from body as fallback:', imagenVista3_4);
+    }
+    
+    if (!imagenLateral && req.body.imagenLateral) {
+      imagenLateral = req.body.imagenLateral;
+      console.log('📄 Using imagenLateral from body as fallback:', imagenLateral);
     }
 
     if (!Array.isArray(imagenes)) imagenes = [];
@@ -139,7 +179,12 @@ vehiclesController.addVehicle = async (req, res) => {
     } = req.body;
 
     // Validar que existan las imágenes principales
+    console.log('🔍 Validating images:');
+    console.log('- imagenVista3_4:', imagenVista3_4, 'length:', imagenVista3_4?.length);
+    console.log('- imagenLateral:', imagenLateral, 'length:', imagenLateral?.length);
+    
     if (!imagenVista3_4 || !imagenLateral) {
+      console.log('❌ Validation failed - missing images');
       return res.status(400).json({ message: "Faltan imagenVista3/4 o imagenLateral" });
     }
 
@@ -202,6 +247,7 @@ vehiclesController.addVehicle = async (req, res) => {
     await newVehicle.save();
     res.status(201).json({ 
       message: "Vehículo agregado exitosamente",
+      vehiculo: newVehicle,
       contratoGenerado: !!contratoArrendamientoPdfUrl,
       contratoUrl: contratoArrendamientoPdfUrl
     });
@@ -214,8 +260,16 @@ vehiclesController.addVehicle = async (req, res) => {
 //Delete
 vehiclesController.deleteVehicle = async (req, res) => {
   try {
+    const vehicleToDelete = await vehiclesModel.findById(req.params.id);
+    if (!vehicleToDelete) {
+      return res.status(404).json({ message: "Vehículo no encontrado" });
+    }
+    
     await vehiclesModel.findByIdAndDelete(req.params.id);
-    res.json({ message: "Vehículo eliminado exitosamente: " });
+    res.json({ 
+      message: "Vehículo eliminado exitosamente",
+      vehiculo: vehicleToDelete 
+    });
   } catch (error) {
     res.status(500).json({ message: "Error al eliminar vehículo: ", error });
   }
@@ -223,50 +277,171 @@ vehiclesController.deleteVehicle = async (req, res) => {
 
 //Update - Put
 vehiclesController.updateVehicle = async (req, res) => {
-  const {
-    imagenes,
-    nombreVehiculo,
-    precioPorDia,
-    placa,
-    idMarca,
-    clase,
-    color,
-    anio,
-    capacidad,
-    modelo,
-    numeroMotor,
-    numeroChasisGrabado,
-    numeroVinChasis,
-    contratoArrendamientoPdf,
-    estado
-  } = req.body;
-
   try {
+    console.log('🔄 Actualizando vehículo:', req.params.id);
+    console.log('📝 Datos recibidos:', req.body);
+    console.log('📝 Headers:', req.headers);
+    
+    // Extraer datos del body - ahora manejamos tanto FormData como JSON
+    let {
+      imagenes,
+      imagenVista3_4,
+      imagenLateral,
+      nombreVehiculo,
+      precioPorDia,
+      placa,
+      idMarca,
+      clase,
+      color,
+      anio,
+      capacidad,
+      modelo,
+      numeroMotor,
+      numeroChasisGrabado,
+      numeroVinChasis,
+      contratoArrendamientoPdf,
+      estado
+    } = req.body;
+
+    // Validar estados permitidos
+    const validStates = ['Disponible', 'Reservado', 'Mantenimiento'];
+    if (estado && !validStates.includes(estado)) {
+      console.log('❌ Estado inválido:', estado);
+      return res.status(400).json({ 
+        message: `Estado inválido: ${estado}. Estados válidos: ${validStates.join(', ')}` 
+      });
+    }
+
+    console.log('✅ Estado válido:', estado);
+
+    // Procesar imagenes si viene como string JSON
+    if (typeof imagenes === 'string') {
+      try {
+        imagenes = JSON.parse(imagenes);
+      } catch (e) {
+        console.log('❌ Error parsing imagenes JSON:', e);
+        imagenes = [];
+      }
+    }
+
+    // Preparar datos para actualización
+    const updateData = {
+      nombreVehiculo,
+      precioPorDia: parseFloat(precioPorDia),
+      placa: placa?.toUpperCase(),
+      idMarca,
+      clase,
+      color,
+      anio: parseInt(anio),
+      capacidad: parseInt(capacidad),
+      modelo,
+      numeroMotor,
+      numeroChasisGrabado,
+      numeroVinChasis,
+      estado
+    };
+
+    // Agregar imágenes solo si están presentes
+    if (imagenes && Array.isArray(imagenes) && imagenes.length > 0) {
+      updateData.imagenes = imagenes;
+    }
+    
+    if (imagenVista3_4) {
+      updateData.imagenVista3_4 = imagenVista3_4;
+    }
+    
+    if (imagenLateral) {
+      updateData.imagenLateral = imagenLateral;
+    }
+
+    if (contratoArrendamientoPdf) {
+      updateData.contratoArrendamientoPdf = contratoArrendamientoPdf;
+    }
+
+    console.log('📊 Datos para actualizar:', updateData);
+
     const updatedVehicle = await vehiclesModel.findByIdAndUpdate(
       req.params.id,
-      {
-        imagenes,
-        nombreVehiculo,
-        precioPorDia,
-        placa,
-        idMarca,
-        clase,
-        color,
-        anio,
-        capacidad,
-        modelo,
-        numeroMotor,
-        numeroChasisGrabado,
-        numeroVinChasis,
-        contratoArrendamientoPdf,
-        estado
-      },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
+
+    if (!updatedVehicle) {
+      return res.status(404).json({ message: "Vehículo no encontrado" });
+    }
     
-    res.json({ message: "Vehículo actualizado exitosamente: ", updatedVehicle });
+    console.log('✅ Vehículo actualizado exitosamente');
+    res.json({ 
+      message: "Vehículo actualizado exitosamente", 
+      vehiculo: updatedVehicle 
+    });
   } catch (error) {
-    res.status(400).json({ message: "Error al actualizar vehículo: ", error });
+    console.error('❌ Error al actualizar vehículo:', error);
+    res.status(500).json({ 
+      message: "Error al actualizar vehículo", 
+      error: error.message,
+      details: error
+    });
+  }
+};
+
+//Update Status Only - Patch
+vehiclesController.updateVehicleStatus = async (req, res) => {
+  try {
+    console.log('🔄 Iniciando actualización de estado del vehículo');
+    console.log('📝 Vehicle ID recibido:', req.params.id);
+    console.log('📝 Longitud del ID:', req.params.id?.length);
+    console.log('📝 Body completo:', JSON.stringify(req.body, null, 2));
+    console.log('📝 Nuevo estado:', req.body.estado);
+    console.log('📝 Tipo de estado:', typeof req.body.estado);
+    
+    const { estado } = req.body;
+    
+    // Validar que el ID tenga el formato correcto de MongoDB ObjectId
+    if (!req.params.id || req.params.id.length !== 24) {
+      console.log('❌ ID de vehículo inválido:', req.params.id);
+      return res.status(400).json({ 
+        message: `ID de vehículo inválido: ${req.params.id}` 
+      });
+    }
+    
+    // Validar estados permitidos
+    const validStates = ['Disponible', 'Reservado', 'Mantenimiento'];
+    if (!estado || !validStates.includes(estado)) {
+      console.log('❌ Estado inválido:', estado);
+      return res.status(400).json({ 
+        message: `Estado inválido: ${estado}. Estados válidos: ${validStates.join(', ')}` 
+      });
+    }
+
+    console.log('✅ Validaciones pasadas, actualizando vehículo...');
+
+    const updatedVehicle = await vehiclesModel.findByIdAndUpdate(
+      req.params.id,
+      { estado },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedVehicle) {
+      console.log('❌ Vehículo no encontrado con ID:', req.params.id);
+      return res.status(404).json({ message: "Vehículo no encontrado" });
+    }
+    
+    console.log('✅ Estado del vehículo actualizado exitosamente:', updatedVehicle.estado);
+    console.log('✅ Vehículo completo:', JSON.stringify(updatedVehicle, null, 2));
+    
+    res.json({ 
+      message: "Estado del vehículo actualizado exitosamente", 
+      vehiculo: updatedVehicle 
+    });
+  } catch (error) {
+    console.error('❌ Error completo al actualizar estado del vehículo:', error);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({ 
+      message: "Error al actualizar estado del vehículo", 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 

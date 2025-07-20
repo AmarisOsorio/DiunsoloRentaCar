@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import './styles/submenu.css';
 import LogoutConfirmModal from './modals/LogoutConfirmModal.jsx';
 import { useSubmenuLog } from '../hooks/components/useSubmenuLog';
+import { useAuth } from '../context/AuthContext';
 
 const ANIMATION_OUT_DURATION = 280; // ms, igual que en el CSS
 
 const Submenu = ({ onClose }) => {
+    const { userType } = useAuth();
     const {
         showLogoutModal,
         handleLogout,
@@ -35,11 +37,17 @@ const Submenu = ({ onClose }) => {
 
     return (
   <>
-    <div className={`bloque submenu-anim${animState === 'in' ? '-in' : '-out'}`}>      <a href="/perfil" className="submenu-item">
-        <i className="fa-solid fa-circle-user user-pic"></i>
-        <span className="submenu-label">Mi perfil</span>
-      </a>
-      <hr />
+    <div className={`bloque submenu-anim${animState === 'in' ? '-in' : '-out'}`}>
+      {/* Solo mostrar enlace de perfil si NO es admin */}
+      {userType !== 'admin' && (
+        <>
+          <a href="/perfil" className="submenu-item">
+            <i className="fa-solid fa-circle-user user-pic"></i>
+            <span className="submenu-label">Mi perfil</span>
+          </a>
+          <hr />
+        </>
+      )}
       <a href="#" className="submenu-item" onClick={handleLogout}>
         <i className="fa-solid fa-right-from-bracket"></i>
         <span className="submenu-label">Cerrar sesión</span>

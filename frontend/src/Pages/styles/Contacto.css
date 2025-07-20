@@ -1,10 +1,3 @@
-/* General container */
-.contacto-bg {
-  background: #f9f9f9;
-  min-height: 100vh;
-  padding-bottom: 2rem;
-}
-
 /* Header */
 .contacto-header {
   background-repeat: no-repeat;
@@ -13,6 +6,22 @@
   height: 300px;
   position: relative;
   overflow: hidden;
+}
+
+.contacto-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(26, 165, 223, 0.5); 
+  z-index: 1;
+}
+
+.contacto-header > * {
+  position: relative;
+  z-index: 2;
 }
 
 .header-overlay {

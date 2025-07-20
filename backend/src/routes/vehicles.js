@@ -38,8 +38,11 @@ router.route("/home")
 
 router.route("/:id")
   .get(vehiclesController.getVehicleById)
-  .put(vehiclesController.updateVehicle)
+  .put(uploadFields, validateVehicleData, vehiclesController.updateVehicle)
   .delete(vehiclesController.deleteVehicle);
+
+router.route("/:id/status")
+  .patch(vehiclesController.updateVehicleStatus);
 
 router.route("/:id/regenerate-contrato")
   .post(vehiclesController.regenerateContrato);

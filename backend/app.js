@@ -13,6 +13,7 @@ import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservasRoutes from "./src/routes/reservas.js";
 import contratosRoutes from "./src/routes/contratos.js";
 import pdfViewerRoutes from "./src/routes/pdfViewer.js";
+import marcasRoutes from "./src/routes/marcas.js";
 
 import EmpleadosRoutes from "./src/routes/Empleados.js";
 
@@ -48,16 +49,18 @@ app.use(cors({
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use("/api/register-clients", registerClients);
+app.use("/api/registerClients", registerClients);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/empleados", EmpleadosRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/passwordRecovery", passwordRecoveryRoutes);
-app.use("/api/send-welcome", sendWelcome);
+app.use("/api/sendWelcome", sendWelcome);
+
 app.use("/api/upload", uploadImageRoutes);
-app.use("/api", contactRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
+app.use("/api/marcas", marcasRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/contratos", contratosRoutes);

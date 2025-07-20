@@ -35,6 +35,9 @@ router.use((req, res, next) => {
 router.route("/")
   .get(clientsController.getClients);
 
+router.route("/nuevos-clientes-registrados")
+  .get(clientsController.getNuevosClientesRegistrados);
+
 router.route("/:id")
   .get(clientsController.getClientById)
   .put(
@@ -49,5 +52,6 @@ router.route("/:id")
   .delete(clientsController.deleteClient);
 
 router.post("/check-email", clientsController.checkEmailExists);
+
 
 export default router;

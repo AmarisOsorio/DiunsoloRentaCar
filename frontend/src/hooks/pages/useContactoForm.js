@@ -1,46 +1,75 @@
-
 import { useState } from 'react';
 
-function useContactoForm() {
-  const [form, setForm] = useState({
-    nombre: '',
-    email: '',
-    mensaje: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+export default function useContactoForm() {
+  const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: '' });
+  const [enviado, setEnviado] = useState(false);
+  const [telefonoError, setTelefonoError] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+
+    if (name === 'telefono') {
+      let soloNumeros = value.replace(/\D/g, '').slice(0, 8);
+      let formateado = soloNumeros;
+      if (soloNumeros.length > 4) {
+        formateado = soloNumeros.slice(0, 4) + '-' + soloNumeros.slice(4);
+      }
+      setForm({ ...form, telefono: formateado });
+
+      const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+      if (formateado.length === 9 && !regex.test(formateado)) {
+        setTelefonoError('Ingrese un teléfono válido de 8 dígitos (inicia con 2, 6 o 7)');
+      } else {
+        setTelefonoError('');
+      }
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!form.nombre) newErrors.nombre = 'El nombre es requerido';
-    if (!form.email) newErrors.email = 'El email es requerido';
-    if (!form.mensaje) newErrors.mensaje = 'El mensaje es requerido';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    if (!validate()) return;
-    setIsSubmitting(true);
-    // Aquí puedes agregar la lógica para enviar el formulario
-    setIsSubmitting(false);
+    setError('');
+    setEnviado(false);
+
+    const regex = /^[267][0-9]{3}-[0-9]{4}$/;
+    if (!regex.test(form.telefono)) {
+      setTelefonoError('Ingrese un teléfono válido de 8 dígitos (inicia con 2, 6 o 7)');
+      return;
+    }
+    setTelefonoError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (response.ok) {
+        setEnviado(true);
+        setForm({ nombre: '', telefono: '', email: '', mensaje: '' });
+      } else {
+        setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
+      }
+    } catch (err) {
+      setError('Ocurrió un error al enviar el mensaje. Intenta nuevamente.');
+    }
+    setLoading(false);
   };
 
   return {
     form,
-    errors,
-    isSubmitting,
+    enviado,
+    telefonoError,
+    error,
+    loading,
     handleChange,
-    handleSubmit
+    handleSubmit,
   };
 }
-
-export default useContactoForm;

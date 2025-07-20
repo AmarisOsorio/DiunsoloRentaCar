@@ -1,9 +1,10 @@
 import ClientsModel from "../models/Clientes.js";
-import bcryptjs from "bcryptjs";
+
+// CLOUDINARY SETUP
 import cloudinary from 'cloudinary';
 
 cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -162,5 +163,35 @@ const clientsController = {
     }
   }
 };
+
+
+/************************* NUEVOS CLIENTES REGISTRADOS *******************************/
+
+clientsController.getNuevosClientesRegistrados = async (req, res) => {
+    try {
+        const resultado = await ClientsModel.aggregate([
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { 
+                            format: "%Y-%m-%d", 
+                            date: "$createdAt" 
+                        }
+                    },
+                    totalClientes: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: -1 }
+            }
+        ]);
+
+        res.status(200).json(resultado);
+    } catch (error) {
+        console.log("Error: " + error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 
 export default clientsController;
