@@ -4,7 +4,7 @@ import LoginImg from '../../../../assets/imgLogin.jpg';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useLogin from './hooks/useLogin.js';
 import TooltipPortal from '../../../interactions/tooltipPortal/TooltipPortal.jsx';
-import VerifyAccountModal from '../../../profile/modals/verifyAccount/VerifyAccountModal.jsx';
+import VerifyAccountModal from '../../../profile/accountInformation/modals/verifyAccount/VerifyAccountModal.jsx';
 import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
 import SuccessCheckAnimation from '../../../interactions/SuccessCheck/SuccessCheckAnimation.jsx';
 

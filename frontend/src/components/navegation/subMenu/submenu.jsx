@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './submenu.css';
-import LogoutConfirmModal from '../../home/modals/logout/LogoutConfirmModal.jsx';
+import LogoutConfirmModal from '../../home/loginSection/logout/LogoutConfirmModal.jsx';
 import { useSubmenuLog } from './hooks/useSubmenuLog.js';
 import { useAuth } from '../../../context/AuthContext.jsx';
 

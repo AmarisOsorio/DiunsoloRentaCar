@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import DeleteAcountConfirm from '../modals/deleteAccount/DeleteAcountConfirm.jsx';
+import DeleteAcountConfirm from './modals/deleteAccount/DeleteAcountConfirm.jsx';
 import { FaUser } from 'react-icons/fa';
 import ProfileSection from '../utils/ProfileSection.jsx';
 import EditableField from '../utils/EditableField.jsx';
 import PasswordField from '../utils/PasswordField.jsx';
 import DocumentUpload from '../utils/DocumentUpload.jsx';
 import ReadOnlyField from '../utils/ReadOnlyField.jsx';
-import VerifyAccountModal from '../modals/verifyAccount/VerifyAccountModal.jsx';
+import VerifyAccountModal from './modals/verifyAccount/VerifyAccountModal.jsx';
 
 // --- PATCH: Hook para interceptar el guardado de correo y abrir modal de verificación ---
 // Recibe handleSaveField, editingField, tempValues, etc. como props

@@ -3,7 +3,7 @@ import './VehiculoModal.css';
 import ReservationRequestModal from './reservationRequest/ReservationRequestModal';
 import useReservationRequestModal from './reservationRequest/hooks/useReservationRequestModal';
 import { useAuth } from '../../../../context/AuthContext';
-import LoginModal from '../../../home/modals/login/LoginModal';
+import LoginModal from '../../../home/loginSection/login/LoginModal';
 
 const VehiculoModal = ({ 
   vehiculo, 

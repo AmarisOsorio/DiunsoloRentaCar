@@ -1,7 +1,7 @@
 import React from 'react';
 import ProtectedRoute from '../../components/navegation/protectedRoutes/ProtectedRoute.jsx';
 import SuccessCheckAnimation from '../../components/interactions/SuccessCheck/SuccessCheckAnimation.jsx';
-import ImageConfirmModal from '../../components/profile/imageConfirmModal/ImageConfirmModal.jsx';
+import ImageConfirmModal from '../../components/profile/accountInformation/modals/imageConfirmModal/ImageConfirmModal.jsx';
 import { useInfoPerfil } from '../../components/profile/accountInformation/hooks/useAccountInformation.jsx';
 import { InformacionCuenta, Reservas, Contratos } from '../../components/profile/index.js';
 import './Perfil.css';

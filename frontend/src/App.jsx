@@ -11,9 +11,9 @@ import ProtectedClientRoute from './components/navegation/protectedRoutes/Protec
 import ProtectedRoute from './components/navegation/protectedRoutes/ProtectedRoute';
 
 /*********** M O D A L S ***************/
-import LoginModal from './components/home/modals/login/LoginModal';
-import RegisterModal from './components/home/modals/register/RegisterModal';
-import ForgotPasswordModal from './components/home/modals/forgotPassword/ForgotPasswordModal';
+import LoginModal from './components/home/loginSection/login/LoginModal';
+import RegisterModal from './components/home/loginSection/register/RegisterModal';
+import ForgotPasswordModal from './components/home/loginSection/forgotPassword/ForgotPasswordModal';
 
 /*********** P A G E S ***************/
 import Home from './Pages/home/Home';

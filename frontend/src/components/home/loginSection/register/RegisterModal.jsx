@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import './RegisterModal.css';
-import VerifyAccountModal from '../../../profile/modals/verifyAccount/VerifyAccountModal.jsx';
+import VerifyAccountModal from '../../../profile/accountInformation/modals/verifyAccount/VerifyAccountModal.jsx';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import TooltipPortal from '../../../interactions/tooltipPortal/TooltipPortal.jsx';
 import useRegisterModal from './hooks/useRegisterModal.jsx';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation.jsx';
 import { useAuth } from '../../../../context/AuthContext.jsx';
 import LoadingModalBackdrop from '../login/LoadingModalBackdrop.jsx';
-import ImageViewSelector from '../../../profile/imageViewSelector/ImageViewSelector.jsx';
+import ImageViewSelector from '../../../profile/accountInformation/modals/imageViewSelector/ImageViewSelector.jsx';
 
 const RegisterModal = ({ open, onClose, onSwitchToLogin }) => {
   const {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './VerifyAccountModal.css';
 import { FaEnvelope } from 'react-icons/fa';
 import useVerifyAccountModal from './hooks/useVerifyAccountModal.jsx';
-import SuccessCheckAnimation from '../../../interactions/SuccessCheck/SuccessCheckAnimation.jsx';
+import SuccessCheckAnimation from '../../../../interactions/SuccessCheck/SuccessCheckAnimation.jsx';
 
 const VerifyAccountModal = ({
   open,
