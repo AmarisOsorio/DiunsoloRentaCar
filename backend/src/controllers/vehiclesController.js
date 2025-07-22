@@ -5,6 +5,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import pdfGenerator from '../utils/pdfGenerator.js';
 
 //Cloudinary Config
+// OJO: Se utilizara la parte de Cloudinary en el código no importandolo
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

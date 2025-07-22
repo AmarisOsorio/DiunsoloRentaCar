@@ -3,6 +3,7 @@ import ClientsModel from "../models/Clientes.js";
 // CLOUDINARY SETUP
 import cloudinary from 'cloudinary';
 
+// OJO: Se utilizara la parte de Cloudinary en el código no importandolo
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

@@ -21,7 +21,8 @@
     "pdf2pic": "^3.2.0",
     "pdfmake": "^0.2.20",
     "puppeteer": "^24.14.0",
-    "streamifier": "^0.1.1"
+    "streamifier": "^0.1.1",
+    "unimported": "^1.31.0"
   },
   "scripts": {
     "dev": "nodemon index.js"
