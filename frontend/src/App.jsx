@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import './components/styles/Navbar.css';
-import './components/styles/Footer.css';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Home from './Pages/Home';
-import Catalogo from './Pages/Catalogo';
-import Contacto from './Pages/Contacto';
-import TerminosCondiciones from './Pages/TerminosCondiciones';
-import PerfilWrapper from './Pages/PerfilWrapper';
-import AdminDashboard from './Pages/admin/AdminDashboard';
-import AdminVehicles from './Pages/admin/AdminVehicles';
-import AdminUsers from './Pages/admin/AdminUsers';
-import ProtectedClientRoute from './components/ProtectedClientRoute';
+//import './components/styles/Navbar.css';
+//import './components/styles/Footer.css';
+
+/*********** C O M P O N E N T S ***************/
+
+import Navbar from './components/navegation/navbar/Navbar';
+import Footer from './components/navegation/footer/Footer';
+import ProtectedClientRoute from './components/navegation/protectedRoutes/ProtectedClientRoute';
+import ProtectedRoute from './components/navegation/protectedRoutes/ProtectedRoute';
+
+/*********** M O D A L S ***************/
+import LoginModal from './components/home/loginSection/login/LoginModal';
+import RegisterModal from './components/home/loginSection/register/RegisterModal';
+import ForgotPasswordModal from './components/home/loginSection/forgotPassword/ForgotPasswordModal';
+
+/*********** P A G E S ***************/
+import Home from './Pages/home/Home';
+import Catalogo from './Pages/catalog/Catalogo';
+import Contacto from './Pages/contact/Contacto';
+import TerminosCondiciones from './Pages/termsAndConditions/TerminosCondiciones';
+import PerfilWrapper from './Pages/profile/PerfilWrapper';
 import './App.css';
-import LoginModal from './components/modals/LoginModal';
-import RegisterModal from './components/modals/RegisterModal';
-import ForgotPasswordModal from './components/modals/ForgotPasswordModal';
+
 import { AuthProvider } from './context/AuthContext';
 
 /**
@@ -35,8 +41,8 @@ const AppContent = () => {
   };
 
   // Rutas donde no se debe mostrar el footer
-  const routesWithoutFooter = ['/perfil', '/admin', '/admin/vehiculos', '/admin/usuarios'];
-  const shouldShowFooter = !routesWithoutFooter.some(route => 
+  const routesWithoutFooter = ['/perfil'];
+  const shouldShowFooter = !routesWithoutFooter.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
 
@@ -70,9 +76,12 @@ const AppContent = () => {
               <PerfilWrapper />
             </ProtectedClientRoute>
           } />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/vehiculos" element={<AdminVehicles />} />
-          <Route path="/admin/usuarios" element={<AdminUsers />} />
+          {/**
+           * <Route path="/admin" element={<AdminDashboard />} />
+           * <Route path="/admin/vehiculos" element={<AdminVehicles />} />
+           * <Route path="/admin/usuarios" element={<AdminUsers />} />
+           */}
+
         </Routes>
         <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
         <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />

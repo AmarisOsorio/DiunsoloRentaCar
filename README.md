@@ -25,6 +25,10 @@ Este proyecto está diseñado para un emprendimiento de **alquileres de vehícul
 - **Backend:** express, mongoose, dotenv, cors, nodemailer, bcryptjs, jsonwebtoken, multer, nodemon
 - **Frontend:** react, react-dom, vite, react-router-dom, (y otras según el diseño)
 
+# 📋 Nomenclatura
+- **Backend** se esta utilizando la nomenclatura de _camelCase_ en el idioma _ingles_.
+- **Frontend** se esta utilizando la nomenclatura de _PascalCase_( Páginas y los estilos ) y _camelCase_( Hooks, Componentes y otras variables ) en el idioma _ingles_.
+  
 # 📌 Integrantes
 - Amaris Osorio
 - Eduardo Lima

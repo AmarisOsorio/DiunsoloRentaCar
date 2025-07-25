@@ -60,16 +60,16 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, 'uploads')));
 
-app.use("/api/register-clients", registerClients);
+app.use("/api/registerClients", registerClients);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/empleados", EmpleadosRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/passwordRecovery", passwordRecoveryRoutes);
-app.use("/api/send-welcome", sendWelcome);
+app.use("/api/sendWelcome", sendWelcome);
 
 app.use("/api/upload", uploadImageRoutes);
-app.use("/api/contacto", contactRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
 app.use("/api/marcas", marcasRoutes);
 app.use("/api/profile", profileRoutes);

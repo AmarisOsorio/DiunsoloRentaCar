@@ -11,8 +11,8 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { validarEdadMinima } from '../utils/ageValidation.js';
-import cloudinary from '../utils/cloudinary.js'; // <-- Importa Cloudinary
+import { validarEdadMinima } from '../utils/ageValidation.js'; //Cambiar esta parte para que deje de importarse, sino que este aquí en el código
+//import cloudinary from '../utils/cloudinary.js'; // <-- Importa Cloudinary
 import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);

@@ -10,20 +10,20 @@ export const AuthProvider = ({ children }) => {
     const saved = localStorage.getItem('userInfo');
     return saved ? JSON.parse(saved) : null;
   });
-  
+
   // Estado para controlar cuando las reservas necesitan ser recargadas
   const [reservasInvalidated, setReservasInvalidated] = useState(false);
-  
+
   // Función para invalidar las reservas (llamar cuando se crean/modifican/eliminan reservas)
   const invalidateReservations = useCallback(() => {
     setReservasInvalidated(true);
   }, []);
-  
+
   // Función para marcar las reservas como válidas (llamar después de cargarlas)
   const markReservationsAsValid = useCallback(() => {
     setReservasInvalidated(false);
   }, []);
-  
+
   useEffect(() => {
     localStorage.setItem('userType', userType || '');
     localStorage.setItem('isAuthenticated', isAuthenticated);
@@ -56,17 +56,28 @@ export const AuthProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo, contraseña })
       });
-      const data = await res.json();      if (res.ok && data.userType) {
+      const data = await res.json();
+
+
+      if (res.ok && data.userType) {
         const normalizedType = data.userType.toLowerCase();
+
+        if (normalizedType === 'admin') {
+          // Bloquear acceso a usuarios admin
+          return { message: 'Este usuario no tiene permiso para acceder a esta plataforma.' };
+        }
+
         setUserType(normalizedType);
         setIsAuthenticated(true);
-        // Guardar información del usuario si está disponible
         if (data.user) {
           setUserInfo(data.user);
         }
         window.dispatchEvent(new Event('auth-changed'));
         return { ...data, message: data.message || 'login exitoso' };
-      } else if (data.needVerification) {
+
+        
+      }
+      else if (data.needVerification) {
         setUserType(null);
         setIsAuthenticated(false);
         return data; // <-- Retorna el objeto completo para que useLogin lo detecte
@@ -275,7 +286,7 @@ export const AuthProvider = ({ children }) => {
         body: formData
       });
       const data = await res.json();
-      
+
       if (data.success) {
         // Actualizar el usuario en el contexto si es necesario
         setUserInfo(prevUser => ({
@@ -306,14 +317,14 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await res.json();
-      
+
       if (data.success) {
         // Actualizar el usuario en el contexto
         setUserInfo(prevUser => ({
           ...prevUser,
           ...data.updatedFields
         }));
-        
+
         // Forzar una actualización del perfil para asegurar sincronización
         await getProfile();
       }
@@ -339,7 +350,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔄 [AuthContext] Response status:', res.status, 'ok:', res.ok);
       const data = await res.json();
       console.log('🔄 [AuthContext] Response data:', data);
-      
+
       if (res.ok && data.success) {
         return { success: true, reservas: data.reservas || [] };
       }
@@ -362,10 +373,10 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify(reservaData)
       });
-      
+
       const data = await res.json();
       console.log('🔄 [AuthContext] updateReservation response:', data);
-      
+
       if (res.ok) {
         // Invalidar las reservas para que se recarguen
         invalidateReservations();
@@ -386,10 +397,10 @@ export const AuthProvider = ({ children }) => {
         method: 'DELETE',
         credentials: 'include'
       });
-      
+
       const data = await res.json();
       console.log('🔄 [AuthContext] deleteReservation response:', data);
-      
+
       if (res.ok) {
         // Invalidar las reservas para que se recarguen
         invalidateReservations();
@@ -403,18 +414,18 @@ export const AuthProvider = ({ children }) => {
   }, [API_URL, invalidateReservations]);
 
   return (
-    <AuthContext.Provider value={{ 
-      userType, 
-      isAuthenticated, 
+    <AuthContext.Provider value={{
+      userType,
+      isAuthenticated,
       userInfo,
       setUserInfo,
-      login, 
-      register, 
-      verifyAccount, 
-      requestPasswordRecovery, 
-      verifyRecoveryCode, 
-      setNewPassword, 
-      logout, 
+      login,
+      register,
+      verifyAccount,
+      requestPasswordRecovery,
+      verifyRecoveryCode,
+      setNewPassword,
+      logout,
       resendVerificationCode,
       updateUserInfo,
       changePassword,
@@ -428,7 +439,7 @@ export const AuthProvider = ({ children }) => {
       reservasInvalidated,
       invalidateReservations,
       markReservationsAsValid
-    // , requestEmailChange, verifyEmailChange
+      // , requestEmailChange, verifyEmailChange
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,8 +1,8 @@
 import express from 'express';
-import sendWelcomeController from '../controllers/sendWelcomeController.js';
+import {sendWelcome} from '../controllers/sendWelcomeController.js';
 
 const router = express.Router();
 
-router.post('/', sendWelcomeController);
+router.post('/', sendWelcome);
 
 export default router;

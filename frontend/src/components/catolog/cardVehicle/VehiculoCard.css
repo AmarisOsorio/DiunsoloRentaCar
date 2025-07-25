@@ -1,0 +1,103 @@
+/* Estilos unificados para VehiculoCard */
+.vehiculo-card-home {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 0.8rem 0.8rem 1rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  max-width: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vehiculo-card-home:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.vehiculo-img-home {
+  width: 170px;
+  height: 110px;
+  object-fit: contain;
+  margin-bottom: 0.7rem;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.vehiculo-card-body-home {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vehiculo-nombre-home {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #1C318C;
+  text-align: center;
+  margin: 0 0 0.3rem 0;
+}
+
+.vehiculo-clase-anio-home {
+  color: #888;
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.vehiculo-estado-home {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.estado-dot-home {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 7px;
+  background: #28a745;
+}
+
+.vehiculo-estado-home.disponible .estado-dot-home {
+  background: #28a745;
+}
+
+.vehiculo-estado-home.reservado .estado-dot-home {
+  background: #ffc107;
+}
+
+.vehiculo-estado-home.mantenimiento .estado-dot-home {
+  background: #dc3545;
+}
+
+.vehiculo-precio-home {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1C318C;
+  margin: 0 0 1rem 0;
+}
+
+.vehiculo-vermas-home {
+  width: 100%;
+  background: #1C318C;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.2rem;
+  transition: background 0.3s ease;
+}
+
+.vehiculo-vermas-home:hover {
+  background: #16306e;
+}
