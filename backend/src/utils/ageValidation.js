@@ -2,7 +2,10 @@
  * Calcula la edad exacta de una persona basada en su fecha de nacimiento
  * @param {Date|string} fechaNacimiento - Fecha de nacimiento
  * @returns {number} - Edad en años
+ * 
+ * ELIMINAR DESPUES DE CAMBIAR EL APARTADO DE profileController.js
  */
+
 export const calcularEdad = (fechaNacimiento) => {
   const fechaNac = new Date(fechaNacimiento);
   const fechaActual = new Date();
@@ -32,7 +35,7 @@ export const esMayorDeEdad = (fechaNacimiento) => {
  * Valida fecha de nacimiento y retorna error si es menor de edad
  * @param {Date|string} fechaNacimiento - Fecha de nacimiento
  * @returns {object|null} - Objeto con error si es menor de edad, null si es válido
- */
+*/
 export const validarEdadMinima = (fechaNacimiento) => {
   const edad = calcularEdad(fechaNacimiento);
   

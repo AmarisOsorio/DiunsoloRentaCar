@@ -1,7 +1,16 @@
+
 import mongoose from "mongoose";
 import { config } from "./src/config.js";
 
-mongoose.connect(config.db.URI);
+// Usar config.db.uri (minúscula) y mostrar error si no está definida
+const dbUri = config.db.uri;
+if (!dbUri) {
+  throw new Error("No se ha definido la URI de la base de datos. Verifica tu archivo .env y config.js");
+}
+mongoose.connect(dbUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 const connection = mongoose.connection;
 

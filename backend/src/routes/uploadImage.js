@@ -19,13 +19,23 @@ const upload = multer({ storage: multer.memoryStorage() }); // Usar memoria para
 // Endpoint para subir una imagen a Cloudinary y devolver la URL
 router.post("/upload-image", upload.single("file"), (req, res) => {
   // Log para depuración
-  // console.log('Cloudinary config:', appConfig.cloudinary);
-  // console.log('Archivo recibido:', req.file ? req.file.originalname : null, req.file ? req.file.mimetype : null, req.file ? req.file.size : null);
+  console.log('🔄 Upload request received');
+  console.log('📁 File:', req.file ? req.file.originalname : 'No file');
+  console.log('📊 Cloudinary config:', {
+    cloud_name: appConfig.cloudinary.cloudinary_name,
+    api_key: appConfig.cloudinary.cloudinary_api_key ? 'Set' : 'Not set',
+    api_secret: appConfig.cloudinary.cloudinary_api_secret ? 'Set' : 'Not set'
+  });
+  
   if (!req.file) {
+    console.log('❌ No file uploaded');
     return res.status(400).json({ message: "No se subió ninguna imagen" });
   }
 
   const folder = req.body.folder || 'vehiculos';
+  
+  console.log('📂 Upload folder:', folder);
+  console.log('🚀 Starting Cloudinary upload...');
   
   const stream = cloudinary.uploader.upload_stream(
     { 
@@ -35,9 +45,10 @@ router.post("/upload-image", upload.single("file"), (req, res) => {
     },
     (error, result) => {
       if (error) {
-        console.error('Error Cloudinary:', error);
+        console.error('❌ Error Cloudinary:', error);
         return res.status(500).json({ message: "Error subiendo a Cloudinary", error });
       }
+      console.log('✅ Upload successful:', result.secure_url);
       res.json({ 
         secure_url: result.secure_url,
         public_id: result.public_id,

@@ -2,6 +2,8 @@ import MarcasModel from "../models/Marcas.js";
 import { v2 as cloudinary } from "cloudinary";
 import { config } from "../config.js";
 
+
+// OJO: Se utilizara la parte de Cloudinary en el código no importandolo
 cloudinary.config({
     cloud_name: config.cloudinary.cloudinary_name,
     api_key: config.cloudinary.cloudinary_api_key,

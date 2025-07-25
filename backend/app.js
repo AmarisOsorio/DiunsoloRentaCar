@@ -31,6 +31,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(cookieParser());
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'diunsolo_secret',
   resave: false,
@@ -42,12 +43,22 @@ app.use(session({
     maxAge: 1000 * 60 * 30
   }
 }));
+
+// Configuración de CORS
+// Permitir solicitudes desde localhost:5173 y localhost:5174
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:5174"],
   credentials: true
 }));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', (req, res, next) => {
+  // Configurar headers específicos para archivos PDF
+  if (req.path.toLowerCase().endsWith('.pdf')) {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment');
+  }
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 app.use("/api/registerClients", registerClients);
 app.use("/api/clients", clientsRoutes);

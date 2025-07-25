@@ -50,5 +50,14 @@ router.route("/:id/regenerate-contrato")
 router.route("/:id/download-contrato")
   .get(vehiclesController.downloadContrato);
 
+router.route("/test/pdf-generation")
+  .post(vehiclesController.testPdfGeneration);
+
+router.route("/:id/debug-pdf")
+  .get(vehiclesController.debugPdfAnalysis);
+
+router.route("/:id/pdf")
+  .get(vehiclesController.generateVehiclePDF);
+
 //Export
 export default router;

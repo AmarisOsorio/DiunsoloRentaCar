@@ -1,0 +1,241 @@
+hr{
+    border: 0;
+    height: 1px;
+    background: #009BDB;
+    margin: 7px 5px 7px;
+    width: 100%;
+}
+
+.userinfo{
+    display: flex;
+    align-items:center;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+    margin-top: 20px;
+}
+.userinfo:hover{
+    color: #009BDB;
+    transform: translateX(5px);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+.userinfo h2{
+    font-size: 18px;
+    color: #009BDB;
+    font-weight: bold;
+    margin: 0;
+    text-align: left;
+}
+.userinfo i{
+ width: 60px;
+ border-radius: 50%;
+ margin-right: 15px;
+ color: #009BDB;
+ background: #fff;
+ box-shadow: 0 2px 8px rgba(0,155,219,0.10);
+ padding: 8px;
+ font-size: 2.2rem;
+}
+
+.submenu{
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    color: #009BDB;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,155,219,0.13);
+    border-radius: 8px;
+    max-height:     0px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    min-width: 210px;
+    max-width: 240px;
+    z-index: 1001;
+    border: 2px solid #009BDB;
+}
+.submenu.active{
+    max-height: 400px;
+    transition: max-height 0.3s ease;
+    min-width: 210px;
+    max-width: 240px;
+}
+a{
+    text-decoration: none;
+    
+}
+
+.bloque{
+    background: #fff;
+    padding: 1px 10px 1px 1px;
+    border-radius: 8px;
+    margin: 10px 5px;
+    min-width: 100px;
+    max-width: 210px;
+    box-shadow: 0 2px 8px rgba(0,155,219,0.07);
+    border: 1.5px solid #009BDB;
+    overflow: hidden;
+}
+
+/* Animación de despliegue y plegado */
+.submenu-anim {
+  opacity: 0;
+  transform: translateY(-16px) scaleY(0.95);
+  animation: submenuFadeIn 0.32s cubic-bezier(.4,2,.6,1) forwards;
+}
+.submenu-anim-in {
+  opacity: 1;
+  transform: none;
+  animation: submenuFadeIn 0.32s cubic-bezier(.4,2,.6,1) forwards;
+}
+.submenu-anim-out {
+  opacity: 1;
+  transform: none;
+  animation: submenuFadeOut 0.28s cubic-bezier(.4,2,.6,1) forwards;
+}
+@keyframes submenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes submenuFadeOut {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scaleY(0.95);
+  }
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #009BDB;
+  margin: 5px 0;
+  transition: transform 0.3s, color 0.3s, background 0.2s;
+  background: #fff;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  min-height: 44px;
+  height: 44px;
+}
+.submenu-item:hover {
+  color: #fff;
+  background: #009BDB;
+  transform: translateX(5px);
+}
+.submenu-item:hover i {
+  color: #fff;
+}
+
+.submenu-label {
+  flex: 0 0 auto;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: unset;
+  max-width: 140px; /* Ajustado para que quepa "Cerrar sesión" en el bloque original */
+  padding-right: 0;
+}
+
+.logout-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logout-modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 24px rgba(0,155,219,0.13);
+  min-width: 260px;
+  max-width: 90vw;
+  text-align: center;
+  border: 2px solid #009BDB;
+}
+.logout-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+.btn-confirm {
+  background: #009BDB;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,155,219,0.07);
+}
+.btn-cancel {
+  background: #eee;
+  color: #009BDB;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+}
+
+@media (min-width: 701px) {
+    /* Mantener el tamaño original del bloque */
+    .bloque {
+        min-width: 100px;
+        max-width: 210px;
+        width: auto;
+        margin: 10px 5px;
+        padding: 1px 10px 1px 1px;
+    }
+    .submenu-label {
+        max-width: 140px; /* Ajustado para que quepa "Cerrar sesión" dentro del bloque original */
+    }
+}
+
+@media (min-width: 601px) and (max-width: 700px) {
+    .bloque {
+        min-width: 180px;
+        max-width: 220px;
+    }
+}
+
+@media (max-width: 600px) {
+    .submenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: auto;
+        margin: 0;
+        min-width: 210px;
+        max-width: 100vw;
+        z-index: 1001;
+    }
+    .bloque {
+        margin: 10px 5px;
+        min-width: 200px;
+        max-width: calc(100vw - 20px);
+    }
+}

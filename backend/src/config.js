@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export const config = {
   db: {
-    URI: process.env.DB_URI,
+    uri: process.env.DB_URI,
   },
   server: {
     port: process.env.PORT,
@@ -26,9 +26,9 @@ export const config = {
     email_pass: process.env.EMAIL_PASS,
   },
   cloudinary: {
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    api_environment: process.env.CLOUDINARY_API_ENVIRONMENT
+    cloudinary_name: process.env.CLOUDINARY_NAME,
+    cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
+    cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloudinary_api_environment: process.env.CLOUDINARY_API_ENVIRONMENT
   },
 };
