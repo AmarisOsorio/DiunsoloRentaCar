@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './Catalogo.css';
 import VehiculoCard from '../../components/catolog/cardVehicle/VehiculoCard.jsx';
 import VehiculoModal from '../../components/catolog/modals/vehicleModal/VehiculoModal.jsx';
