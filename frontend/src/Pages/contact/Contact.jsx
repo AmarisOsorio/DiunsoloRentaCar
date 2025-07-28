@@ -1,10 +1,10 @@
 import React from 'react';
-import './Contacto.css';
+import './Contact.css';
 import contactHeader from '../../assets/contactHeader.png';
 import LocationIcon from '../../assets/LocationIcon.png';
 import EmailIcon from '../../assets/EmailIcon.png';
 import PhoneIcon from '../../assets/PhoneIcon.png';
-import useContactoForm from './hooks/useContactoForm';
+import useContactoForm from './hooks/useContactForm';
 
 const Contacto = () => {
   const {

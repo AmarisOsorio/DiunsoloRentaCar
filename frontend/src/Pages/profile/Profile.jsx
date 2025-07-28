@@ -4,7 +4,7 @@ import SuccessCheckAnimation from '../../components/interactions/SuccessCheck/Su
 import ImageConfirmModal from '../../components/profile/imageConfirmModal/ImageConfirmModal.jsx';
 import { useInfoPerfil } from '../../components/profile/accountInformation/hooks/useAccountInformation.jsx';
 import { InformacionCuenta, Reservas, Contratos } from '../../components/profile/index.js';
-import './Perfil.css';
+import './Profile.css';
 import './validation-styles.css';
 import { FaHome, FaUser, FaCalendarAlt, FaFileContract } from 'react-icons/fa';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import DeleteAcountConfirm from '../modals/deleteAccount/DeleteAcountConfirm.jsx';
+import DeleteAcountConfirm from '../accountInformation/modals/deleteAccount/DeleteAcountConfirm.jsx';
 import { FaUser } from 'react-icons/fa';
 import ProfileSection from '../utils/ProfileSection.jsx';
 import EditableField from '../utils/EditableField.jsx';
