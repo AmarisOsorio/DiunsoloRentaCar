@@ -11,6 +11,8 @@ loginController.login = async (req, res) => {
   try {
     let userFound;
     let userType;
+
+
     // Validación robusta de emailAdmin
     if (!config.emailAdmin || !config.emailAdmin.email || !config.emailAdmin.password) {
       return res.status(500).json({ message: "Configuración de emailAdmin incompleta en config.js" });
@@ -21,7 +23,8 @@ loginController.login = async (req, res) => {
     ) {
       userType = "Admin";
       userFound = { _id: "Admin" };
-    } else {
+    }
+    else {
       // Buscar empleados por correo_electronico y clientes por correo
       userFound = await empleadosModel.findOne({ correo_electronico: correo });
       userType = "Empleado";
@@ -112,7 +115,7 @@ loginController.login = async (req, res) => {
       (error, token) => {
         if (error) console.log(error);
         res.cookie("authToken", token);
-        
+
         // Formatear información del usuario para enviar al frontend
         let userData = null;
         if (userType === "Cliente") {
@@ -128,9 +131,9 @@ loginController.login = async (req, res) => {
             fechaRegistro: userFound.createdAt
           };
         }
-        
-        res.json({ 
-          message: "login exitoso", 
+
+        res.json({
+          message: "login exitoso",
           userType,
           user: userData
         });

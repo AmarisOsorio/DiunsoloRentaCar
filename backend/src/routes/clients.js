@@ -1,5 +1,5 @@
 import express from "express";
-import upload from "../middlewares/uploadClienteImages.js";
+
 
 const router = express.Router();
 
@@ -40,15 +40,7 @@ router.route("/nuevos-clientes-registrados")
 
 router.route("/:id")
   .get(clientsController.getClientById)
-  .put(
-    upload.fields([
-      { name: "licenciaFrente", maxCount: 1 },
-      { name: "licenciaReverso", maxCount: 1 },
-      { name: "pasaporteFrente", maxCount: 1 },
-      { name: "pasaporteReverso", maxCount: 1 },
-    ]),
-    clientsController.updateClient
-  )
+  
   .delete(clientsController.deleteClient);
 
 router.post("/check-email", clientsController.checkEmailExists);
