@@ -1,48 +1,30 @@
+// Core modules
 import express from "express";
 import cookieParser from "cookie-parser";
-import session from "express-session";
-import registerClients from "./src/routes/registerClients.js";
+import cors from "cors";
+
+// Rutas de autenticación y usuarios
+import registerClientsRoutes from "./src/routes/registerClients.js";
 import loginRoutes from "./src/routes/login.js";
 import logoutRoutes from "./src/routes/logout.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.js";
-import clientsRoutes from "./src/routes/clients.js";
-import mantenimientosRoutes from "./src/routes/mantenimientos.js";
-import sendWelcome from "./src/routes/sendWelcome.js";
-import uploadImageRoutes from "./src/routes/uploadImage.js";
-import vehiclesRoutes from "./src/routes/vehicles.js";
-import reservasRoutes from "./src/routes/reservas.js";
-import contratosRoutes from "./src/routes/contratos.js";
-import pdfViewerRoutes from "./src/routes/pdfViewer.js";
-import marcasRoutes from "./src/routes/marcas.js";
-
-import EmpleadosRoutes from "./src/routes/Empleados.js";
-
-import contactRoutes from "./src/routes/contact.js";
 import profileRoutes from "./src/routes/profile.js";
 
-import { fileURLToPath } from 'url';
-import path from 'path';
-import cors from "cors";
+// Rutas de recursos principales
+import clientsRoutes from "./src/routes/clients.js";
+import employeesRoutes from "./src/routes/Empleados.js";
+import vehiclesRoutes from "./src/routes/vehicles.js";
+import reservationsRoutes from "./src/routes/reservas.js";
+import contractsRoutes from "./src/routes/contratos.js";
+import maintenancesRoutes from "./src/routes/mantenimientos.js";
+import brandsRoutes from "./src/routes/marcas.js";
+
+// Rutas utilitarias y de comunicación
+import sendWelcomeRoutes from "./src/routes/sendWelcome.js";
+import contactRoutes from "./src/routes/contact.js";
 
 const app = express();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use(express.json());
-app.use(cookieParser());
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'diunsolo_secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 30
-  }
-}));
 
 // Configuración de CORS
 // Permitir solicitudes desde localhost:5173 y localhost:5174
@@ -51,31 +33,29 @@ app.use(cors({
   credentials: true
 }));
 
-app.use('/uploads', (req, res, next) => {
-  // Configurar headers específicos para archivos PDF
-  if (req.path.toLowerCase().endsWith('.pdf')) {
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment');
-  }
-  next();
-}, express.static(path.join(__dirname, 'uploads')));
+// Middlewares
+app.use(express.json());
+app.use(cookieParser());
 
-app.use("/api/register-clients", registerClients);
-app.use("/api/clients", clientsRoutes);
-app.use("/api/empleados", EmpleadosRoutes);
+// Rutas de autenticación y usuarios
+app.use("/api/registerClients", registerClientsRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/passwordRecovery", passwordRecoveryRoutes);
-app.use("/api/send-welcome", sendWelcome);
-
-app.use("/api/upload", uploadImageRoutes);
-app.use("/api/contacto", contactRoutes);
-app.use("/api/vehicles", vehiclesRoutes);
-app.use("/api/marcas", marcasRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/reservas", reservasRoutes);
-app.use("/api/contratos", contratosRoutes);
-app.use("/api/mantenimientos", mantenimientosRoutes); 
-app.use("/api/pdf", pdfViewerRoutes);
+
+// Rutas de recursos principales
+app.use("/api/clients", clientsRoutes);
+app.use("/api/employees", employeesRoutes);
+app.use("/api/vehicles", vehiclesRoutes);
+app.use("/api/reservations", reservationsRoutes);
+app.use("/api/contracts", contractsRoutes);
+app.use("/api/maintenances", maintenancesRoutes);
+app.use("/api/brands", brandsRoutes);
+
+// Rutas utilitarias y de comunicación
+app.use("/api/sendWelcome", sendWelcomeRoutes);
+app.use("/api/contact", contactRoutes);
+
 
 export default app;

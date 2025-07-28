@@ -1,12 +1,12 @@
 import puppeteer from 'puppeteer';
-import fs from 'fs';
+import chromium from '@sparticuz/chromium';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(__filename); 
 
 // Cargar variables de entorno
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -19,51 +19,45 @@ cloudinary.config({
 });
 
 class PdfGenerator {
-  
-  // Función para obtener la ruta de la imagen del logo
-  getLogoImagePath() {
-    const possiblePaths = [
-      path.join(process.cwd(), 'assets', 'diunsolo-logo.png'),
-      path.join(process.cwd(), 'assets', 'diunsolo-logo.jpg'),
-      path.join(process.cwd(), 'assets', 'diunsolo-logo.jpeg'),
-    ];
-
-    for (const logoPath of possiblePaths) {
-      if (fs.existsSync(logoPath)) {
-        console.log('✅ Logo encontrado en:', logoPath);
-        return logoPath;
-      }
-    }
-
-    console.log('⚠️ Logo real no encontrado. Usando placeholder.');
-    return null;
-  }
-  
-  async generateContratoArrendamiento(vehiculoData) {
-    // Limpiar archivos temporales antiguos antes de generar nuevo PDF
-    await this.cleanupTempFiles();
-    
-    const logoPath = this.getLogoImagePath();
-    const htmlTemplate = this.getHtmlTemplate(vehiculoData, logoPath);
-    
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
+  /*
+   * Genera un contrato de arrendamiento en PDF y lo sube a Cloudinary.
+   */
+  async generateLeaseContract(vehicleData) {
+    let browser;
     try {
-      const page = await browser.newPage();
-      
-      // Si hay un logo real, permitir el acceso a archivos locales
-      if (logoPath) {
-        await page.setContent(htmlTemplate, { waitUntil: 'networkidle0' });
+      // Detectar si está en AWS Lambda/serverless
+      const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+      let launchOptions;
+      if (isLambda) {
+        launchOptions = {
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless,
+        };
       } else {
-        await page.setContent(htmlTemplate, { waitUntil: 'networkidle0' });
+        launchOptions = {
+          headless: true,
+          args: [],
+        };
       }
-      
+      try {
+        browser = await puppeteer.launch(launchOptions);
+      } catch (err) {
+        // Lanzar el error original para que el controlador lo capture y lo envíe al frontend
+        throw new Error('No se pudo iniciar Chromium para generar el PDF: ' + (err?.message || err));
+      }
+      // 1. Crear una nueva página en el navegador headless (Puppeteer)
+      const page = await browser.newPage();
+
+      // 2. Generar el HTML del contrato usando la plantilla y los datos del vehículo
+      const htmlTemplate = this.getHtmlTemplate(vehicleData);
+      await page.setContent(htmlTemplate, { waitUntil: 'networkidle0' });
+
+      // 3. Generar el PDF en memoria (como buffer) a partir del HTML cargado
       const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
+        format: 'A4', // Formato de hoja A4
+        printBackground: true, // Incluir fondos y colores
         margin: {
           top: '20mm',
           right: '15mm',
@@ -71,365 +65,88 @@ class PdfGenerator {
           left: '15mm'
         }
       });
-      
-      // Limpiar el nombre del vehículo para usar en el nombre del archivo
-      const nombreLimpio = vehiculoData.nombreVehiculo
-        .replace(/[^a-zA-Z0-9\s]/g, '') // Remover caracteres especiales
-        .replace(/\s+/g, '-') // Reemplazar espacios con guiones
-        .toUpperCase(); // Convertir a mayúsculas
-      
-      console.log('🔧 Nombre original:', vehiculoData.nombreVehiculo);
-      console.log('🔧 Nombre limpio:', nombreLimpio);
-      
-      // SUBIR A CLOUDINARY (SIN FALLBACK LOCAL - SOLO CLOUDINARY)
-      const timestamp = Date.now();
-      const publicId = `${nombreLimpio}-CONTRATO-DE-ARRENDAMIENTO-DE-VEHICULO-${timestamp}`;
-      
-      console.log('🔧 Public ID que se usará:', publicId);
-      console.log('☁️ Subiendo PDF a Cloudinary...');
-      console.log('📊 Tamaño del PDF buffer:', pdfBuffer.length, 'bytes');
-      console.log('📊 Tipo de buffer:', typeof pdfBuffer);
-      console.log('📊 Es Buffer?:', Buffer.isBuffer(pdfBuffer));
-      console.log('📊 Es Uint8Array?:', pdfBuffer instanceof Uint8Array);
-      
-      // Verificar que el buffer tiene contenido válido
-      if (!pdfBuffer || pdfBuffer.length === 0) {
-        throw new Error('PDF buffer está vacío o no válido');
+
+      // 4. Limpiar el nombre del vehículo para crear un nombre de archivo seguro y descriptivo
+      //    - Quita caracteres especiales, reemplaza espacios por guiones y convierte a mayúsculas
+      const cleanName = vehicleData.vehicleName
+        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .replace(/\s+/g, '-')
+        .toUpperCase();
+
+      let cleanPlate = '';
+      if (vehicleData.plate) {
+        cleanPlate = vehicleData.plate
+          .replace(/ /g, '-')
+          .replace(/[^a-zA-Z0-9-]/g, '')
+          .toUpperCase();
+      } else {
+        cleanPlate = 'NOPLATE';
       }
-      
-      // Convertir a Buffer si es necesario
-      let finalBuffer = pdfBuffer;
-      if (!Buffer.isBuffer(pdfBuffer) && pdfBuffer instanceof Uint8Array) {
-        finalBuffer = Buffer.from(pdfBuffer);
-        console.log('🔧 Convertido Uint8Array a Buffer');
-      } else if (!Buffer.isBuffer(pdfBuffer)) {
-        throw new Error('PDF buffer no es un Buffer válido ni Uint8Array');
-      }
-      
-      // Verificar que comience con el header de PDF
-      const pdfHeader = finalBuffer.slice(0, 4).toString();
-      console.log('📊 PDF Header:', pdfHeader);
-      if (pdfHeader !== '%PDF') {
-        console.warn('⚠️ El buffer no parece ser un PDF válido');
-        console.warn('📊 Primeros 20 bytes:', finalBuffer.slice(0, 20));
-      }
-      
-      // Subir como raw 
+      const publicId = `${cleanName}-CONTRATO-ARRENDAMIENTO-${cleanPlate}`;
+
+      // 8. Subir el PDF a Cloudinary como archivo "raw" (no imagen, no video)
+      //    Se usa upload_stream para enviar el buffer directamente
       const uploadResult = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
+        cloudinary.uploader.upload_stream(
           {
-            folder: 'contratos',
-            resource_type: 'raw',
-            public_id: publicId,
+            folder: 'vehicle-contracts', // Carpeta en Cloudinary (contratos de vehículos)
+            resource_type: 'raw', // Tipo de recurso: archivo genérico
+            public_id: publicId, // Nombre público del archivo
             use_filename: false,
-            unique_filename: false,
-            // Agregar type para especificar que es un archivo
-            type: 'upload'
+            unique_filename: false // Usar exactamente el public_id especificado
           },
           (error, result) => {
             if (error) {
-              console.error('❌ Error subiendo a Cloudinary:', error);
-              console.error('❌ Error details:', JSON.stringify(error, null, 2));
+              // Log corto y claro
+              console.error('Cloudinary upload error:', error?.message || error);
               reject(error);
             } else {
-              console.log('✅ Upload result completo:', {
-                public_id: result.public_id,
-                secure_url: result.secure_url,
-                resource_type: result.resource_type,
-                bytes: result.bytes,
-                format: result.format,
-                version: result.version
-              });
-              
-              // Verificar que se subió como archivo y no como enlace
-              if (result.resource_type !== 'raw') {
-                console.warn('⚠️ El archivo no se subió como raw, se subió como:', result.resource_type);
-              }
-              
-              if (result.bytes !== finalBuffer.length) {
-                console.warn('⚠️ El tamaño del archivo subido no coincide con el buffer original');
-                console.warn('Buffer original:', finalBuffer.length, 'bytes');
-                console.warn('Archivo subido:', result.bytes, 'bytes');
-              } else {
-                console.log('✅ Tamaños coinciden - archivo subido correctamente');
-              }
-              
               resolve(result);
             }
           }
-        );
-        
-        // Escribir el buffer final al stream
-        uploadStream.end(finalBuffer);
+        ).end(pdfBuffer); // Enviar el buffer del PDF
       });
-      
-      // Usar directamente la URL de Cloudinary para evitar dependencia del backend
-      console.log('✅ PDF subido a Cloudinary exitosamente');
-      console.log('🔗 URL de Cloudinary:', uploadResult.secure_url);
-      
-      // Verificar que la URL generada apunta a un archivo real
-      const finalUrl = uploadResult.secure_url;
-      console.log('🔗 URL final generada:', finalUrl);
-      
-      // Crear también una URL con transformación para forzar descarga
-      const downloadUrl = finalUrl.replace('/upload/', '/upload/fl_attachment/');
-      console.log('🔗 URL de descarga:', downloadUrl);
-      
-      // Devolver la URL directa de Cloudinary (sin transformaciones para almacenamiento)
-      return finalUrl;
-      
+
+      // 11. Devolver la URL directa del PDF en Cloudinary
+      return uploadResult.secure_url;
+
     } finally {
-      await browser.close();
+      // 12. Cerrar el navegador de Puppeteer para liberar recursos
+      if (browser) await browser.close();
     }
   }
 
-  // Función para limpiar archivos temporales antiguos (más de 1 hora)
-  async cleanupTempFiles() {
-    const tempDir = path.join(process.cwd(), 'temp');
-    
-    if (!fs.existsSync(tempDir)) {
-      return;
-    }
-
-    const files = fs.readdirSync(tempDir);
-    const oneHourAgo = Date.now() - (60 * 60 * 1000);
-
-    for (const file of files) {
-      const filePath = path.join(tempDir, file);
-      const stats = fs.statSync(filePath);
-      
-      if (stats.birthtime.getTime() < oneHourAgo) {
-        try {
-          fs.unlinkSync(filePath);
-          console.log(`🗑️ Archivo temporal eliminado: ${file}`);
-        } catch (error) {
-          console.error(`❌ Error eliminando archivo temporal ${file}:`, error);
-        }
-      }
-    }
-  }
-
-  // Función para verificar que la URL apunta a un archivo PDF real
-  async verifyPdfUrl(url) {
-    try {
-      console.log('🔍 Verificando URL de PDF:', url);
-      
-      // Hacer una petición HEAD para verificar el archivo sin descargarlo completo
-      const response = await fetch(url, { method: 'HEAD' });
-      
-      console.log('📊 Status de verificación:', response.status);
-      console.log('📊 Headers de respuesta:', Object.fromEntries(response.headers));
-      
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        const contentLength = response.headers.get('content-length');
-        
-        console.log('✅ Archivo verificado exitosamente');
-        console.log('📄 Content-Type:', contentType);
-        console.log('📊 Content-Length:', contentLength, 'bytes');
-        
-        return {
-          isValid: true,
-          contentType,
-          contentLength: parseInt(contentLength) || 0,
-          status: response.status
-        };
-      } else {
-        console.log('❌ Error verificando archivo:', response.status, response.statusText);
-        return {
-          isValid: false,
-          error: `HTTP ${response.status}: ${response.statusText}`
-        };
-      }
-    } catch (error) {
-      console.error('❌ Error en verificación de URL:', error);
-      return {
-        isValid: false,
-        error: error.message
-      };
-    }
-  }
-
-  getHtmlTemplate(vehiculo, logoPath) {
-    // Generar la imagen del logo - usar imagen física si existe, sino placeholder
-    let logoElement;
-    if (logoPath) {
-      try {
-        // Leer la imagen y convertirla a base64 para insertarla directamente
-        const imageBuffer = fs.readFileSync(logoPath);
-        const ext = path.extname(logoPath).toLowerCase();
-        let mimeType = 'image/png';
-        if (ext === '.jpg' || ext === '.jpeg') {
-          mimeType = 'image/jpeg';
-        }
-        const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-        logoElement = `<img src="${base64Image}" alt="Diunsolo Rent a Car" class="logo-image">`;
-        console.log('✅ Logo real insertado en PDF');
-      } catch (error) {
-        console.error('❌ Error leyendo logo:', error);
-        // Fallback a placeholder si hay error
-        logoElement = `
-          <div style="width: 400px; height: 100px; margin: 0 auto; display: flex; border-radius: 5px; overflow: hidden; font-family: Arial Black, sans-serif;">
-            <!-- Lado azul oscuro con DIUN -->
-            <div style="width: 50%; background: linear-gradient(135deg, #1f3a93, #2c5aa0); display: flex; align-items: center; justify-content: center;">
-              <span style="color: #ffeb3b; font-size: 28px; font-weight: bold; letter-spacing: 1px;">DIUN</span>
-            </div>
-            <!-- Lado azul claro con SOLO -->
-            <div style="width: 50%; background: linear-gradient(135deg, #00bcd4, #26c6da); display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <span style="color: white; font-size: 28px; font-weight: bold; letter-spacing: 1px;">SOLO</span>
-              <span style="color: white; font-size: 10px; letter-spacing: 2px; margin-top: 2px;">RENTA CAR</span>
-            </div>
-          </div>
-        `;
-      }
-    } else {
-      // Usar placeholder que simula el diseño real
-      logoElement = `
-        <div style="width: 400px; height: 100px; margin: 0 auto; display: flex; border-radius: 5px; overflow: hidden; font-family: Arial Black, sans-serif;">
-          <!-- Lado azul oscuro con DIUN -->
-          <div style="width: 50%; background: linear-gradient(135deg, #1f3a93, #2c5aa0); display: flex; align-items: center; justify-content: center;">
-            <span style="color: #ffeb3b; font-size: 28px; font-weight: bold; letter-spacing: 1px;">DIUN</span>
-          </div>
-          <!-- Lado azul claro con SOLO -->
-          <div style="width: 50%; background: linear-gradient(135deg, #00bcd4, #26c6da); display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 28px; font-weight: bold; letter-spacing: 1px;">SOLO</span>
-            <span style="color: white; font-size: 10px; letter-spacing: 2px; margin-top: 2px;">RENTA CAR</span>
-          </div>
-        </div>
-      `;
-    }
-    
+  getHtmlTemplate(vehicle) {
+    // Usar la URL pública de Cloudinary para el logo
+    const logoElement = `<img src="https://res.cloudinary.com/dziypvsar/image/upload/v1753638778/diunsolo-logo_k1p5pm.png">`;
+    // Mapear los datos del vehículo correctamente
     return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
       <style>
-        body {
-          font-family: Arial, sans-serif;
-          font-size: 12px;
-          line-height: 1.4;
-          margin: 0;
-          padding: 15px;
-          color: #000;
-        }
-        .logo-header {
-          text-align: center;
-          margin-bottom: 20px;
-          border-bottom: 2px solid #1f3a93;
-          padding-bottom: 12px;
-        }
-        .logo-container {
-          margin-bottom: 12px;
-        }
-        .logo-image {
-          max-width: 350px;
-          height: auto;
-          margin-bottom: 12px;
-          display: block;
-          margin-left: auto;
-          margin-right: auto;
-        }
-        .title {
-          font-size: 16px;
-          font-weight: bold;
-          text-align: center;
-          margin-bottom: 20px;
-          text-transform: uppercase;
-          color: #1f3a93;
-        }
-        .content {
-          text-align: justify;
-          margin-bottom: 15px;
-          line-height: 1.5;
-          font-size: 12px;
-        }
-        .vehiculo-specs {
-          border: 2px solid #1f3a93;
-          padding: 12px;
-          margin: 15px 0;
-          background-color: #f8f9fa;
-          border-radius: 5px;
-        }
-        .specs-title {
-          font-weight: bold;
-          font-size: 14px;
-          text-align: center;
-          margin-bottom: 12px;
-          color: #1f3a93;
-          text-transform: uppercase;
-        }
-        .specs-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-        .spec-item {
-          font-size: 11px;
-          padding: 6px;
-          background-color: white;
-          border-radius: 3px;
-          border-left: 3px solid #00bcd4;
-        }
-        .spec-label {
-          font-weight: bold;
-          color: #1f3a93;
-        }
-        .clausulas-section {
-          margin-top: 15px;
-        }
-        .clausulas-title {
-          font-weight: bold;
-          font-size: 14px;
-          margin-bottom: 12px;
-          color: #1f3a93;
-        }
-        .clausula {
-          margin-bottom: 10px;
-          text-align: justify;
-          line-height: 1.4;
-          font-size: 12px;
-        }
-        .clausula-numero {
-          font-weight: bold;
-          color: #1f3a93;
-        }
-        .clausula-especial {
-          background-color: #fff3cd;
-          border: 1px solid #ffc107;
-          padding: 8px;
-          margin: 10px 0;
-          border-radius: 3px;
-          font-size: 11px;
-        }
-        .clausula-especial-title {
-          font-weight: bold;
-          text-align: center;
-          margin-bottom: 8px;
-          color: #856404;
-          text-transform: uppercase;
-          font-size: 12px;
-        }
-        .firmas {
-          margin-top: 25px;
-          border-top: 2px solid #1f3a93;
-          padding-top: 15px;
-        }
-        .firma-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 40px;
-          margin-top: 30px;
-        }
-        .firma-box {
-          text-align: center;
-          padding-top: 15px;
-          margin-top: 50px;
-          font-size: 14px;
-        }
-        .page-break {
-          page-break-before: always;
-        }
+        body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; margin: 0; padding: 15px; color: #000; }
+        .logo-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1f3a93; padding-bottom: 12px; }
+        .logo-container { margin-bottom: 12px; }
+        .logo-image { max-width: 350px; height: auto; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
+        .title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 20px; text-transform: uppercase; color: #1f3a93; }
+        .content { text-align: justify; margin-bottom: 15px; line-height: 1.5; font-size: 12px; }
+        .vehiculo-specs { border: 2px solid #1f3a93; padding: 12px; margin: 15px 0; background-color: #f8f9fa; border-radius: 5px; }
+        .specs-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 12px; color: #1f3a93; text-transform: uppercase; }
+        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .spec-item { font-size: 11px; padding: 6px; background-color: white; border-radius: 3px; border-left: 3px solid #00bcd4; }
+        .spec-label { font-weight: bold; color: #1f3a93; }
+        .clausulas-section { margin-top: 15px; }
+        .clausulas-title { font-weight: bold; font-size: 14px; margin-bottom: 12px; color: #1f3a93; }
+        .clausula { margin-bottom: 10px; text-align: justify; line-height: 1.4; font-size: 12px; }
+        .clausula-numero { font-weight: bold; color: #1f3a93; }
+        .clausula-especial { background-color: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin: 10px 0; border-radius: 3px; font-size: 11px; }
+        .clausula-especial-title { font-weight: bold; text-align: center; margin-bottom: 8px; color: #856404; text-transform: uppercase; font-size: 12px; }
+        .firmas { margin-top: 25px; border-top: 2px solid #1f3a93; padding-top: 15px; }
+        .firma-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; }
+        .firma-box { text-align: center; padding-top: 15px; margin-top: 50px; font-size: 14px; }
+        .page-break { page-break-before: always; }
       </style>
     </head>
     <body>
@@ -448,34 +165,34 @@ class PdfGenerator {
         <div class="specs-title">Especificaciones del Vehículo</div>
         <div class="specs-grid">
           <div class="spec-item">
-            <span class="spec-label">Vehículo:</span> ${vehiculo.nombreVehiculo || 'N/A'}
+            <span class="spec-label">Vehículo:</span> ${vehicle.vehicleName || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">Marca:</span> ${vehiculo.marca || 'N/A'}
+            <span class="spec-label">Marca:</span> ${vehicle.brand || vehicle.brandName || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">Modelo:</span> ${vehiculo.modelo || 'N/A'}
+            <span class="spec-label">Modelo:</span> ${vehicle.model || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">Año:</span> ${vehiculo.anio || 'N/A'}
+            <span class="spec-label">Año:</span> ${vehicle.year || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">Placa:</span> ${vehiculo.placa || 'N/A'}
+            <span class="spec-label">Placa:</span> ${vehicle.plate || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">Color:</span> ${vehiculo.color || 'N/A'}
+            <span class="spec-label">Color:</span> ${vehicle.color || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">Capacidad:</span> ${vehiculo.capacidad || 'N/A'} personas
+            <span class="spec-label">Capacidad:</span> ${vehicle.capacity || 'N/A'} personas
           </div>
           <div class="spec-item">
-            <span class="spec-label">No. Motor:</span> ${vehiculo.numeroMotor || 'N/A'}
+            <span class="spec-label">No. Motor:</span> ${vehicle.engineNumber || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">No. Chasis:</span> ${vehiculo.numeroChasisGrabado || 'N/A'}
+            <span class="spec-label">No. Chasis:</span> ${vehicle.chassisNumber || 'N/A'}
           </div>
           <div class="spec-item">
-            <span class="spec-label">VIN:</span> ${vehiculo.numeroVinChasis || 'N/A'}
+            <span class="spec-label">VIN:</span> ${vehicle.vinNumber || 'N/A'}
           </div>
         </div>
       </div>

@@ -12,7 +12,10 @@ const HTMLVerifyAccountEmail = (code) => {
       </div>
       <div style="color: #888; font-size: 1rem; text-align: center; margin-bottom: 1.2rem;">Este código es válido por los próximos <strong>15 minutos</strong>.<br>Si no solicitaste este cambio, puedes ignorar este correo.</div>
       <hr style="margin: 32px 0 18px 0; border: none; border-top: 1px solid #eee;" />
-      <p style="font-size: 0.97em; color: #888; text-align: center;">¿Necesitas ayuda? Contáctanos en <a href="mailto:soporte@diunsolo.com" style="color:#009BDB;">soporte@diunsolo.com</a></p>
+      <p style="font-size: 0.97em; color: #888; text-align: center;">
+        ¿Necesitas ayuda? Contáctanos por WhatsApp al
+        <a href="https://wa.me/50374234724" style="color:#009BDB; text-decoration:none; font-weight:bold;" target="_blank">7423-4724</a>
+      </p>
       <div style="text-align: center; margin-top: 18px;">
         <a href="http://localhost:5173" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
       </div>

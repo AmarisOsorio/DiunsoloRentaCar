@@ -1,7 +1,6 @@
 // --- CAMBIO DE EMAIL SEGURO ---
 import { sendEmail, HTMLRecoveryEmail } from "../utils/mailPasswordRecovery.js";
 import { HTMLVerifyAccountEmail } from '../utils/mailVerifyAccount.js';
-// import crypto from "crypto"; // Duplicado eliminado
 
 import ClientsModel from "../models/Clientes.js";
 import Reservas from "../models/Reservas.js";
@@ -11,9 +10,14 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { validarEdadMinima } from '../utils/ageValidation.js';
-import cloudinary from '../utils/cloudinary.js'; // <-- Importa Cloudinary
-import crypto from "crypto";
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configuración de Cloudinary 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

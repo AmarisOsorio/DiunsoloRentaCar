@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// Ejecutamos la libreria
+// para acceder al .env
+dotenv.config();
 
 export const config = {
   db: {
@@ -26,9 +23,9 @@ export const config = {
     email_pass: process.env.EMAIL_PASS,
   },
   cloudinary: {
-    cloudinary_name: process.env.CLOUDINARY_NAME,
-    cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
-    cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
-    cloudinary_api_environment: process.env.CLOUDINARY_API_ENVIRONMENT
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    api_environment: process.env.CLOUDINARY_API_ENVIRONMENT
   },
 };
