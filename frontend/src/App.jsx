@@ -13,9 +13,9 @@ import ForgotPasswordModal from './components/home/loginSection/forgotPassword/F
 
 /*********** P A G E S ***************/
 import Home from './Pages/home/Home';
-import Catalog from './Pages/catalog/Catalog';
-import Contact from './Pages/contact/Contact';
-import TermsAndConditions from './Pages/termsAndConditions/TerminosCondiciones';
+import Catalog from './Pages/catalog/Catalog.jsx';
+import Contact from './Pages/contact/Contact.jsx';
+import TermsAndConditions from './Pages/termsAndConditions/TerminosCondiciones.jsx';
 import Profile from './Pages/profile/Profile'
 import './App.css';
 

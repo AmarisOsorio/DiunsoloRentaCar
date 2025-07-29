@@ -10,10 +10,7 @@ if (!dbUri) {
   throw new Error("No se ha definido la URI de la base de datos. Verifica tu archivo .env y config.js");
 }
 // Conecta a MongoDB usando la URI y opciones recomendadas
-mongoose.connect(dbUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect(dbUri);
 
 // Obtiene la conexión actual de mongoose
 const connection = mongoose.connection;

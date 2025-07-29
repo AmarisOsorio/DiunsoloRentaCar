@@ -1,7 +1,7 @@
 import React from 'react';
 import './Home.css';
 import ServicesCard from '../../components/home/ourServices/ServicesCard';
-import VehiculoCard from '../../components/catolog/cardVehicle/VehiculoCard';
+import VehiculoCard from '../../components/catalog/cardVehicle/VehicleCard';
 import VehiculoModal from '../../components/catolog/modals/vehicleModal/VehiculoModal';
 import useVehicleModal from '../../components/catolog/modals/vehicleModal/hooks/useVehicleModal';
 import FamiliarSection from '../../components/home/familySection/FamilySection';
