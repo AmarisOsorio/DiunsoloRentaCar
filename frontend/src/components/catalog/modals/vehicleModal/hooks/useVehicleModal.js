@@ -2,19 +2,19 @@ import { useState } from 'react';
 
 const useVehicleModal = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedVehiculo, setSelectedVehiculo] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [imagenActual, setImagenActual] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const openModal = (vehiculo) => {
-    setSelectedVehiculo(vehiculo);
+  const openModal = (vehicle) => {
+    setSelectedVehicle(vehicle);
     setImagenActual(0);
     setIsOpen(true);
   };
 
   const closeModal = () => {
     setIsOpen(false);
-    setSelectedVehiculo(null);
+    setSelectedVehicle(null);
     setImagenActual(0);
   };
 
@@ -40,14 +40,14 @@ const useVehicleModal = () => {
   };
 
   const cambiarImagen = (direccion) => {
-    if (selectedVehiculo?.imagenes && selectedVehiculo.imagenes.length > 1) {
+    if (selectedVehicle?.imagenes && selectedVehicle.imagenes.length > 1) {
       if (direccion === 'next') {
         setImagenActual((prev) => 
-          prev === selectedVehiculo.imagenes.length - 1 ? 0 : prev + 1
+          prev === selectedVehicle.imagenes.length - 1 ? 0 : prev + 1
         );
       } else {
         setImagenActual((prev) => 
-          prev === 0 ? selectedVehiculo.imagenes.length - 1 : prev - 1
+          prev === 0 ? selectedVehicle.imagenes.length - 1 : prev - 1
         );
       }
     }
@@ -61,7 +61,7 @@ const useVehicleModal = () => {
 
   return {
     isOpen,
-    selectedVehiculo,
+    selectedVehicle,
     imagenActual,
     showLoginModal,
     setImagenActual,

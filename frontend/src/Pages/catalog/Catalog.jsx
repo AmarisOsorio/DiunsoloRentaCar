@@ -1,12 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import './Catalog.css';
-import VehicleCard from '../../components/catalog/cardVehicle/VehicleCard.jsx';
+import VehicleCard from '../../components/catalog/VehicleCard/VehicleCard.jsx';
+import VehicleModal from '../../components/catalog/modals/vehicleModal/VehicleModal.jsx';
+import ReservationRequestModal from '../../components/catalog/modals/vehicleModal/reservationRequest/ReservationRequestModal.jsx';
+import FiltrosCatalogo from '../../components/catalog/filters/filters.jsx';
 import catalogBG from '../../assets/bannerCatalogo3.webp';
 import useCatalogo from './hooks/useCatalog.js';
 import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
 
 const Catalog = () => {
-  const { vehiculos, loading } = useCatalogo();
+  // Mapear los vehículos para asegurar nombres consistentes con el backend
+  const { vehiculos: rawVehiculos, loading } = useCatalogo();
+  const vehiculos = Array.isArray(rawVehiculos)
+    ? rawVehiculos.map(v => ({
+        ...v,
+        brand: v.brand || v.brandName || '',
+        images: v.images || v.galleryImages || [],
+        dailyPrice: v.dailyPrice || v.precioPorDia || '',
+      }))
+    : [];
   const [filtros, setFiltros] = useState({
     marcas: [],
     tipos: [],
@@ -19,16 +31,16 @@ const Catalog = () => {
 
   // Estado y handlers para el modal de reserva
   const [showReservationModal, setShowReservationModal] = useState(false);
-  const [vehiculoReserva, setVehiculoReserva] = useState(null);
+  const [reservationVehicle, setReservationVehicle] = useState(null);
 
-  const handleOpenReservationModal = (vehiculo) => {
-    setVehiculoReserva(vehiculo);
+  const handleOpenReservationModal = (vehicle) => {
+    setReservationVehicle(vehicle);
     setShowReservationModal(true);
   };
 
   const handleCloseReservationModal = () => {
     setShowReservationModal(false);
-    setVehiculoReserva(null);
+    setReservationVehicle(null);
   };
   useEffect(() => {
     const handleResize = () => {
@@ -44,14 +56,15 @@ const Catalog = () => {
 
   const {
     isOpen,
-    selectedVehiculo,
+    selectedVehicle,
     imagenActual,
     setImagenActual,
     openModal,
     closeModal,
     getEstadoClass,
     cambiarImagen,
-    handleBackdropClick
+    handleBackdropClick,
+    setSelectedVehicle
   } = useVehicleModal();
 
   const vehiculosFiltrados = useMemo(() => {
@@ -153,13 +166,13 @@ const Catalog = () => {
           <div className="vehiculos-grid">
             {Array.isArray(vehiculosFiltrados) && vehiculosFiltrados.length > 0 ? (
               vehiculosFiltrados.map((vehiculo) => (
-                <VehiculoCard
+                <VehicleCard
                   key={vehiculo._id}
-                  vehiculo={vehiculo}
+                  vehicle={vehiculo}
                   variant="catalogo"
                   showPrice={false}
                   onClick={() => openModal(vehiculo)}
-                  onReservar={handleOpenReservationModal}
+                  onReserve={handleOpenReservationModal}
                 />
               ))
             ) : (
@@ -172,8 +185,8 @@ const Catalog = () => {
         </main>
       </section>
 
-      <VehiculoModal
-        vehiculo={selectedVehiculo}
+      <VehicleModal
+        vehicle={selectedVehicle}
         isOpen={isOpen}
         onClose={closeModal}
         imagenActual={imagenActual}
@@ -181,7 +194,7 @@ const Catalog = () => {
         getEstadoClass={getEstadoClass}
         cambiarImagen={cambiarImagen}
         handleBackdropClick={handleBackdropClick}
-        onSolicitarReserva={handleOpenReservationModal}
+        onOpenReservationRequest={handleOpenReservationModal}
       />
 
       {/* Modal de reserva */}
@@ -189,7 +202,7 @@ const Catalog = () => {
         <ReservationRequestModal
           isOpen={showReservationModal}
           onClose={handleCloseReservationModal}
-          vehiculo={vehiculoReserva}
+          vehicle={reservationVehicle}
           onSubmit={() => {}}
           loading={false}
           error={null}

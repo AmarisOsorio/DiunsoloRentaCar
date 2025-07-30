@@ -1,6 +1,4 @@
 // Ejemplo de componente de Card para autos en el catálogo
-import React from 'react';
-import './CardVehicle.css';
 import React, { useState } from 'react';
 import './VehicleCard.css';
 

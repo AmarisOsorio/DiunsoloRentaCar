@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../../../context/AuthContext';
+import { FaCar, FaTimes, FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa';
 import './ReservationRequest.css';
 
 const ReservationRequestModal = ({ 
   isOpen, 
   onClose, 
-  vehiculo, 
+  vehicle, 
   onSubmit, 
   loading, 
   error, 
@@ -118,11 +119,11 @@ const ReservationRequestModal = ({
     }
 
     const reservationData = {
-      vehiculoID: vehiculo._id,
+      vehiculoID: vehicle._id,
       fechaInicio: formData.fechaInicio,
       fechaDevolucion: formData.fechaDevolucion,
       comentarios: formData.comentarios,
-      precioPorDia: vehiculo.precioPorDia || 0,
+      precioPorDia: vehicle.precioPorDia || 0,
       // Datos del cliente de la reserva
       clienteReserva: {
         nombre: formData.nombreCliente.trim(),
@@ -157,13 +158,13 @@ const ReservationRequestModal = ({
     onClose();
   };
 
-  if (!isOpen || !vehiculo) return null;
+  if (!isOpen || !vehicle) return null;
 
   // Obtener fecha mínima (hoy)
   const today = new Date().toISOString().split('T')[0];
 
   // Galería de imágenes (similar a VehiculoModal)
-  const images = [vehiculo.imagenVista3_4, vehiculo.imagenLateral, ...(vehiculo.imagenes || [])].filter(Boolean);
+  const images = [vehicle.imagenVista3_4, vehicle.imagenLateral, ...(vehicle.imagenes || [])].filter(Boolean);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const hasImages = images.length > 0;
   const nextImage = () => {
@@ -189,7 +190,7 @@ const ReservationRequestModal = ({
               <div className="unified-carousel-container">
                 <img
                   src={images[currentImageIndex]}
-                  alt={vehiculo.marca + ' ' + vehiculo.modelo}
+                  alt={vehicle.marca + ' ' + vehicle.modelo}
                   className="view-gallery"
                 />
                 <div className="image-counter-badge">
@@ -223,9 +224,9 @@ const ReservationRequestModal = ({
           {/* Formulario de reserva */}
           <div className="vehicle-info-section">
             <div className="vehicle-title">
-              <h3>{vehiculo.marca} {vehiculo.modelo}</h3>
-              <span className={`status-badge ${vehiculo.estado === 'Disponible' ? 'available' : 'unavailable'}`}>
-                {vehiculo.estado || 'Estado desconocido'}
+              <h3>{vehicle.marca} {vehicle.modelo}</h3>
+              <span className={`status-badge ${vehicle.estado === 'Disponible' ? 'available' : 'unavailable'}`}>
+                {vehicle.estado || 'Estado desconocido'}
               </span>
             </div>
             <div className="vehicle-details-grid">
@@ -361,23 +362,23 @@ const ReservationRequestModal = ({
               <div className="details-list">
                 <div className="detail-item">
                   <span className="detail-label">Marca:</span>
-                  <span className="detail-value">{vehiculo.marca}</span>
+                  <span className="detail-value">{vehicle.marca}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Modelo:</span>
-                  <span className="detail-value">{vehiculo.modelo}</span>
+                  <span className="detail-value">{vehicle.modelo}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Año:</span>
-                  <span className="detail-value">{vehiculo.anio}</span>
+                  <span className="detail-value">{vehicle.anio}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Color:</span>
-                  <span className="detail-value">{vehiculo.color}</span>
+                  <span className="detail-value">{vehicle.color}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Capacidad:</span>
-                  <span className="detail-value">{vehiculo.capacidad} personas</span>
+                  <span className="detail-value">{vehicle.capacidad} personas</span>
                 </div>
               </div>
             </div>

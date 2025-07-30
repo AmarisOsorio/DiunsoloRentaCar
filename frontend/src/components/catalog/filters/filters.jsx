@@ -12,10 +12,7 @@ const FiltrosCatalogo = ({ vehiculos, onFilterChange, onClose, isMobile, ordenFi
   const capitalizar = (texto) =>
     texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : '';
 
-  const { marcas: marcasDB } = useMarcas();
-  const marcasDisponibles = marcasDB.length > 0
-    ? marcasDB.map(m => m.nombreMarca?.trim())
-    : (vehiculos ? [...new Set(vehiculos.map(v => v.idMarca?.nombreMarca?.trim()))].sort() : []);
+  const marcasDisponibles = vehiculos ? [...new Set(vehiculos.map(v => v.idMarca?.nombreMarca?.trim()))].sort() : [];
 
   const clasesDisponibles = vehiculos
     ? [...new Set(vehiculos.map(v => v.clase?.trim().toLowerCase()))].sort()
