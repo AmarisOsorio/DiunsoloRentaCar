@@ -1,9 +1,8 @@
 const ReservasController = {};
 import reservasModel from "../models/Reservas.js";
 import clientesModel from "../models/Clientes.js";
-import vehiculosModel from "../models/Vehiculos.js";
+import vehiculosModel from "../models/Vehicles.js";
 import { Contratos } from "../models/Contratos.js";
-import ContractGenerator from "../utils/contractGenerator.js";
 
 //Select
 

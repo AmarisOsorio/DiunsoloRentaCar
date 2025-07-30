@@ -2,7 +2,7 @@
 import express from "express";
 import vehiclesController from "../controllers/vehiclesController.js";
 import multer from "multer";
-import { ensureTempDirectory, validateVehicleData } from "../middlewares/vehicleValidation.js";
+import { validateVehicleData } from "../middlewares/vehicleValidation.js";
 
 //Router
 const router = express.Router();
@@ -23,15 +23,15 @@ const upload = multer({
 
 // Configuración para múltiples campos de archivos
 const uploadFields = upload.fields([
-  { name: 'imagenes', maxCount: 10 },
-  { name: 'imagenVista3_4', maxCount: 1 },
-  { name: 'imagenLateral', maxCount: 1 }
+  { name: 'galleryImages', maxCount: 10 },
+  { name: 'mainViewImage', maxCount: 1 },
+  { name: 'sideImage', maxCount: 1 }
 ]);
 
 //Routes
 router.route("/")
-  .get(vehiclesController.getVehicles) //Get all vehicles [Catalogo]
-  .post(ensureTempDirectory, uploadFields, validateVehicleData, vehiclesController.addVehicle); 
+  .get(vehiclesController.getVehicles)
+  .post(uploadFields, validateVehicleData, vehiclesController.addVehicle);
 
 router.route("/home")
   .get(vehiclesController.getHomeVehicles); //Get featured vehicles [Home]
@@ -40,24 +40,8 @@ router.route("/:id")
   .get(vehiclesController.getVehicleById)
   .put(uploadFields, validateVehicleData, vehiclesController.updateVehicle)
   .delete(vehiclesController.deleteVehicle);
-
-router.route("/:id/status")
-  .patch(vehiclesController.updateVehicleStatus);
-
-router.route("/:id/regenerate-contrato")
-  .post(vehiclesController.regenerateContrato);
-
-router.route("/:id/download-contrato")
-  .get(vehiclesController.downloadContrato);
-
-router.route("/test/pdf-generation")
-  .post(vehiclesController.testPdfGeneration);
-
-router.route("/:id/debug-pdf")
-  .get(vehiclesController.debugPdfAnalysis);
-
-router.route("/:id/pdf")
-  .get(vehiclesController.generateVehiclePDF);
+router.route("/:id/download-lease-contract")
+  .get(vehiclesController.downloadLeaseContract);
 
 //Export
 export default router;

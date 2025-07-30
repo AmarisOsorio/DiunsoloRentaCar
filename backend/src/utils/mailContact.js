@@ -1,32 +1,35 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// Importar dependencias necesarias
+import nodemailer from 'nodemailer'; // Para enviar correos electrónicos
+import dotenv from 'dotenv'; // Para cargar variables de entorno
+// Cargar variables de entorno desde .env
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+/*
+ * Envía un correo con los datos del formulario de contacto.
+ */
 async function sendContactoMail({ nombre, correo, telefono, mensaje }) {
+  // Configurar el transporte de correo usando Gmail y credenciales del .env
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: 'gmail', // Servicio de correo (puedes cambiarlo por otro proveedor)
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: process.env.EMAIL_USER, // Usuario de correo (desde .env)
+      pass: process.env.EMAIL_PASS // Contraseña de correo (desde .env)
     },
     tls: {
-      rejectUnauthorized: false
+      rejectUnauthorized: false // Permitir certificados autofirmados (útil en desarrollo)
     }
   });
 
+  // Opciones del correo a enviar
   const mailOptions = {
-    from: 'DIUNSOLO Renta Car <no-reply@diunsolo.com>',
-    to: process.env.EMAIL_USER,
-    subject: 'Nuevo mensaje de contacto desde DIUNSOLO Renta Car',
+    from: 'DIUNSOLO Renta Car <no-reply@diunsolo.com>', // Remitente
+    to: process.env.EMAIL_USER, // Destinatario (el propio correo de la empresa)
+    subject: 'Nuevo mensaje de contacto desde DIUNSOLO Renta Car', // Asunto
     html: `
+      <!-- Contenido HTML del correo -->
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 10px; padding: 28px 18px 24px 18px; background: #fafbfc;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <img src="cid:diunsolologo" alt="Diunsolo RentaCar" style="max-width: 120px; margin-bottom: 12px;" />
+          <img src="https://res.cloudinary.com/dziypvsar/image/upload/v1753638778/diunsolo-logo_k1p5pm.png" alt="Diunsolo RentaCar" style="max-width: 120px; margin-bottom: 12px;" />
         </div>
         <h2 style="color: #1C318C; text-align: center; font-size: 2rem; margin-bottom: 0.5rem;">Nuevo mensaje de contacto</h2>
         <p style="font-size: 1.1rem; color: #222; text-align: center; margin-bottom: 1.2rem;">
@@ -49,17 +52,12 @@ async function sendContactoMail({ nombre, correo, telefono, mensaje }) {
           <a href="https://diunsolo.rent" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
         </div>
       </div>
-    `,
-    attachments: [
-      {
-        filename: 'diunsolologo.png',
-        path: path.join(__dirname, '..', '..', '..', 'frontend', 'src', 'assets', 'diunsolologo.png'),
-        cid: 'diunsolologo'
-      }
-    ]
+    `
   };
 
+  // Enviar el correo usando el transporter configurado
   await transporter.sendMail(mailOptions);
 }
 
+// Exportar la función para usarla en otros módulos
 export default sendContactoMail;

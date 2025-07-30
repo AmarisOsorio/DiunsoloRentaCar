@@ -1,9 +1,9 @@
 import React from 'react';
 import './Home.css';
 import ServicesCard from '../../components/home/ourServices/ServicesCard';
-import VehiculoCard from '../../components/catolog/cardVehicle/VehiculoCard';
-import VehiculoModal from '../../components/catolog/modals/vehicleModal/VehiculoModal';
-import useVehicleModal from '../../components/catolog/modals/vehicleModal/hooks/useVehicleModal';
+import VehiculoCard from '../../components/catalog/VehicleCard/VehicleCard';
+import VehicleModal from '../../components/catalog/modals/vehicleModal/VehicleModal';
+import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal';
 import FamiliarSection from '../../components/home/familySection/FamilySection';
 import IntroSection from '../../components/home/introSection/IntroSection';
 import GallerySection from '../../components/home/gallerySection/GallerySection';
@@ -128,7 +128,7 @@ function HomePage() {
         <GallerySection />
       </div>
       
-      <VehiculoModal
+      <VehicleModal
         vehiculo={selectedVehiculo}
         isOpen={isOpen}
         onClose={closeModal}
