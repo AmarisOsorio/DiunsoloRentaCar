@@ -48,24 +48,16 @@ const AppContent = () => {
       <main>
         <Routes>
           <Route path="/" element={
-            <ProtectedRoute>
               <Home />
-            </ProtectedRoute>
           } />
           <Route path="/catalogo" element={
-            <ProtectedRoute>
               <Catalog />
-            </ProtectedRoute>
           } />
           <Route path="/contacto" element={
-            <ProtectedRoute>
               <Contact />
-            </ProtectedRoute>
           } />
           <Route path="/terminos" element={
-            <ProtectedRoute>
               <TermsAndConditions />
-            </ProtectedRoute>
           } />
 
          
