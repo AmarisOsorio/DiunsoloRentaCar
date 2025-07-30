@@ -1,106 +1,91 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import './Catalog.css';
 import VehicleCard from '../../components/catalog/VehicleCard/VehicleCard.jsx';
 import VehicleModal from '../../components/catalog/modals/vehicleModal/VehicleModal.jsx';
 import ReservationRequestModal from '../../components/catalog/modals/vehicleModal/reservationRequest/ReservationRequestModal.jsx';
-import FiltrosCatalogo from '../../components/catalog/filters/filters.jsx';
-import catalogBG from '../../assets/bannerCatalogo3.webp';
-import useCatalogo from './hooks/useCatalog.js';
+import CatalogFilters from '../../components/catalog/filters/filters.jsx';
+import catalogBG from '../../assets/bannerCatalog.webp';
+import useCatalog from './hooks/useCatalog.js';
 import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
 
 const Catalog = () => {
-  // Mapear los vehículos para asegurar nombres consistentes con el backend
-  const { vehiculos: rawVehiculos, loading } = useCatalogo();
-  const vehiculos = Array.isArray(rawVehiculos)
-    ? rawVehiculos.map(v => ({
-        ...v,
-        brand: v.brand || v.brandName || '',
-        images: v.images || v.galleryImages || [],
-        dailyPrice: v.dailyPrice || v.precioPorDia || '',
-      }))
-    : [];
-  const [filtros, setFiltros] = useState({
-    marcas: [],
-    tipos: [],
+  const { vehicles, loading } = useCatalog();
+  const [filters, setFilters] = useState({
+    brands: [],
+    types: [],
   });
-  const [showFiltros, setShowFiltros] = useState(false);
-  // Solo mostrar el botón en móvil y actualizar en tiempo real
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
-  );
+  const [showFilters, setShowFilters] = useState(false);
 
   // Estado y handlers para el modal de reserva
+  // Estado del modal de reserva:
+  // - showReservationModal: controla la visibilidad del modal de reserva
+  // - reservationVehicle: almacena el vehículo a reservar
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [reservationVehicle, setReservationVehicle] = useState(null);
 
+  // Abre el modal de reserva para un vehículo específico
   const handleOpenReservationModal = (vehicle) => {
     setReservationVehicle(vehicle);
     setShowReservationModal(true);
   };
 
+  // Cierra el modal de reserva y limpia el vehículo seleccionado
   const handleCloseReservationModal = () => {
     setShowReservationModal(false);
     setReservationVehicle(null);
   };
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
-  const handleFilterChange = (nuevosFiltros) => {
-    setFiltros(nuevosFiltros);
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
   };
 
   const {
     isOpen,
     selectedVehicle,
-    imagenActual,
-    setImagenActual,
+    currentImage,
+    setCurrentImage,
     openModal,
     closeModal,
-    getEstadoClass,
-    cambiarImagen,
+    getStateClass,
+    changeImage,
     handleBackdropClick,
     setSelectedVehicle
   } = useVehicleModal();
 
-  const vehiculosFiltrados = useMemo(() => {
-  if (!vehiculos || !Array.isArray(vehiculos)) return [];
+  const filteredVehicles = useMemo(() => {
+    if (!vehicles || !Array.isArray(vehicles)) return [];
 
-  let vehiculosFiltered = [...vehiculos];
+    let vehiclesFiltered = [...vehicles];
 
-  // Filtro por marca (usando la propiedad v.marca que es el nombre de la marca)
-  if (filtros.marcas.length > 0) {
-    vehiculosFiltered = vehiculosFiltered.filter(v => {
-      const nombreMarca = v.marca?.trim();
-      if (!nombreMarca || typeof nombreMarca !== 'string') return false;
-      return filtros.marcas.includes(nombreMarca);
-    });
-  }
+    // Filter by brand (using v.marca as the brand name)
+    if (filters.brands.length > 0) {
+      vehiclesFiltered = vehiclesFiltered.filter(v => {
+        const brandName = v.marca?.trim();
+        if (!brandName || typeof brandName !== 'string') return false;
+        return filters.brands.includes(brandName);
+      });
+    }
 
-  // Filtro por clase
-  if (filtros.tipos.length > 0) {
-    vehiculosFiltered = vehiculosFiltered.filter(v => {
-      const clase = v.clase;
-      if (!clase || typeof clase !== 'string') return false;
-      return filtros.tipos.includes(clase.trim().toLowerCase());
-    });
-  }
+    // Filter by type/class
+    if (filters.types.length > 0) {
+      vehiclesFiltered = vehiclesFiltered.filter(v => {
+        const type = v.clase;
+        if (!type || typeof type !== 'string') return false;
+        return filters.types.includes(type.trim().toLowerCase());
+      });
+    }
 
-  // Filtro por estado
-  if (filtros.estados && filtros.estados.length > 0) {
-    vehiculosFiltered = vehiculosFiltered.filter(v => {
-      const estado = v.estado;
-      if (!estado || typeof estado !== 'string') return false;
-      return filtros.estados.includes(estado);
-    });
-  }
+    // Filter by state
+    if (filters.estados && filters.estados.length > 0) {
+      vehiclesFiltered = vehiclesFiltered.filter(v => {
+        const state = v.estado;
+        if (!state || typeof state !== 'string') return false;
+        return filters.estados.includes(state);
+      });
+    }
 
-  return vehiculosFiltered;
-}, [vehiculos, filtros]);
+    return vehiclesFiltered;
+  }, [vehicles, filters]);
 
   if (loading) return <div className="marcas-loading">Cargando vehículos...</div>;
 
@@ -123,55 +108,43 @@ const Catalog = () => {
           <div className="catalogo-header-info">
             <h2>Vehículos</h2>
             <div className="resultados-filtros-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-              {!isMobile && (
-                <p className="resultados-count" style={{ margin: 0, order: 2 }}>
-                  {vehiculosFiltrados.length} vehículo
-                  {vehiculosFiltrados.length !== 1 ? 's' : ''} encontrado
-                  {vehiculosFiltrados.length !== 1 ? 's' : ''}
-                </p>
-              )}
+              <p className="resultados-count" style={{ margin: 0, order: 2 }}>
+                {filteredVehicles.length} vehículo
+                {filteredVehicles.length !== 1 ? 's' : ''} encontrado
+                {filteredVehicles.length !== 1 ? 's' : ''}
+              </p>
               <button
-                className={`btn-filtros-toggle${showFiltros ? ' active' : ''}`}
-                onClick={() => setShowFiltros((prev) => !prev)}
-                style={!isMobile ? { order: 1, marginLeft: 0, minWidth: '180px', justifyContent: 'center', fontSize: '1.08rem', padding: '0.6rem 1.2rem', display: 'inline-flex' } : {}}
+                className={`btn-filtros-toggle${showFilters ? ' active' : ''}`}
+                onClick={() => setShowFilters((prev) => !prev)}
+                style={{ order: 1, marginLeft: 0, minWidth: '180px', justifyContent: 'center', fontSize: '1.08rem', padding: '0.6rem 1.2rem', display: 'inline-flex' }}
               >
                 <span className="btn-filtros-toggle-content">
                   <svg width="22" height="22" fill="#fff" className="btn-filtros-toggle-icon" viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm2 7h14v2H5v-2zm4 7h6v2H9v-2z"/></svg>
-                  {showFiltros ? 'Ocultar filtros' : 'Mostrar filtros'}
+                  {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
                 </span>
               </button>
-              {isMobile && (
-                <p className="resultados-count" style={{ margin: 0, order: 2 }}>
-                  {vehiculosFiltrados.length} vehículo
-                  {vehiculosFiltrados.length !== 1 ? 's' : ''} encontrado
-                  {vehiculosFiltrados.length !== 1 ? 's' : ''}
-                </p>
-              )}
             </div>
           </div>
           {/* Panel de filtros debajo del header-info cuando está activo */}
-          {showFiltros && (
-            <div
-              className={`filtros-container anim-filtros-in${!isMobile ? ' filtros-container-desktop' : ' filtros-container-mobile'}`}
-            >
-              <FiltrosCatalogo
-                vehiculos={vehiculos}
+          {showFilters && (
+            <div className="filtros-container anim-filtros-in filtros-container-desktop">
+              <CatalogFilters
+                vehicles={vehicles}
                 onFilterChange={handleFilterChange}
-                onClose={() => setShowFiltros(false)}
-                isMobile={isMobile}
-                ordenFiltros={['marcas', 'tipos', 'estados']}
+                onClose={() => setShowFilters(false)}
+                ordenFiltros={['brands', 'types', 'estados']}
               />
             </div>
           )}
           <div className="vehiculos-grid">
-            {Array.isArray(vehiculosFiltrados) && vehiculosFiltrados.length > 0 ? (
-              vehiculosFiltrados.map((vehiculo) => (
+            {Array.isArray(filteredVehicles) && filteredVehicles.length > 0 ? (
+              filteredVehicles.map((vehicle) => (
                 <VehicleCard
-                  key={vehiculo._id}
-                  vehicle={vehiculo}
+                  key={vehicle._id}
+                  vehicle={vehicle}
                   variant="catalogo"
                   showPrice={false}
-                  onClick={() => openModal(vehiculo)}
+                  onClick={() => openModal(vehicle)}
                   onReserve={handleOpenReservationModal}
                 />
               ))
@@ -189,10 +162,10 @@ const Catalog = () => {
         vehicle={selectedVehicle}
         isOpen={isOpen}
         onClose={closeModal}
-        imagenActual={imagenActual}
-        setImagenActual={setImagenActual}
-        getEstadoClass={getEstadoClass}
-        cambiarImagen={cambiarImagen}
+        currentImage={currentImage}
+        setCurrentImage={setCurrentImage}
+        getStateClass={getStateClass}
+        changeImage={changeImage}
         handleBackdropClick={handleBackdropClick}
         onOpenReservationRequest={handleOpenReservationModal}
       />
