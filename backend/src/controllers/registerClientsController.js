@@ -1,453 +1,301 @@
-import jsonwebtoken from "jsonwebtoken";
+//Imports
+import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
-import nodemailer from "nodemailer";
 import crypto from "crypto";
-import path from "path";
-import { fileURLToPath } from "url";
 import cloudinary from 'cloudinary';
 
-import clientsModel from "../models/Clientes.js";
+import clientsModel from "../models/Clients.js";
 import { config } from "../config.js";
+import { sendVerificationEmail } from "../utils/mailVerifyAccount.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// CLOUDINARY SETUP
-// OJO: Se utilizara la parte de Cloudinary en el código no importandolo
+//Cloudinary config
 cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: config.cloudinary.cloud_name,
+  api_key: config.cloudinary.cloudinary_api_key,
+  api_secret: config.cloudinary.cloudinary_api_secret,
 });
 
+//Cloudinary image upload function
+const uploadImage = async (file, folder = "public") => {
+  try {
+    if (!file || !file.path) return "";
+    
+    const result = await cloudinary.v2.uploader.upload(
+      file.path, 
+      {
+        folder: folder,
+        allowed_formats: ["jpg", "png", "jpeg"]
+      }
+    );
+    
+    return result.secure_url;
+  } catch (error) {
+    console.error('Error uploading to Cloudinary:', error);
+    return "";
+  }
+};
+
+//Controller
 const registerClientsController = {};
 
-function validarEdadMinima(fechaDeNacimiento) {
+//Register
+registerClientsController.registerClients = async (req, res) => {
   try {
-    const hoy = new Date();
-    const fechaNacimiento = new Date(fechaDeNacimiento);
-    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-    const mesActual = hoy.getMonth();
-    const mesNacimiento = fechaNacimiento.getMonth();
-    
-    if (mesActual < mesNacimiento || (mesActual === mesNacimiento && hoy.getDate() < fechaNacimiento.getDate())) {
-      edad--;
-    }
-    
-    if (edad < 18) {
-      return {
-        isValid: false,
-        message: 'Debes ser mayor de 18 años para registrarte'
-      };
-    }
-    
-    return { isValid: true };
-  } catch (error) {
-    return {
-      isValid: false,
-      message: 'Fecha de nacimiento inválida'
-    };
-  }
-}
+    //Required data
+    const {
+      name, 
+      lastName, 
+      email, 
+      password, 
+      phone, 
+      birthDate
+    } = req.body;
 
-// Función para subir buffer a Cloudinary - AHORA FUNCIONAL
-async function uploadBufferToCloudinary(buffer, folder) {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.v2.uploader.upload_stream(
-      { 
-        folder: folder,
-        resource_type: 'image',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
-      },
-      (error, result) => {
-        if (error) {
-          console.error('Error en Cloudinary upload_stream:', error);
-          return reject(error);
-        }
-        console.log('Cloudinary upload exitoso:', result.public_id);
-        resolve(result.secure_url);
-      }
-    );
-    stream.end(buffer);
-  });
-}
-
-registerClientsController.register = async (req, res) => {
-  try {
-    console.log('=== INICIANDO REGISTRO DE CLIENTE ===');
-    console.log('Body recibido:', req.body);
-    console.log('Archivos recibidos:', req.files ? Object.keys(req.files) : 'Sin archivos');
-    
-    // Manejar diferentes formas de recibir los campos
-    let nombres = req.body.nombres || req.body.nombre;
-    let apellidos = req.body.apellidos || req.body.apellido;
-    let fechaDeNacimiento = req.body.fechaDeNacimiento;
-    let correo = req.body.correo;
-    let contraseñaRaw = req.body.contraseña;
-    let telefono = req.body.telefono;
-
-    // Variables para las URLs de las imágenes
-    let licenciaFrenteUrl = null;
-    let licenciaReversoUrl = null;
-    let pasaporteFrenteUrl = null;
-    let pasaporteReversoUrl = null;
-
-    // Normalizar teléfono
-    if (telefono) {
-      let clean = (telefono + '').replace(/[^0-9]/g, '');
-      
-      if (clean.length === 8) {
-        telefono = clean.slice(0, 4) + '-' + clean.slice(4);
-      }
-      
-      const regex = /^[267]\d{3}-\d{4}$/;
-      if (!regex.test(telefono)) {
-        return res.status(400).json({ message: 'El teléfono debe estar completo y en formato 0000-0000, iniciando con 2, 6 o 7' });
-      }
+    //Check existing email
+    const existingClient = await clientsModel.findOne({ email });
+    if (existingClient) {
+      return res.status(400).json({ message: "El correo ya está registrado" });
     }
 
-    const contraseña = contraseñaRaw || req.body['contraseña'] || req.body['contraseÃ±a'];
-    if (!contraseña) {
-      return res.status(400).json({ message: "El campo 'contraseña' es obligatorio y no fue recibido correctamente." });
-    }
-    
-    if (!nombres || !apellidos) {
-      return res.status(400).json({ message: "Los campos 'nombres' y 'apellidos' son obligatorios." });
+    //Validate phone format
+    const phoneRegex = /^[267]\d{3}-\d{4}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ message: "El teléfono debe estar completo y en formato 0000-0000, iniciando con 2, 6 o 7" });
     }
 
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: config.email.email_user,
-        pass: config.email.email_pass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    //Birthdate validation
+    const birth = new Date(birthDate);
     
-    const existsClient = await clientsModel.findOne({ correo });
-    
-    if (existsClient) {
-      if (existsClient.isVerified) {
-        return res.json({ message: "Client already exists", isVerified: true });
-      } else {
-        const validacionEdad = validarEdadMinima(fechaDeNacimiento);
-        if (!validacionEdad.isValid) {
-          return res.status(400).json({ 
-            message: validacionEdad.message 
-          });
-        }
-        
-        // Procesar imágenes si se enviaron en la actualización
-        if (req.files) {
-          console.log('📤 Procesando imágenes para cliente existente no verificado...');
-          
-          try {
-            if (req.files.licenciaFrente && req.files.licenciaFrente[0]) {
-              console.log('Subiendo licencia frente...');
-              licenciaFrenteUrl = await uploadBufferToCloudinary(
-                req.files.licenciaFrente[0].buffer,
-                'diunsolo/licencias'
-              );
-            }
-            
-            if (req.files.licenciaReverso && req.files.licenciaReverso[0]) {
-              console.log('Subiendo licencia reverso...');
-              licenciaReversoUrl = await uploadBufferToCloudinary(
-                req.files.licenciaReverso[0].buffer,
-                'diunsolo/licencias'
-              );
-            }
-            
-            if (req.files.pasaporteFrente && req.files.pasaporteFrente[0]) {
-              console.log('Subiendo pasaporte frente...');
-              pasaporteFrenteUrl = await uploadBufferToCloudinary(
-                req.files.pasaporteFrente[0].buffer,
-                'diunsolo/pasaportes'
-              );
-            }
-            
-            if (req.files.pasaporteReverso && req.files.pasaporteReverso[0]) {
-              console.log('Subiendo pasaporte reverso...');
-              pasaporteReversoUrl = await uploadBufferToCloudinary(
-                req.files.pasaporteReverso[0].buffer,
-                'diunsolo/pasaportes'
-              );
-            }
-          } catch (uploadError) {
-            console.error('❌ Error subiendo imágenes:', uploadError);
-            // Continuar sin las imágenes en caso de error
-          }
-        }
-        
-        const passwordHashUpdate = await bcryptjs.hash(contraseña, 10);
-        existsClient.nombre = nombres;
-        existsClient.apellido = apellidos;
-        existsClient.fechaDeNacimiento = fechaDeNacimiento;
-        existsClient.telefono = telefono;
-        existsClient.contraseña = passwordHashUpdate;
-        
-        // Actualizar URLs de imágenes si se subieron
-        if (licenciaFrenteUrl) existsClient.licenciaFrente = licenciaFrenteUrl;
-        if (licenciaReversoUrl) existsClient.licenciaReverso = licenciaReversoUrl;
-        if (pasaporteFrenteUrl) existsClient.pasaporteFrente = pasaporteFrenteUrl;
-        if (pasaporteReversoUrl) existsClient.pasaporteReverso = pasaporteReversoUrl;
-        
-        await existsClient.save();
-        
-        let verificationCodeUpdate = '';
-        for (let i = 0; i < 6; i++) {
-          verificationCodeUpdate += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        
-        const tokenCodeUpdate = jsonwebtoken.sign(
-          { correo, verificationCode: verificationCodeUpdate },
-          config.JWT.secret,
-          { expiresIn: "15m" }
-        );
-        
-        res.cookie("VerificationToken", tokenCodeUpdate, { maxAge: 15 * 60 * 1000 });
-        
-        const mailOptionsUpdate = {
-          from: config.email.email_user,
-          to: correo,
-          subject: "Verificación de correo - Código de activación | Diunsolo RentaCar",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px;">
-              <h2>Código de verificación</h2>
-              <p>Tu código de verificación es: <strong>${verificationCodeUpdate}</strong></p>
-              <p>Este código expirará en 15 minutos.</p>
-            </div>
-          `
-        };
-        
-        transporter.sendMail(mailOptionsUpdate, (error) => {
-          if (error) {
-            return res.status(500).json({ message: "Error enviando correo" });
-          }
-          return res.json({ message: "Nuevo código enviado. La cuenta ya está registrada pero no verificada.", isVerified: false });
-        });
-        return;
-      }
-    }
-
-    const validacionEdad = validarEdadMinima(fechaDeNacimiento);
-    if (!validacionEdad.isValid) {
+    //Date validation
+    if (isNaN(birth.getTime())) {
       return res.status(400).json({ 
-        message: validacionEdad.message 
+        message: "Fecha de nacimiento inválida. Formato esperado: YYYY-MM-DD",
+        receivedDate: birthDate
       });
     }
 
-    // Procesar imágenes para nuevo cliente
-    if (req.files) {
-      console.log('📤 Procesando imágenes para nuevo cliente...');
+    //Age validation
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const currentMonth = today.getMonth();
+    const birthMonth = birth.getMonth();
+    
+    if (currentMonth < birthMonth || (currentMonth === birthMonth && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    if (age < 18) {
+      return res.status(400).json({ message: "Debes ser mayor de 18 años para registrarte" });
+    }
+
+    //Setup images for cloudinary
+    let lFrontUrl = "";
+    let lBackUrl = "";
+    let pFrontUrl = "";
+    let pBackUrl = "";
+
+    if (req.files) {      
+      if (req.files.licenseFront && req.files.licenseFront[0]) {
+        lFrontUrl = await uploadImage(req.files.licenseFront[0], "diunsolo/licenses");
+      }
       
-      try {
-        if (req.files.licenciaFrente && req.files.licenciaFrente[0]) {
-          console.log('Subiendo licencia frente...');
-          licenciaFrenteUrl = await uploadBufferToCloudinary(
-            req.files.licenciaFrente[0].buffer,
-            'diunsolo/licencias'
-          );
-          console.log('✅ Licencia frente subida:', licenciaFrenteUrl);
-        }
-        
-        if (req.files.licenciaReverso && req.files.licenciaReverso[0]) {
-          console.log('Subiendo licencia reverso...');
-          licenciaReversoUrl = await uploadBufferToCloudinary(
-            req.files.licenciaReverso[0].buffer,
-            'diunsolo/licencias'
-          );
-          console.log('✅ Licencia reverso subida:', licenciaReversoUrl);
-        }
-        
-        if (req.files.pasaporteFrente && req.files.pasaporteFrente[0]) {
-          console.log('Subiendo pasaporte frente...');
-          pasaporteFrenteUrl = await uploadBufferToCloudinary(
-            req.files.pasaporteFrente[0].buffer,
-            'diunsolo/pasaportes'
-          );
-          console.log('✅ Pasaporte frente subido:', pasaporteFrenteUrl);
-        }
-        
-        if (req.files.pasaporteReverso && req.files.pasaporteReverso[0]) {
-          console.log('Subiendo pasaporte reverso...');
-          pasaporteReversoUrl = await uploadBufferToCloudinary(
-            req.files.pasaporteReverso[0].buffer,
-            'diunsolo/pasaportes'
-          );
-          console.log('✅ Pasaporte reverso subido:', pasaporteReversoUrl);
-        }
-      } catch (uploadError) {
-        console.error('❌ Error subiendo imágenes:', uploadError);
-        // Continuar con el registro aunque fallen las imágenes
+      if (req.files.licenseBack && req.files.licenseBack[0]) {
+        lBackUrl = await uploadImage(req.files.licenseBack[0], "diunsolo/licenses");
+      }
+      
+      if (req.files.passportFront && req.files.passportFront[0]) {
+        pFrontUrl = await uploadImage(req.files.passportFront[0], "diunsolo/passports");
+      }
+      
+      if (req.files.passportBack && req.files.passportBack[0]) {
+        pBackUrl = await uploadImage(req.files.passportBack[0], "diunsolo/passports");
       }
     }
 
-    const passwordHash = await bcryptjs.hash(contraseña, 10);
-    
+    //Hash password
+    const passwordHash = await bcryptjs.hash(password, 10);
+
+    //Create new client
     const newClient = new clientsModel({
-      nombre: nombres,
-      apellido: apellidos,
-      fechaDeNacimiento,
-      correo,
-      contraseña: passwordHash,
-      telefono,
-      // Agregar las URLs de las imágenes si existen
-      licenciaFrente: licenciaFrenteUrl,
-      licenciaReverso: licenciaReversoUrl,
-      pasaporteFrente: pasaporteFrenteUrl,
-      pasaporteReverso: pasaporteReversoUrl
+      name,
+      lastName,
+      email,
+      password: passwordHash,
+      phone,
+      birthDate,
+      licenseFront: lFrontUrl,
+      licenseBack: lBackUrl,
+      passportFront: pFrontUrl,
+      passportBack: pBackUrl,
+      isVerified: false
     });
-    
+
+    //Save client
     await newClient.save();
-    console.log('✅ Cliente guardado exitosamente con imágenes');
-    
-    let verificationCode = '';
-    for (let i = 0; i < 6; i++) {
-      verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    if (!config.JWT.secret) {
-      return res.status(500).json({ message: "JWT secret is not defined in environment variables" });
-    }
-    
-    const tokenCode = jsonwebtoken.sign(
-      { correo, verificationCode },
+
+    //Generate verification code
+    const verificationCode = crypto.randomBytes(3).toString("hex").toUpperCase();
+
+    //JWT Sign
+    const token = jwt.sign(
+      { email, verificationCode },
       config.JWT.secret,
       { expiresIn: "15m" }
     );
-    
-    res.cookie("VerificationToken", tokenCode, { maxAge: 15 * 60 * 1000 });
-    
-    const mailOptions = {
-      from: config.email.email_user,
-      to: correo,
-      subject: "Verificación de correo - Código de activación | Diunsolo RentaCar",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px;">
-          <h2>¡Bienvenido a Diunsolo RentaCar!</h2>
-          <p>Hola <strong>${nombres} ${apellidos}</strong>,</p>
-          <p>Tu código de verificación es: <strong style="font-size: 1.5em; color: #007bff;">${verificationCode}</strong></p>
-          <p>Este código expirará en 15 minutos.</p>
-        </div>
-      `
-    };
-    
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        return res.status(500).json({ message: "Error enviando correo: " + error.message });
-      }
-      
-      res.json({
-        message: "Cliente registrado. Por favor verifica tu correo con el código enviado"
+
+    //Cookie setup
+    res.cookie("VerificationToken", token);
+
+    //Send verification email
+    try {
+      await sendVerificationEmail(email, name, lastName, verificationCode);
+    } catch (emailError) {
+      console.error('Error enviando email:', emailError);
+      // El cliente ya está registrado, solo notificar del error del email
+      return res.status(201).json({ 
+        message: "Cliente registrado exitosamente, pero hubo un error enviando el correo de verificación. Puedes solicitar un reenvío.",
+        emailError: true
       });
+    }
+
+    //OK
+    res.status(201).json({ 
+      message: "Cliente registrado exitosamente. Se ha enviado un correo de verificación."
     });
+
   } catch (error) {
-    console.error('❌ Error en el registro:', error);
-    res.status(500).json({ message: "Error en el registro: " + (error.message || 'Error desconocido') });
+    console.error('Error en registerClientsController:', error);
+    
+    //Specific mongoose validation
+    if (error.name === 'ValidationError') {
+      const errorMessages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "Error de validación: " + errorMessages.join(', '),
+        validationErrors: error.errors
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Error al registrar cliente: " + error.message 
+    });
   }
 };
 
-registerClientsController.verifyCodeEmail = async (req, res) => {
-  if (!req.body || !req.body.verificationCode) {
-    return res.status(400).json({ message: "El campo 'verificationCode' es obligatorio en el body." });
-  }
-  
-  const { verificationCode } = req.body;
-  const token = req.cookies.VerificationToken;
-  
+//Email verification
+registerClientsController.verifyEmail = async (req, res) => {
   try {
-    const decoded = jsonwebtoken.verify(token, config.JWT.secret);
-    const { correo, verificationCode: storedCode } = decoded;
-    
-    if (verificationCode !== storedCode) {
-      return res.json({ message: "Invalid code" });
+    //Required data
+    const { verificationCode } = req.body;
+    const token = req.cookies.VerificationToken;
+
+    //Check required fields
+    if (!verificationCode) {
+      return res.status(400).json({ message: "Código de verificación requerido" });
     }
+
+    if (!token) {
+      return res.status(400).json({ message: "Token de verificación no encontrado" });
+    }
+
+    //Verify and decode token
+    const decoded = jwt.verify(token, config.JWT.secret);
+    const { email, verificationCode: storedCode } = decoded;
+
+    //Compare verification codes
+    if (verificationCode.toUpperCase() !== storedCode.toUpperCase()) {
+      return res.status(400).json({ message: "Código de verificación incorrecto" });
+    }
+
+    //Verify client
+    const client = await clientsModel.findOne({ email });
     
-    const client = await clientsModel.findOne({ correo });
+    //Client not found
+    if (!client) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+
+    //Update verification status
     client.isVerified = true;
     await client.save();
-    
-    res.json({ message: "Correo verificado exitosamente" });
-    res.clearCookie("VerificationToken");
-    return;
+
+    //OK
+    res.status(200).json({ message: "Correo verificado exitosamente" });
+
+    //Clear cookie
+    //res.clearCookie("VerificationToken");
+
   } catch (error) {
-    if (!res.headersSent) {
-      return res.json({ message: "error" });
+    console.error('Error al verificar correo:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(400).json({ message: "Token de verificación inválido" });
     }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: "Token de verificación expirado" });
+    }
+    
+    res.status(500).json({ message: "Error al verificar correo" });
   }
 };
 
-registerClientsController.resendCodeEmail = async (req, res) => {
-  const token = req.cookies.VerificationToken;
-  if (!token) {
-    return res.status(400).json({ message: "No hay sesión de verificación activa." });
-  }
-  
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: config.email.email_user,
-      pass: config.email.email_pass,
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-  
+//Resend verification email
+registerClientsController.resendVerificationEmail = async (req, res) => {
   try {
-    const decoded = jsonwebtoken.verify(token, config.JWT.secret);
-    const { correo } = decoded;
+    //Required data
+    const token = req.cookies.verificationToken;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token de verificación no encontrado" });
+    }
+
+    //Verify and decode token
+    const decoded = jwt.verify(token, config.JWT.secret);
+    const { email } = decoded;
+
+    //Search client
+    const client = await clientsModel.findOne({ email });
     
-    if (!correo) {
-      return res.status(400).json({ message: "No se encontró el correo en la sesión." });
+    //Client not found
+    if (!client) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
     }
     
-    const client = await clientsModel.findOne({ correo });
-    const nombreCompleto = client ? `${client.nombre || ''} ${client.apellido || ''}`.trim() : '';
-    
-    let verificationCode = '';
-    for (let i = 0; i < 6; i++) {
-      verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    //Client already verified
+    if (client.isVerified) {
+      return res.status(400).json({ message: "El correo ya está verificado" });
     }
-    
-    const tokenCode = jsonwebtoken.sign(
-      { correo, verificationCode },
+
+    //Generate new verification code
+    const verificationCode = crypto.randomBytes(3).toString("hex").toUpperCase();
+
+    //JWT Sign
+    const newToken = jwt.sign(
+      { email: client.email, verificationCode },
       config.JWT.secret,
-      { expiresIn: "15m" }
+      { expiresIn: "2h" }
     );
+
+    //Update cookie
+    res.cookie("verificationToken", newToken, { maxAge: 2 * 60 * 60 * 1000 });
+
+    //Send new email
+    await sendVerificationEmail(client.email, client.name, client.lastName, verificationCode);
     
-    res.cookie("VerificationToken", tokenCode, { maxAge: 15 * 60 * 1000 });
-    
-    const mailOptions = {
-      from: config.email.email_user,
-      to: correo,
-      subject: "Verificación de correo - Código de activación | Diunsolo RentaCar",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px;">
-          <h2>Nuevo código de verificación</h2>
-          <p>Hola${nombreCompleto ? `, <strong>${nombreCompleto}</strong>` : ''},</p>
-          <p>Tu nuevo código de verificación es: <strong style="font-size: 1.5em; color: #007bff;">${verificationCode}</strong></p>
-          <p>Este código expirará en 15 minutos.</p>
-        </div>
-      `
-    };
-    
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        return res.status(500).json({ message: "Error enviando correo" });
-      }
-      return res.json({ message: "Nuevo código enviado" });
-    });
+    //OK
+    res.status(200).json({ message: "Correo de verificación reenviado exitosamente" });
+
   } catch (error) {
-    res.status(500).json({ message: "Error reenviando código" });
+    console.error('Error al reenviar correo de verificación:', error);
+    
+    //Specific JWT errors
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: "Sesión de verificación inválida o expirada" });
+    }
+    
+    res.status(500).json({ message: "Error al reenviar correo de verificación" });
   }
 };
 
-
-
+//Export
 export default registerClientsController;

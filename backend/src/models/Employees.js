@@ -12,21 +12,21 @@
 import {Schema, model} from "mongoose";
 
 //Schema
-const empleadosSchema = new Schema({
-    nombre: {
+const employeesSchema = new Schema({
+    firstName: {
         type: String,
         required: true
     },
-    apellido: {
+    lastName: {
         type: String,
         required: true
     },
-    correoElectronico: {
+    email: {
         type: String,
         required: true,
         unique: true
     },
-    contrasena: {
+    password: {
         type: String,
         required: true
     },
@@ -35,7 +35,7 @@ const empleadosSchema = new Schema({
         required: true,
         unique: true
     },
-    telefono: {
+    phone: {
         type: String,
         required: true
     },
@@ -44,7 +44,7 @@ const empleadosSchema = new Schema({
         required: true,
         enum: ["Administrador", "Gestor", "Empleado"]
     },
-    foto: {
+    photo: {
         type: String,
         required: false, 
         default: null
@@ -55,4 +55,4 @@ const empleadosSchema = new Schema({
 });
 
 //Export
-export default model("Empleados", empleadosSchema);
+export default model("Employees", employeesSchema);
