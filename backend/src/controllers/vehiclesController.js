@@ -1,6 +1,6 @@
 // Imports
 import Vehicle from "../models/Vehicles.js";
-import Brand from "../models/Marcas.js";
+import Brand from "../models/Brands.js";
 
 import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config.js';
