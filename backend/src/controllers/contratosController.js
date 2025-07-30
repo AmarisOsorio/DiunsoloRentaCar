@@ -2,8 +2,8 @@ const ContratosController = {};
 import { Contratos } from "../models/Contratos.js";
 import reservasModel from "../models/Reservas.js";
 import clientesModel from "../models/Clientes.js";
-import vehiculosModel from "../models/Vehiculos.js";
-import PdfGenerator from "../utils/pdfGenerator.js";
+import vehiculosModel from "../models/Vehicles.js";
+
 
 // Obtener todos los contratos
 ContratosController.getContratos = async (req, res) => {
@@ -13,7 +13,7 @@ ContratosController.getContratos = async (req, res) => {
                 path: 'reservationId',
                 populate: [
                     { path: 'clientID', model: 'Clientes' },
-                    { path: 'vehiculoID', model: 'Vehiculos' }
+                    { path: 'vehiculoID', model: 'Vehicle' }
                 ]
             });
         res.json(contratos);
@@ -31,7 +31,7 @@ ContratosController.getContratoById = async (req, res) => {
                 path: 'reservationId',
                 populate: [
                     { path: 'clientID', model: 'Clientes' },
-                    { path: 'vehiculoID', model: 'Vehiculos' }
+                    { path: 'vehiculoID', model: 'Vehicle' }
                 ]
             });
         
@@ -54,7 +54,7 @@ ContratosController.getContratoByReservation = async (req, res) => {
                 path: 'reservationId',
                 populate: [
                     { path: 'clientID', model: 'Clientes' },
-                    { path: 'vehiculoID', model: 'Vehiculos' }
+                    { path: 'vehiculoID', model: 'Vehicle' }
                 ]
             });
         

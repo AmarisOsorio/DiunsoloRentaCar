@@ -9,7 +9,6 @@ import ForgotPasswordModal from '../../home/loginSection/forgotPassword/ForgotPa
 import { useNavbar } from './hooks/useNavbar.jsx';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import Submenu from '../subMenu/submenu.jsx';
-/*import AdminNavbar from './admin/AdminNavbar';*/
 import { FaChevronDown } from 'react-icons/fa';
 
 const languages = [
@@ -24,11 +23,6 @@ const navLinks = [
 
 const Navbar = () => {
   const { userType, isAuthenticated } = useAuth();
-  
-  // Si ya es admin autenticado, mostrar directamente AdminNavbar sin delay
-  /*if (isAuthenticated && userType === 'admin') {
-    return <AdminNavbar />;
-  }*/
   
   // Para usuarios normales y no autenticados, inicializar hooks del navbar normal
   const {
