@@ -19,6 +19,6 @@
  * OJO: 
  * Este es la estructura de carpetas que estaremos utilizando para la parte móvil así 
  * que procuren seguirla si en dado caso alguno necesitas agregar algo o cambiar algo
- * avisen con tiempo y no ha ultima hora. Gracias!
+ * avisen con tiempo y no ha última hora. Gracias!
  *     
  */
