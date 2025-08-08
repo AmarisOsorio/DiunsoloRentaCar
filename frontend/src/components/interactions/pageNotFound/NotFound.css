@@ -1,0 +1,80 @@
+/***************** CONTENIDO PRINCIPAL ************************/
+.notfound-fullpage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #ffffff;
+  padding: 40px 20px;
+}
+
+.notfound-content-flat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1100px;
+  width: 100%;
+}
+
+/********* IMAGEN **********/
+
+.notfound-image img {
+  max-width: 500px;
+  width: 100%;
+}
+
+/********* ESTILOs DE TEXTO **********/
+
+.notfound-text {
+  text-align: center;
+  color: #1a1a1a;
+  margin-top: 30px;
+  padding: 0 20px;
+  max-width: 500px;
+}
+
+.notfound-text h1 {
+  font-size: 2.5rem;
+  color: #0077cc;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.notfound-text p {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.notfound-sub {
+  display: block;
+  margin-top: 10px;
+}
+
+.notfound-link {
+  font-size: 1rem;
+  color: #0077cc;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.notfound-link:hover {
+  color: #005fa3;
+}
+
+/***************** RESPONSIVE ************************/
+
+@media (min-width: 768px) {
+  .notfound-content-flat {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .notfound-text {
+    text-align: left;
+    margin-left: 40px;
+    margin-top: 0;
+  }
+}
