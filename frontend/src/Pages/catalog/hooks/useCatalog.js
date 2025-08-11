@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 
+const apiUrl = "http://localhost:4000/api/vehicles"
+
 const useCatalog = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/vehicles')
+    fetch(`${apiUrl}`)
       .then(res => res.json())
       .then(data => {
         setVehicles(data);
