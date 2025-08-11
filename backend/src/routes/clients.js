@@ -5,7 +5,7 @@ import clientsController from "../controllers/clientsController.js";
 const router = express.Router();
 
 //Configure Save Directory
-const upload = multer({dest: "public/"})
+const upload = multer({dest: "public/Clients"})
 
 router.route("/")
   .get(clientsController.getClients);
