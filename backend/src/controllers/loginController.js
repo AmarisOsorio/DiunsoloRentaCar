@@ -8,6 +8,11 @@ import { config } from "../config.js";
 //Controller
 const loginController = {};
 
+//Maximum login attempts
+const maxAttempts = 3;
+//Lock time in milliseconds (15 minutes)
+const lockTime = 15 * 60 * 1000;
+
 //Login
 loginController.login = async (req, res) => {
   const { email, password } = req.body;
@@ -105,11 +110,33 @@ loginController.login = async (req, res) => {
       });
       return;
     }
+
+    //Check if user is locked
+    if (userType !== "Admin") {
+        if (userFound.lockTime > Date.now()) {
+            const remainingTIme = Math.ceil((userFound.lockTime - Data.now() / 60000));
+            return res.json({message: `Account locked. Try again in ${remainingTIme} minutes.`});
+        };
+    };
+
     if (userType !== "Admin") {
       const isMatch = await bcryptjs.compare(password, userFound.password);
       if (!isMatch) {
+        //Invalid password, increment login attempts
+          userFound.loginAttempts = (userFound.loginAttempts) + 1;
+          
+          if (userFound.loginAttempts > maxAttempts) {
+              userFound.lockTime = Date.now() + lockTime;
+              await userFound.save();
+              return res.status(403).json({message: "Account locked. Too many failed attempts."});
+          }
         return res.status(400).json({ message: "Contraseña inválida" });
       }
+
+      //Reset login attempts
+      userFound.loginAttempts = 0;
+      userFound.lockTime = null;
+      await userFound.save();
     }
     jsonwebtoken.sign(
       { id: userFound._id, userType },
