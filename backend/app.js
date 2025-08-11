@@ -17,7 +17,7 @@ import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservationsRoutes from "./src/routes/reservas.js";
 import contractsRoutes from "./src/routes/contratos.js";
 import maintenancesRoutes from "./src/routes/mantenimientos.js";
-import brandsRoutes from "./src/routes/marcas.js";
+import brandsRoutes from "./src/routes/brands.js";
 
 // Rutas utilitarias y de comunicación
 import sendWelcomeRoutes from "./src/routes/sendWelcome.js";
@@ -52,6 +52,7 @@ app.use("/api/reservas", reservationsRoutes);
 app.use("/api/contracts", contractsRoutes);
 app.use("/api/maintenances", maintenancesRoutes);
 app.use("/api/brands", brandsRoutes);
+
 
 // Rutas utilitarias y de comunicación
 app.use("/api/sendWelcome", sendWelcomeRoutes);
