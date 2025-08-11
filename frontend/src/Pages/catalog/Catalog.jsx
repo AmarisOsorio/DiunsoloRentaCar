@@ -1,189 +1,175 @@
-import { useState, useMemo } from 'react';
-import './Catalog.css';
-import VehicleCard from '../../components/catalog/VehicleCard/VehicleCard.jsx';
-import VehicleModal from '../../components/catalog/modals/vehicleModal/VehicleModal.jsx';
-import ReservationRequestModal from '../../components/catalog/modals/vehicleModal/reservationRequest/ReservationRequestModal.jsx';
-import CatalogFilters from '../../components/catalog/filters/filters.jsx';
-import catalogBG from '../../assets/bannerCatalog.webp';
-import useCatalog from './hooks/useCatalog.js';
-import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
-
-const Catalog = () => {
-  const { vehicles, loading } = useCatalog();
-  const [filters, setFilters] = useState({
-    brands: [],
-    types: [],
-  });
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Estado y handlers para el modal de reserva
-  // Estado del modal de reserva:
-  // - showReservationModal: controla la visibilidad del modal de reserva
-  // - reservationVehicle: almacena el vehículo a reservar
-  const [showReservationModal, setShowReservationModal] = useState(false);
-  const [reservationVehicle, setReservationVehicle] = useState(null);
-
-  // Abre el modal de reserva para un vehículo específico
-  const handleOpenReservationModal = (vehicle) => {
-    setReservationVehicle(vehicle);
-    setShowReservationModal(true);
-  };
-
-  // Cierra el modal de reserva y limpia el vehículo seleccionado
-  const handleCloseReservationModal = () => {
-    setShowReservationModal(false);
-    setReservationVehicle(null);
-  };
-
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  const {
-    isOpen,
-    selectedVehicle,
-    currentImage,
-    setCurrentImage,
-    openModal,
-    closeModal,
-    getStateClass,
-    changeImage,
-    handleBackdropClick,
-    setSelectedVehicle
-  } = useVehicleModal();
-
-  const filteredVehicles = useMemo(() => {
-    if (!vehicles || !Array.isArray(vehicles)) return [];
-
-    let vehiclesFiltered = [...vehicles];
-
-    // Filter by brand (using v.marca as the brand name)
-    if (filters.brands.length > 0) {
-      vehiclesFiltered = vehiclesFiltered.filter(v => {
-        const brandName = v.marca?.trim();
-        if (!brandName || typeof brandName !== 'string') return false;
-        return filters.brands.includes(brandName);
-      });
-    }
-
-    // Filter by type/class
-    if (filters.types.length > 0) {
-      vehiclesFiltered = vehiclesFiltered.filter(v => {
-        const type = v.clase;
-        if (!type || typeof type !== 'string') return false;
-        return filters.types.includes(type.trim().toLowerCase());
-      });
-    }
-
-    // Filter by state
-    if (filters.estados && filters.estados.length > 0) {
-      vehiclesFiltered = vehiclesFiltered.filter(v => {
-        const state = v.estado;
-        if (!state || typeof state !== 'string') return false;
-        return filters.estados.includes(state);
-      });
-    }
-
-    return vehiclesFiltered;
-  }, [vehicles, filters]);
-
-  if (loading) return <div className="marcas-loading">Cargando vehículos...</div>;
-
-  return (
+  // Importaciones de librerías y componentes necesarios para el catálogo
+  import { useState } from 'react';
+  import './Catalog.css';
+  import VehicleCard from '../../components/catalog/VehicleCard/VehicleCard.jsx';
+  import VehicleModal from '../../components/catalog/modals/vehicleModal/VehicleModal.jsx';
+  import ReservationRequestModal from '../../components/catalog/modals/vehicleModal/reservationRequest/ReservationRequestModal.jsx';
+  import CatalogFilters from '../../components/catalog/filters/filters.jsx';
+  import catalogBG from '../../assets/bannerCatalog.webp';
+  import useCatalog from './hooks/useCatalog.js';
+  import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
+  import { useFilteredVehicles } from '../../components/catalog/filters/hook/usefilters.js';
 
 
-    <>
-      <div
-        className="catalogo-header"
-        style={{ backgroundImage: `url(${catalogBG})` }}
-      >
-        <div className="catalogo-header-overlay">
-          <h1>Catálogo</h1>
-          <p>Explora nuestra variedad de autos disponibles para renta.</p>
+  // Componente principal del catálogo de vehículos
+  const Catalog = () => {
+    // Hook personalizado para obtener los vehículos y el estado de carga
+    const { vehicles, loading } = useCatalog();
+    // Estado para los filtros seleccionados
+    const [filters, setFilters] = useState({
+      brands: [],
+      types: [],
+    });
+    // Estado para mostrar u ocultar el panel de filtros
+    const [showFilters, setShowFilters] = useState(true);
+
+    // Estado y handlers para el modal de reserva
+    // - showReservationModal: controla la visibilidad del modal de reserva
+    // - reservationVehicle: almacena el vehículo a reservar
+    const [showReservationModal, setShowReservationModal] = useState(false);
+    const [reservationVehicle, setReservationVehicle] = useState(null);
+
+    // Función para abrir el modal de reserva para un vehículo específico
+    const handleOpenReservationModal = (vehicle) => {
+      setReservationVehicle(vehicle);
+      setShowReservationModal(true);
+    };
+
+    // Función para cerrar el modal de reserva y limpiar el vehículo seleccionado
+    const handleCloseReservationModal = () => {
+      setShowReservationModal(false);
+      setReservationVehicle(null);
+    };
+
+    // Actualiza el estado de los filtros cuando el usuario selecciona nuevas opciones en el panel de filtros
+    const handleFilterChange = (newFilters) => {
+      setFilters(newFilters);
+    };
+
+    // Desestructura los estados y funciones necesarios para controlar el modal de detalles del vehículo
+    const {
+      isOpen,
+      selectedVehicle,
+      currentImage,
+      setCurrentImage,
+      openModal,
+      closeModal,
+      getStateClass,
+      changeImage,
+      handleBackdropClick
+      } = useVehicleModal();
+
+    // Obtiene la lista de vehículos filtrados según los filtros seleccionados
+    const filteredVehicles = useFilteredVehicles(vehicles, filters);
+
+    // Muestra un mensaje de carga mientras se obtienen los vehículos del backend
+    if (loading) return <div className="brands-loading">Cargando vehículos...</div>;
+
+    return (
+      <>
+        {/* Encabezado del catálogo con imagen de fondo */}
+        <div
+          className="catalog-header"
+          style={{ backgroundImage: `url(${catalogBG})` }}
+        >
+          <div className="catalog-header-overlay">
+            <h1>Descubre tu próximo viaje sobre ruedas</h1>
+            <p>Explora nuestra flota, conoce cada detalle y reserva el vehículo perfecto en solo unos clics.</p>
+          </div>
         </div>
-      </div>
 
-      <section className="catalogo-content">
-        <main className="catalogo-main">
-          <div className="catalogo-header-info">
-            <h2>Vehículos</h2>
-            <div className="resultados-filtros-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-              <p className="resultados-count" style={{ margin: 0, order: 2 }}>
-                {filteredVehicles.length} vehículo
-                {filteredVehicles.length !== 1 ? 's' : ''} encontrado
-                {filteredVehicles.length !== 1 ? 's' : ''}
-              </p>
-              <button
-                className={`btn-filtros-toggle${showFilters ? ' active' : ''}`}
-                onClick={() => setShowFilters((prev) => !prev)}
-                style={{ order: 1, marginLeft: 0, minWidth: '180px', justifyContent: 'center', fontSize: '1.08rem', padding: '0.6rem 1.2rem', display: 'inline-flex' }}
-              >
-                <span className="btn-filtros-toggle-content">
-                  <svg width="22" height="22" fill="#fff" className="btn-filtros-toggle-icon" viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm2 7h14v2H5v-2zm4 7h6v2H9v-2z"/></svg>
-                  {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
-                </span>
-              </button>
-            </div>
-          </div>
-          {/* Panel de filtros debajo del header-info cuando está activo */}
-          {showFilters && (
-            <div className="filtros-container anim-filtros-in filtros-container-desktop">
-              <CatalogFilters
-                vehicles={vehicles}
-                onFilterChange={handleFilterChange}
-                onClose={() => setShowFilters(false)}
-                ordenFiltros={['brands', 'types', 'estados']}
-              />
-            </div>
-          )}
-          <div className="vehiculos-grid">
-            {Array.isArray(filteredVehicles) && filteredVehicles.length > 0 ? (
-              filteredVehicles.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle._id}
-                  vehicle={vehicle}
-                  variant="catalogo"
-                  showPrice={false}
-                  onClick={() => openModal(vehicle)}
-                  onReserve={handleOpenReservationModal}
-                />
-              ))
-            ) : (
-              <div className="no-vehiculos">
-                <p>No se encontraron vehículos que coincidan con los filtros seleccionados.</p>
-                <p>Intenta ajustar los filtros para ver más opciones.</p>
+        {/* Cuerpo principal del catálogo */}
+        <section className="catalog-content">
+          <main className="catalog-main">
+            {/* Cabecera de la sección de resultados y filtros */}
+            <div className="catalog-header-info">
+              <div className="catalog-header-title-group">
+                <h2 className="catalog-header-title">Catálogo</h2>
+                <span className="catalog-header-subtitle">Con amplia variedad en vehículos</span>
               </div>
-            )}
-          </div>
-        </main>
-      </section>
+              {/* Fila de filtros: botón para mostrar/ocultar y contador de resultados */}
+              <div className="filters-row">
+                <button
+                  className={`btn-filters-toggle${showFilters ? ' active' : ''}`}
+                  onClick={() => setShowFilters((prev) => !prev)}
+                >
+                  <span className="btn-filters-toggle-content">
+                    <svg width="22" height="22" fill="#fff" className="btn-filters-toggle-icon" viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm2 7h14v2H5v-2zm4 7h6v2H9v-2z"/></svg>
+                    {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                  </span>
+                </button>
+                <p className="results-count">
+                  {filteredVehicles.length} vehículo{filteredVehicles.length !== 1 ? 's' : ''} encontrado{filteredVehicles.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <div className="catalog-header-separator" />
+            </div>
+            
+            {/* Layout de filtros a la izquierda y grid a la derecha */}
+            <div className="catalog-layout">
+              {/* Panel de filtros a la izquierda */}
+              {showFilters && (
+                <aside className="filters-container">
+                  <CatalogFilters
+                    vehicles={vehicles}
+                    onFilterChange={handleFilterChange}
+                    onClose={() => setShowFilters(false)}
+                    ordenFiltros={['brands', 'types', 'estados']}
+                  />
+                </aside>
+              )}
+              {/* Grid de tarjetas de vehículos a la derecha */}
+              <div className="vehicles-grid">
+                {Array.isArray(filteredVehicles) && filteredVehicles.length > 0 ? (
+                  filteredVehicles.map((vehicle) => (
+                    <VehicleCard
+                      key={vehicle._id}
+                      vehicle={vehicle}
+                      variant="catalog"
+                      showPrice={false}
+                      onClick={() => openModal(vehicle)}
+                      onReserve={handleOpenReservationModal}
+                    />
+                  ))
+                ) : (
+                  <div className="no-vehicles">
+                    <p>No se encontraron vehículos que coincidan con los filtros seleccionados.</p>
+                    <p>Intenta ajustar los filtros para ver más opciones.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
+        </section>
 
-      <VehicleModal
-        vehicle={selectedVehicle}
-        isOpen={isOpen}
-        onClose={closeModal}
-        currentImage={currentImage}
-        setCurrentImage={setCurrentImage}
-        getStateClass={getStateClass}
-        changeImage={changeImage}
-        handleBackdropClick={handleBackdropClick}
-        onOpenReservationRequest={handleOpenReservationModal}
-      />
-
-      {/* Modal de reserva */}
-      {showReservationModal && (
-        <ReservationRequestModal
-          isOpen={showReservationModal}
-          onClose={handleCloseReservationModal}
-          vehicle={reservationVehicle}
-          onSubmit={() => {}}
-          loading={false}
-          error={null}
-          success={false}
+        {/* Modal de detalles del vehículo */}
+        <VehicleModal
+          vehicle={selectedVehicle}
+          isOpen={isOpen}
+          onClose={closeModal}
+          currentImage={currentImage}
+          setCurrentImage={setCurrentImage}
+          getStateClass={getStateClass}
+          changeImage={changeImage}
+          handleBackdropClick={handleBackdropClick}
+          onOpenReservationRequest={handleOpenReservationModal}
         />
-      )}
-    </>
-  );
-};
 
-export default Catalog;
+        {/* Modal de reserva de vehículo */}
+        {showReservationModal && (
+          <ReservationRequestModal
+            isOpen={showReservationModal}
+            onClose={handleCloseReservationModal}
+            vehicle={reservationVehicle}
+            onSubmit={() => {}}
+            loading={false}
+            error={null}
+            success={false}
+          />
+        )}
+      </>
+    );
+  };
+
+  // Exporta el componente principal del catálogo
+  export default Catalog;

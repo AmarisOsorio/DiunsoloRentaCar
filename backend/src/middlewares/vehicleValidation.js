@@ -28,48 +28,48 @@ export const validateVehicleData = (req, res, next) => {
   if (isUpdate) {
     console.log('🔍 Validación para actualización - permitiendo campos parciales');
     // Para updates, solo validar que los campos presentes sean válidos
-    const { anio, capacidad, precioPorDia } = req.body;
-    
-    if (anio && (isNaN(parseInt(anio)) || parseInt(anio) < 1900 || parseInt(anio) > new Date().getFullYear() + 1)) {
+    const { year, capacity, dailyPrice } = req.body;
+
+    if (year && (isNaN(parseInt(year)) || parseInt(year) < 1900 || parseInt(year) > new Date().getFullYear() + 1)) {
       return res.status(400).json({
         message: 'El año debe ser válido',
-        field: 'anio'
+        field: 'year'
       });
     }
-    
-    if (capacidad && (isNaN(parseInt(capacidad)) || parseInt(capacidad) < 1 || parseInt(capacidad) > 50)) {
+
+    if (capacity && (isNaN(parseInt(capacity)) || parseInt(capacity) < 1 || parseInt(capacity) > 50)) {
       return res.status(400).json({
         message: 'La capacidad debe ser entre 1 y 50',
-        field: 'capacidad'
+        field: 'capacity'
       });
     }
-    
-    if (precioPorDia && (isNaN(parseFloat(precioPorDia)) || parseFloat(precioPorDia) <= 0)) {
+
+    if (dailyPrice && (isNaN(parseFloat(dailyPrice)) || parseFloat(dailyPrice) <= 0)) {
       return res.status(400).json({
         message: 'El precio por día debe ser un número positivo',
-        field: 'precioPorDia'
+        field: 'dailyPrice'
       });
     }
-    
+
     next();
     return;
   }
-  
-  // Para creación (POST), validar todos los campos requeridos
+
+  // Para creación (POST), validar todos los campos requeridos (en inglés)
   const required = [
-    'nombreVehiculo', 'precioPorDia', 'placa', 'idMarca', 
-    'clase', 'color', 'anio', 'capacidad', 'modelo', 
-    'numeroMotor', 'numeroChasisGrabado', 'numeroVinChasis'
+    'vehicleName', 'dailyPrice', 'plate', 'brandId',
+    'vehicleClass', 'color', 'year', 'capacity', 'model',
+    'engineNumber', 'chassisNumber', 'vinNumber'
   ];
-  
+
   const missing = required.filter(field => !req.body[field]);
-  
+
   if (missing.length > 0) {
     return res.status(400).json({
       message: 'Faltan campos requeridos',
       missing: missing
     });
   }
-  
+
   next();
 };

@@ -206,16 +206,10 @@ class ContractGenerator {
      */
     static async saveContractPDF(pdfBuffer, filename) {
         try {
+            // Guardar el PDF en la ruta uploads, pero NO crear el folder si no existe
             const uploadsDir = path.join(process.cwd(), 'uploads');
-            
-            // Crear directorio uploads si no existe
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-            }
-            
             const filePath = path.join(uploadsDir, filename);
             fs.writeFileSync(filePath, pdfBuffer);
-            
             return `/uploads/${filename}`;
         } catch (error) {
             console.error('Error guardando PDF:', error);

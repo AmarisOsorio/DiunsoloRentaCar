@@ -51,7 +51,7 @@ const vehicleSchema = new Schema({
     },
     brandId: {
         type: Schema.Types.ObjectId,
-        ref: 'Brands',
+        ref: 'Marcas',
         required: true
     },
     vehicleClass: {

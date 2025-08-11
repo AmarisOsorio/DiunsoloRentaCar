@@ -1,324 +1,246 @@
-/* Modal backdrop */
-.reservation-modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-/* Modal container */
-.reservation-modal-container {
-  position: relative;
-  background-color: white;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-/* Close button */
-.reservation-modal-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: rgba(0, 0, 0, 0.1);
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
-  color: #666;
-  transition: background-color 0.3s;
-}
-
-.reservation-modal-close:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-/* Modal content */
-.reservation-modal-content {
-  padding: 2rem;
-}
-
-/* Modal header */
-.reservation-modal-header {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.reservation-title {
-  margin: 0 0 1rem 0;
-  color: #333;
-  font-size: 1.5rem;
-}
-
-.vehiculo-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.vehiculo-thumbnail {
-  width: 80px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-.vehiculo-details h3 {
-  margin: 0;
-  color: #333;
-  font-size: 1.1rem;
-}
-
-.vehiculo-details p {
-  margin: 0.25rem 0;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.vehiculo-capacity {
-  color: #007bff !important;
-  font-weight: 500;
-}
-
-/* Modal body */
-.reservation-modal-body {
-  min-height: 200px;
-}
-
-/* Form styles */
-.reservation-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-/* Form sections */
-.form-section {
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #007bff;
-}
-
-.section-title {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.section-description {
-  margin: 0 0 1rem 0;
-  color: #666;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-/* Form groups and rows */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.form-input,
-.form-textarea {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: border-color 0.3s;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-.form-input.error,
-.form-textarea.error {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
-}
-
-.form-textarea {
-  resize: none;
-  min-height: 80px;
-}
-
-/* Field errors */
-.field-error {
-  color: #dc3545;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-/* Form actions */
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background-color: #545b62;
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Success message */
-.success-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 2rem;
-  gap: 1rem;
-}
-
-.success-icon {
-  width: 60px;
-  height: 60px;
-  background-color: #28a745;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.success-message h3 {
-  margin: 0;
-  color: #28a745;
-  font-size: 1.3rem;
-}
-
-.success-message p {
-  margin: 0;
-  color: #666;
-  font-size: 1rem;
-}
-
-/* Error message */
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 6px;
-  color: #721c24;
-  font-size: 0.9rem;
-}
-
-.error-icon {
-  font-size: 1.1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .reservation-modal-container {
-    margin: 1rem;
-    max-width: none;
-  }
-  
-  .reservation-modal-content {
-    padding: 1.5rem;
-  }
-  
-  .vehiculo-info {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .form-section {
-    padding: 1rem;
-  }
-  
+@media (max-width: 1024px) {
   .form-row {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  
-  .form-actions {
     flex-direction: column;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
+    gap: 0.7rem;
     width: 100%;
   }
+  .form-group {
+    width: 100%;
+    align-items: stretch;
+  }
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .layout-flex {
+    flex-direction: column;
+    gap: 1.2rem;
+    align-items: stretch;
+  }
+  .reservation-form-wrapper {
+    order: 1;
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
+    padding: 0 8px;
+    max-height: 60vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .vehicle-gallery-info-wrapper {
+    order: 2;
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
+    padding: 0 8px;
+    max-height: none;
+    overflow-y: visible;
+  }
+  .vehicle-gallery-section {
+    max-width: 100vw;
+    padding: 0;
+  }
+  .unified-carousel-container {
+    max-width: 100vw;
+    min-height: 180px;
+    padding: 8px 0;
+  }
+  .view-gallery {
+    max-width: 100vw;
+    height: 160px;
+    border-radius: 10px;
+  }
+  .vehicle-info-section {
+    padding: 12px 8px;
+    box-shadow: none;
+    border-radius: 8px;
+    background: #f7f7f7;
+  }
+  .reservation-form {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.2rem 0.5rem;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+  .vehicle-gallery-info-wrapper {
+    margin-top: 12px;
+  }
+  .vehicle-info-section {
+    margin-bottom: 16px;
+  }
+}
+/* Layout principal flex para la sección de detalles */
+.layout-flex {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.vehicle-details-content.layout-flex {
+  overflow: visible !important;
+}
+
+.vehicle-gallery-info-wrapper {
+  flex: 1 1 350px;
+  max-width: 400px;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Galería equilibrada: ancho mayor, alto menor */
+.vehicle-gallery-section {
+  width: 100%;
+  max-width: 420px;
+}
+.unified-carousel-container {
+  width: 100%;
+  max-width: 350px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.view-gallery {
+  width: 100%;
+  max-width: 340px;
+  height: 100px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.vehicle-info-section {
+  width: 100%;
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 1rem 0.8rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  overflow: visible;
+}
+.details-section h4 {
+  margin-bottom: 0.7rem;
+}
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+}
+.detail-label {
+  font-weight: 500;
+  color: #555;
+}
+.detail-value {
+  color: #222;
+}
+
+.reservation-form-wrapper {
+  flex: 1 1 350px;
+  max-width: 520px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto; /* Centra el cuadro horizontalmente */
+}
+.reservation-form {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto; /* Centra el cuadro dentro del wrapper */
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+  padding: 2.2rem 2rem; /* Más espacio interno */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* Los elementos ocupan todo el ancho */
+}
+.form-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+.form-input {
+  margin-top: 0.3rem;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 1rem;
+}
+.form-input.error {
+  border-color: #e74c3c;
+}
+.field-error {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.btn-primary {
+  background: #1565c0;
+  color: #fff;
+  border: 1.5px solid #1565c0;
+  border-radius: 7px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+  cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #0d47a1;
+  border-color: #0d47a1;
+  box-shadow: 0 4px 12px rgba(21,101,192,0.13);
+}
+.btn-secondary {
+  background: #f7f7f7;
+  color: #333;
+  border: 1.5px solid #bdbdbd;
+  border-radius: 7px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(189,189,189,0.08);
+  cursor: pointer;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+  border-color: #9e9e9e;
+  box-shadow: 0 4px 12px rgba(189,189,189,0.13);
+}
+.btn-primary:disabled, .btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
