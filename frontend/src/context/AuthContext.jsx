@@ -389,6 +389,29 @@ export const AuthProvider = ({ children }) => {
     }
   }, [API_URL, invalidateReservations]);
 
+  // Función para crear una reserva
+  const createReservation = useCallback(async (reservaData) => {
+    try {
+      const res = await fetch(`${API_URL}/reservas`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reservaData)
+      });
+      const data = await res.json();
+      if (res.ok && (data.success || data.reservaId)) {
+        // Invalidar las reservas para que se recarguen
+        invalidateReservations();
+        return { success: true, reservaId: data.reservaId, message: data.message || 'Reserva creada correctamente' };
+      }
+      return { success: false, message: data.message || 'Error al crear la reserva' };
+    } catch (error) {
+      return { success: false, message: 'Error de conexión' };
+    }
+  }, [API_URL, invalidateReservations]);
+
   // Función para eliminar una reserva
   const deleteReservation = useCallback(async (reservaId) => {
     try {
@@ -436,10 +459,10 @@ export const AuthProvider = ({ children }) => {
       getUserReservations,
       updateReservation,
       deleteReservation,
+      createReservation,
       reservasInvalidated,
       invalidateReservations,
       markReservationsAsValid
-      // , requestEmailChange, verifyEmailChange
     }}>
       {children}
     </AuthContext.Provider>

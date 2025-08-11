@@ -54,12 +54,9 @@ ReservasController.insertReservas = async (req, res) => {
                 telefono: usuarioAutenticado.telefono,
                 correoElectronico: usuarioAutenticado.correo
             }];
-            console.log('Usando datos del usuario autenticado como fallback:', clienteData);
         } catch (err) {
-            return res.status(500).json({ message: "Error buscando usuario autenticado", error: err.message });
+            return res.status(500).json({ message: "Error buscando usuario autenticado" });
         }
-    } else {
-        console.log('Usando datos del cliente del formulario:', clienteData);
     }
 
     const newReserva = new reservasModel({
@@ -139,7 +136,7 @@ ReservasController.insertReservas = async (req, res) => {
             }
             
             await nuevoContrato.save();
-            console.log(`Contrato generado automáticamente para la reserva ${savedReserva._id}`);
+            // Contrato generado correctamente
         }
         
     } catch (contractError) {
@@ -227,11 +224,9 @@ ReservasController.getUserReservations = async (req, res) => {
                 imagenVehiculo: vehiculo.imagenLateral || '',
             };
         });
-        
         res.json({ success: true, reservas: reservasAdaptadas });
     } catch (error) {
-        console.error('Error al obtener reservas del usuario:', error);
-        res.status(500).json({ success: false, message: 'Error al obtener reservas' });
+        res.status(500).json({ success: false, message: 'No se pudieron obtener las reservas.' });
     }
 };
 

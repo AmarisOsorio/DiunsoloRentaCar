@@ -1,253 +1,219 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../../../../../context/AuthContext';
+const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
+  // Obtener autenticación y datos de usuario
+  const { isAuthenticated, userInfo, createReservation } = useAuth();
+  // Estado para el nombre de la marca
+  const [brandName, setBrandName] = useState('');
 
-const useReservationRequestModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // Estado local para los datos del formulario de reserva
+  const [formData, setFormData] = useState({
+    startDate: '',
+    endDate: '',
+    clientName: '',
+    clientPhone: '',
+    clientEmail: ''
+  });
+
+  // Fecha mínima (hoy)
+  const today = new Date().toISOString().split('T')[0];
+
+  // Galería de imágenes del vehículo
+  const createUnifiedImageArray = () => {
+    const unifiedImages = [];
+    if (vehicle) {
+      if (vehicle.mainViewImage || vehicle.imagenVista3_4) {
+        unifiedImages.push(vehicle.mainViewImage || vehicle.imagenVista3_4);
+      }
+      if (vehicle.sideImage || vehicle.imagenLateral) {
+        const sideImg = vehicle.sideImage || vehicle.imagenLateral;
+        if (!unifiedImages.includes(sideImg)) {
+          unifiedImages.push(sideImg);
+        }
+      }
+      const galleryArr = vehicle.galleryImages || vehicle.imagenes || [];
+      if (galleryArr.length > 0) {
+        galleryArr.forEach((img) => {
+          if (img && !unifiedImages.includes(img)) {
+            unifiedImages.push(img);
+          }
+        });
+      }
+    }
+    return { images: unifiedImages };
+  };
+
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { images } = createUnifiedImageArray();
+  const hasImages = images.length > 0;
+  const nextImage = () => {
+    if (images.length > 1) setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+  const prevImage = () => {
+    if (images.length > 1) setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const [validationErrors, setValidationErrors] = useState({});
+  const [loading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
-  const { userInfo, invalidateReservations, isAuthenticated, getProfile } = useAuth();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-  const openModal = () => {
-    setIsOpen(true);
-    setError(null);
-    setSuccess(false);
-  };
-
-  const closeModal = () => {
-    setIsOpen(false);
-    setError(null);
-    setSuccess(false);
-  };
-
-  const submitReservation = async (reservationData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Verificar autenticación
-      if (!isAuthenticated) {
-        throw new Error('Debes iniciar sesión para hacer una reserva');
-      }
-
-      console.log('Estado de autenticación:', { isAuthenticated, userInfo });
-
-      // Inicializar con userInfo del contexto si está disponible
-      let currentUserInfo = userInfo;
-      console.log('UserInfo inicial del contexto:', currentUserInfo);
-      
-      // Si no hay userInfo en el contexto, intentar obtener el perfil
-      if (!currentUserInfo || !currentUserInfo._id) {
-        try {
-          console.log('Obteniendo perfil del usuario...');
-          const profileResult = await getProfile();
-          console.log('Resultado del perfil:', profileResult);
-          
-          if (profileResult && profileResult.success && profileResult.user && profileResult.user._id) {
-            currentUserInfo = profileResult.user;
-            console.log('Perfil obtenido exitosamente:', currentUserInfo);
-          } else {
-            console.log('Error al obtener perfil o perfil no válido:', profileResult);
-          }
-        } catch (profileError) {
-          console.error('Error al obtener perfil:', profileError);
+  // Autocompletar datos del usuario autenticado al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      setValidationErrors({});
+      if (isAuthenticated && userInfo) {
+        let fullName = '';
+        if (userInfo.nombres && userInfo.apellidos) {
+          fullName = `${userInfo.nombres} ${userInfo.apellidos}`.trim();
         }
+        setFormData(prev => ({
+          ...prev,
+          clientName: fullName,
+          clientPhone: userInfo.telefono || userInfo.phone || '',
+          clientEmail: userInfo.correo || userInfo.email || '',
+        }));
       }
+    }
+  }, [isOpen, isAuthenticated, userInfo]);
 
-      // Verificar que tenemos el ID del usuario
-      console.log('Verificando currentUserInfo:', currentUserInfo);
-      console.log('currentUserInfo._id:', currentUserInfo?._id);
-      console.log('Tipo de _id:', typeof currentUserInfo?._id);
-      
-      if (!currentUserInfo) {
-        console.error('currentUserInfo es null o undefined');
-        throw new Error('No se pudo obtener la información del usuario. Por favor, inicia sesión nuevamente.');
+  // Manejar cambios en los campos del formulario
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Validar el formulario y devolver errores en español
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.startDate) {
+      errors.startDate = 'La fecha de inicio es requerida';
+    }
+    if (!formData.endDate) {
+      errors.endDate = 'La fecha de devolución es requerida';
+    }
+    if (formData.startDate && formData.endDate) {
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      if (endDate <= startDate) {
+        errors.endDate = 'La fecha de devolución debe ser posterior a la fecha de inicio';
       }
-      
-      if (!currentUserInfo._id && !currentUserInfo.id) {
-        console.error('UserInfo sin _id ni id válido:', currentUserInfo);
-        console.error('Propiedades disponibles:', Object.keys(currentUserInfo));
-        throw new Error('Información de usuario incompleta. Por favor, inicia sesión nuevamente.');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (startDate < today) {
+        errors.startDate = 'La fecha de inicio no puede ser en el pasado';
       }
-
-      // Usar _id o id como fallback
-      const userId = currentUserInfo._id || currentUserInfo.id;
-      console.log('ID del usuario a usar:', userId);
-
-      // Validar datos de reserva
-      if (!reservationData.vehiculoID) {
-        throw new Error('ID del vehículo no válido');
+    }
+    if (!formData.clientName.trim()) {
+      errors.clientName = 'El nombre del cliente es requerido';
+    }
+    if (!formData.clientPhone.trim()) {
+      errors.clientPhone = 'El teléfono del cliente es requerido';
+    } else {
+      const phoneDigits = formData.clientPhone.replace(/\D/g, '');
+      if (!/^\d{8}$/.test(phoneDigits)) {
+        errors.clientPhone = 'Completa el teléfono con 8 dígitos numéricos';
       }
+    }
+    if (!formData.clientEmail.trim()) {
+      errors.clientEmail = 'El correo electrónico del cliente es requerido';
+    } else if (!/\S+@\S+\.\S+/.test(formData.clientEmail)) {
+      errors.clientEmail = 'El correo electrónico no es válido';
+    }
+    return errors;
+  };
 
-      if (!reservationData.fechaInicio || !reservationData.fechaDevolucion) {
-        throw new Error('Las fechas de inicio y devolución son requeridas');
-      }
+  // Restablecer el formulario
+  const resetForm = () => {
+    setFormData({
+      startDate: '',
+      endDate: '',
+      clientName: '',
+      clientPhone: '',
+      clientEmail: ''
+    });
+    setValidationErrors({});
+  };
 
-      // Validar que la fecha de devolución sea posterior a la fecha de inicio
-      const fechaInicio = new Date(reservationData.fechaInicio);
-      const fechaDevolucion = new Date(reservationData.fechaDevolucion);
-      
-      if (fechaDevolucion <= fechaInicio) {
-        throw new Error('La fecha de devolución debe ser posterior a la fecha de inicio');
-      }
-
-      // Validar que las fechas no sean en el pasado
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      
-      if (fechaInicio < hoy) {
-        throw new Error('La fecha de inicio no puede ser en el pasado');
-      }
-
-      // Validar datos del cliente de la reserva
-      if (!reservationData.clienteReserva || 
-          !reservationData.clienteReserva.nombre || 
-          !reservationData.clienteReserva.telefono || 
-          !reservationData.clienteReserva.correoElectronico) {
-        throw new Error('Todos los datos del cliente son requeridos');
-      }
-
-      console.log('UserInfo válido:', currentUserInfo);
-      console.log('ReservationData:', reservationData);
-
-      console.log('=== DATOS DE LA RESERVA ===');
-      console.log('Usuario autenticado (quien hace la reserva):', {
-        id: userId,
-        nombre: currentUserInfo.nombre || currentUserInfo.nombres,
-        correo: currentUserInfo.correo || currentUserInfo.email
-      });
-      console.log('Cliente beneficiario (datos del formulario):', reservationData.clienteReserva);
-      console.log('================================');
-
-      // Enviar los datos del cliente beneficiario en el array 'cliente'
-      const dataToSend = {
-        clientID: userId, // ID del usuario autenticado que hace la reserva
-        vehiculoID: reservationData.vehiculoID,
-        fechaInicio: reservationData.fechaInicio,
-        fechaDevolucion: reservationData.fechaDevolucion,
-        comentarios: reservationData.comentarios || '',
-        estado: 'Pendiente',
-        precioPorDia: reservationData.precioPorDia || 0,
-        // Array cliente con los datos del formulario (cliente beneficiario)
-        cliente: [{
-          nombre: reservationData.clienteReserva.nombre,
-          telefono: reservationData.clienteReserva.telefono,
-          correoElectronico: reservationData.clienteReserva.correoElectronico
-        }]
-      };
-
-      console.log('=== ESTRUCTURA ENVIADA AL BACKEND ===');
-      console.log('clientID (usuario autenticado):', dataToSend.clientID);
-      console.log('cliente (array con datos del formulario):', dataToSend.cliente);
-      console.log('RESULTADO: clientID = usuario autenticado, cliente = datos del formulario');
-      console.log('=====================================');
-
-      console.log('Datos a enviar:', dataToSend);
-      console.log('URL de la API:', `${API_URL}/reservas`);
-
-      const response = await fetch(`${API_URL}/reservas`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSend)
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
-      const result = await response.json();
-      console.log('Respuesta del servidor:', result);
-
-      if (!response.ok) {
-        // Manejar diferentes tipos de errores
-        if (response.status === 401) {
-          throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
-        } else if (response.status === 400) {
-          throw new Error(result.message || 'Datos de reserva inválidos');
-        } else if (response.status === 409) {
-          throw new Error('El vehículo ya está reservado para esas fechas');
+  // Enviar la reserva (dummy, solo para mantener la estructura)
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      setError('Usuario no autenticado al intentar enviar reserva');
+      return;
+    }
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+    // Enviar la reserva al backend
+    setError(null);
+    setValidationErrors({});
+    setSuccess(false);
+    // Construir datos para el backend
+    const reservaData = {
+      clientID: userInfo?._id,
+      vehiculoID: vehicle?._id,
+      fechaInicio: formData.startDate,
+      fechaDevolucion: formData.endDate,
+      estado: 'Pendiente',
+      precioPorDia: vehicle?.pricePerDay || 0,
+      cliente: [{
+        nombre: formData.clientName,
+        telefono: formData.clientPhone,
+        correoElectronico: formData.clientEmail
+      }]
+    };
+    // Llamar a createReservation del contexto
+    createReservation(reservaData)
+      .then(result => {
+        if (result.success || result.reservaId) {
+          setSuccess(true);
+          setTimeout(() => {
+            setSuccess(false);
+            resetForm();
+            if (onClose) onClose();
+          }, 1800);
         } else {
-          throw new Error(result.message || 'Error al enviar la solicitud');
+          setError(result.message || 'No se pudo crear la reserva.');
         }
-      }
-
-      // Verificar si el backend retorna success o si el mensaje indica éxito
-      if (result.message && result.message.includes('saved')) {
-        console.log('Reserva creada exitosamente:', result);
-        setSuccess(true);
-        
-        // Invalidar las reservas para que se recarguen
-        if (invalidateReservations) {
-          invalidateReservations();
-        }
-        
-        // Cerrar modal después de 2 segundos
-        setTimeout(() => {
-          closeModal();
-        }, 2000);
-        
-        return result;
-      } else {
-        throw new Error(result.message || 'Error al procesar la reserva');
-      }
-      
-    } catch (err) {
-      console.error('Error en submitReservation:', err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkExistingReservations = async (vehiculoId) => {
-    try {
-      console.log('Verificando reservas existentes...');
-      const response = await fetch(`${API_URL}/reservas/mis-reservas`, {
-        method: 'GET',
-        credentials: 'include'
+      })
+      .catch(err => {
+        setError('Error al crear la reserva.');
       });
-      
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.reservas) {
-          // Verificar si hay reservas pendientes o activas para este vehículo
-          const reservaExistente = result.reservas.find(reserva => 
-            reserva.vehiculoID._id === vehiculoId && 
-            (reserva.estado === 'Pendiente' || reserva.estado === 'Activa')
-          );
-          
-          if (reservaExistente) {
-            console.log('Reserva existente encontrada:', reservaExistente);
-            return {
-              hasExisting: true,
-              reserva: reservaExistente
-            };
-          }
-        }
-      }
-      
-      return { hasExisting: false };
-    } catch (error) {
-      console.error('Error verificando reservas:', error);
-      return { hasExisting: false }; // En caso de error, permitir continuar
-    }
   };
 
   return {
-    isOpen,
-    loading,
-    error,
-    success,
-    openModal,
-    closeModal,
-    submitReservation,
-    checkExistingReservations
+  formData,
+  setFormData,
+  validationErrors,
+  setValidationErrors,
+  loading,
+  error,
+  success,
+  handleSubmit,
+  handleInputChange,
+  resetForm,
+  isAuthenticated,
+  today,
+  images,
+  hasImages,
+  currentImageIndex,
+  setCurrentImageIndex,
+  nextImage,
+  prevImage,
   };
-};
+}
 
 export default useReservationRequestModal;

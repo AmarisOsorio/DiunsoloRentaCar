@@ -1,7 +1,7 @@
 // Importaciones principales de React y los íconos usados en el modal
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
-import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar, FaDollarSign, FaUsers, FaCog, FaDownload } from 'react-icons/fa';
+import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar } from 'react-icons/fa';
 import './VehicleModal.css';
 
 
@@ -69,14 +69,6 @@ const VehicleModal = ({
     if ((index === 0 && !vehicle.mainViewImage && vehicle.sideImage) ||
         (index === 1 && vehicle.mainViewImage && vehicle.sideImage)) return 'view-side';
     return 'view-gallery';
-  };
-
-  // Formatea un precio en formato moneda USD (no se usa en esta versión)
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('es-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
   };
 
   // Navega a la siguiente imagen del carrusel
@@ -190,7 +182,7 @@ const VehicleModal = ({
                   {/* Marca */}
                   <div className="detail-item">
                     <span className="detail-label">Marca:</span>
-                    <span className="detail-value">{vehicle.brandName}</span>
+                    <span className="detail-value">{vehicle.brandId?.nombreMarca}</span>
                   </div>
                   {/* Modelo */}
                   <div className="detail-item">
@@ -232,14 +224,13 @@ const VehicleModal = ({
             </button>
           ) : (
             <button
-              className="request-reservation-btn"
+              className="login-required-btn"
               onClick={() => {
                 if (typeof onOpenLoginModal === 'function') {
                   onOpenLoginModal();
                 }
               }}
               title="Inicia sesión para reservar"
-              style={{ background: '#f59e42', color: '#fff' }}
             >
               <FaCalendar />
               Inicia sesión para reservar

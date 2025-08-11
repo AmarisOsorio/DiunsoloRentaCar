@@ -34,7 +34,7 @@ Este proyecto está diseñado para un emprendimiento de **alquileres de vehícul
 - Eduardo Lima
 - Christhian Sánchez
 - Edenilson Amaya
-- José Irhaeta
+- José Iraheta
 
 ---
 ## 📝 Pasos previos antes de ejecutar el frontend y backend

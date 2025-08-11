@@ -48,7 +48,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/employees", employeesRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
-app.use("/api/reservations", reservationsRoutes);
+app.use("/api/reservas", reservationsRoutes);
 app.use("/api/contracts", contractsRoutes);
 app.use("/api/maintenances", maintenancesRoutes);
 app.use("/api/brands", brandsRoutes);
