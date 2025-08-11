@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Navbar from './components/navegation/navbar/Navbar';
 import Footer from './components/navegation/footer/Footer';
 import ProtectedRoute from './components/navegation/protectedRoutes/ProtectedRoute';
+import ErrorNotFound from './components/interactions/pageNotFound/NotFound.jsx'
 
 /*********** M O D A L S ***************/
 import LoginModal from './components/home/loginSection/login/LoginModal';
@@ -67,8 +68,11 @@ const AppContent = () => {
             </ProtectedRoute>
           } />
           
+          {/****** Ruta que permite que mostrar la página de error cuando se ingresa a una dirección erronea *******/}
+          <Route path="*" element={<ErrorNotFound />} />
 
         </Routes>
+        
         <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
         <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
         <ForgotPasswordModal open={showForgotModal} onClose={() => { setShowForgotModal(false); setShowLoginModal(true); }} />
