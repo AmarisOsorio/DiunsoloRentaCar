@@ -3,7 +3,6 @@ import Vehicle from "../models/Vehicles.js";
 import Brand from "../models/Marcas.js";
 
 import { v2 as cloudinary } from 'cloudinary';
-import pdfGenerator from '../utils/pdfGenerator.js';
 import { config } from '../config.js';
 
 // Cloudinary configuration (usa config.js que ya tiene dotenv.config())

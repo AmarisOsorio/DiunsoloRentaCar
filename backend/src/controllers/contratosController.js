@@ -3,7 +3,7 @@ import { Contratos } from "../models/Contratos.js";
 import reservasModel from "../models/Reservas.js";
 import clientesModel from "../models/Clientes.js";
 import vehiculosModel from "../models/Vehicles.js";
-import PdfGenerator from "../utils/pdfGenerator.js";
+
 
 // Obtener todos los contratos
 ContratosController.getContratos = async (req, res) => {
