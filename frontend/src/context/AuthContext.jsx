@@ -48,13 +48,13 @@ export const AuthProvider = ({ children }) => {
     loadUserProfile();
   }, [isAuthenticated, userType, userInfo]);
 
-  const login = async ({ correo, contraseña }) => {
+  const login = async ({ email, password }) => {
     try {
       const res = await fetch(`${API_URL}/login`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo, contraseña })
+        body: JSON.stringify({ email, password })
       });
       const data = await res.json();
 

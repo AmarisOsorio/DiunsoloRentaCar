@@ -19,11 +19,11 @@ const useRegisterModal = () => {
   } = useForm({
     mode: 'onBlur',
     defaultValues: {
-      nombres: '',
-      apellidos: '',
-      contraseña: '', // changed from password
-      confirmarContraseña: '', // changed from confirmPassword
-      telefono: '',
+      name: '',
+      lastName: '',
+      password: '', // changed from password
+      confirmPassword: '', // changed from confirmPassword
+      phone: '',
       email: '',
       licenciaFrente: null,
       licenciaReverso: null,
@@ -46,10 +46,10 @@ const useRegisterModal = () => {
   const [pasaporteFrentePreview, setPasaporteFrentePreview] = useState(null);
   const [pasaporteReversoPreview, setPasaporteReversoPreview] = useState(null);
 
-  const nombreRef = useRef();
+  const nameRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
-  const telefonoRef = useRef();
+  const phoneRef = useRef();
   const emailRef = useRef();
 
   // Animación de apertura/cierre
@@ -163,24 +163,24 @@ const useRegisterModal = () => {
     setRegisterSuccess('');
     setLoading(true);
     // Normalizar teléfono a 0000-0000 antes de enviar (sin validación de formato ni primer dígito)
-    let telefono = (data.telefono || '').toString();
-    const raw = telefono.replace(/[^0-9]/g, '');
+    let phone = (data.phone || '').toString();
+    const raw = phone.replace(/[^0-9]/g, '');
     if (raw.length === 8) {
-      telefono = raw.slice(0, 4) + '-' + raw.slice(4, 8);
+      phone = raw.slice(0, 4) + '-' + raw.slice(4, 8);
     }
     // Detectar si hay archivos
     const hasFiles = [data.licenciaFrente, data.licenciaReverso, data.pasaporteFrente, data.pasaporteReverso].some(f => f instanceof File);
     let payload;
     // Asegurarse de que los campos nombres y apellidos existan y sean string
-    const nombres = data.nombres || '';
-    const apellidos = data.apellidos || '';
+    const names = data.name || '';
+    const lastNames = data.lastName || '';
     if (hasFiles) {
       payload = new FormData();
-      payload.append('nombres', nombres);
-      payload.append('apellidos', apellidos);
-      payload.append('contraseña', data.contraseña);
-      payload.append('confirmarContraseña', data.confirmarContraseña);
-      payload.append('telefono', telefono);
+      payload.append('nombres', names);
+      payload.append('apellidos', lastNames);
+      payload.append('contraseña', data.password);
+      payload.append('confirmarContraseña', data.confirmPassword);
+      payload.append('telefono', phone);
       payload.append('correo', data.email);
       payload.append('fechaDeNacimiento', data.fechaDeNacimiento);
       if (data.licenciaFrente instanceof File) payload.append('licenciaFrente', data.licenciaFrente);
@@ -189,11 +189,11 @@ const useRegisterModal = () => {
       if (data.pasaporteReverso instanceof File) payload.append('pasaporteReverso', data.pasaporteReverso);
     } else {
       payload = {
-        nombres,
-        apellidos,
-        correo: data.email,
-        contraseña: data.contraseña,
-        telefono: telefono,
+        names,
+        lastNames,
+        email: data.email,
+        password: data.password,
+        phone: phone,
         fechaDeNacimiento: data.fechaDeNacimiento,
         pasaporteFrenteDui: data.pasaporteFrente || undefined,
         pasaporteReversoDui: data.pasaporteReverso || undefined,
@@ -204,10 +204,10 @@ const useRegisterModal = () => {
     try {
       // Verificar correo duplicado (igual para ambos casos)
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-      const response = await fetch(`${API_URL}/clients/check-email`, {
+      const response = await fetch(`${API_URL}/registerClients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: data.email }) // El backend espera 'correo'
+        body: JSON.stringify({ email: data.email }) // El backend espera 'correo'
       });
       if (!response.ok) {
         setRegisterError("No se pudo verificar el correo. Intenta más tarde.");
@@ -218,16 +218,16 @@ const useRegisterModal = () => {
       if (emailResult.exists) {
         // Si el correo existe, intentamos registrar para ver si está verificado o no
         const payloadToSend = hasFiles ? payload : {
-          nombres,
-          apellidos,
-          correo: data.email,
-          contraseña: data.contraseña,
-          telefono: telefono,
-          fechaDeNacimiento: data.fechaDeNacimiento,
-          pasaporteFrenteDui: data.pasaporteFrente || undefined,
-          pasaporteReversoDui: data.pasaporteReverso || undefined,
-          licenciaFrente: data.licenciaFrente || undefined,
-          licenciaReverso: data.licenciaReverso || undefined
+          names,
+          lastNames,
+          email: data.email,
+          password: data.password,
+          phone: phone,
+          birthDate: data.fechaDeNacimiento,
+          licenseFront: data.pasaporteFrente || undefined,
+          licenseBack: data.pasaporteReverso || undefined,
+          passportFront: data.licenciaFrente || undefined,
+          passportBack: data.licenciaReverso || undefined
         };
         const result = await registerUser(payloadToSend);
         if (
@@ -277,7 +277,7 @@ const useRegisterModal = () => {
     try {
       const result = await registerUser(payload);
       if (result.message && result.message.includes('verifica tu correo')) {
-        setRegistrationSuccessData({ nombre: `${nombres} ${apellidos}` });
+        setRegistrationSuccessData({ name: `${names} ${lastNames}` });
         setRegisterSuccess(result.message);
       } else if (result.message && result.message.toLowerCase().includes('client already exists')) {
         setRegisterError('La cuenta ya está registrada pero no verificada. Se ha enviado un nuevo código de verificación.');
@@ -304,7 +304,7 @@ const useRegisterModal = () => {
         const password = getValues('contraseña');
         
         // Intentar iniciar sesión automáticamente usando el contexto
-        const loginResult = await login({ correo: email, contraseña: password });
+        const loginResult = await login({ email: email, password: password });
         
         if (loginResult.userType && !loginResult.needVerification) {
           // Login exitoso - redirigir después de un breve delay
@@ -346,10 +346,10 @@ const useRegisterModal = () => {
     setShowConfirmPassword,
     focusedField,
     setFocusedField,
-    nombreRef,
+    nameRef,
     passwordRef,
     confirmPasswordRef,
-    telefonoRef,
+    phoneRef,
     emailRef,
     handleSubmit,
     onSubmit,
