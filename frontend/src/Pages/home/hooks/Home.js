@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+const apiUrl = "http://localhost:4000/api/vehicles/home"
 const useHomeVehiculos = () => {
   const [vehiculos, setVehiculos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +11,7 @@ const useHomeVehiculos = () => {
       try {
         setLoading(true);
         // Ajusta la URL según tu endpoint de API
-        const response = await fetch('/api/vehicles/home');
+        const response = await fetch(`${apiUrl}`);
         
         if (!response.ok) {
           throw new Error('Error al obtener los vehículos');

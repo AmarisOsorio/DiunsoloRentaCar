@@ -1,51 +1,59 @@
-import clientsModel from "../models/Clientes.js";
-import empleadosModel from "../models/Empleados.js";
+//Imports
+import clientsModel from "../models/Clients.js";
+import employeesModel from "../models/Employees.js";
 import bcryptjs from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 import { config } from "../config.js";
 
+//Controller
 const loginController = {};
 
+//Maximum login attempts
+const maxAttempts = 3;
+//Lock time in milliseconds (15 minutes)
+const lockTime = 15 * 60 * 1000;
+
+//Login
 loginController.login = async (req, res) => {
-  const { correo, contraseña } = req.body;
+  const { email, password } = req.body;
   try {
     let userFound;
     let userType;
 
 
-    // Validación robusta de emailAdmin
+    //Email check
     if (!config.emailAdmin || !config.emailAdmin.email || !config.emailAdmin.password) {
+      //Error
+      console.log("Configuración de emailAdmin incompleta en config.js");
       return res.status(500).json({ message: "Configuración de emailAdmin incompleta en config.js" });
     }
     if (
-      correo === config.emailAdmin.email &&
-      contraseña === config.emailAdmin.password
+      //Admin check
+      email === config.emailAdmin.email &&
+      password === config.emailAdmin.password
     ) {
       userType = "Admin";
       userFound = { _id: "Admin" };
     }
     else {
-      // Buscar empleados por correo_electronico y clientes por correo
-      userFound = await empleadosModel.findOne({ correo_electronico: correo });
+      //Employee check
+      userFound = await employeesModel.findOne({ email: email });
       userType = "Empleado";
+
+      //Client check
       if (!userFound) {
-        // Log búsqueda exacta y resultado
-        // const allClients = await clientsModel.find({});
-        // console.log('Correo recibido:', correo);
-        // console.log('Primeros 3 clientes:', allClients.slice(0,3).map(c=>c.correo));
-        userFound = await clientsModel.findOne({ correo });
-        // console.log('Resultado búsqueda cliente:', userFound);
+        userFound = await clientsModel.findOne({ email });
         userType = "Cliente";
       }
     }
-    // console.log('Tipo de usuario:', userType);
     if (!userFound) {
-      // console.log('No se encontró usuario para:', correo);
-      return res.json({ message: "Usuario no encontrado" });
+      //User not found
+      console.log("Usuario no encontrado");
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
-    // Si es cliente y no está verificado
+    //Client not verified
     if (userType === "Cliente" && userFound.isVerified === false) {
-      // Generar y enviar código de verificación
+      //Generate vefification code
       const nodemailer = await import("nodemailer");
       const { fileURLToPath } = await import('url');
       const path = await import('path');
@@ -57,7 +65,7 @@ loginController.login = async (req, res) => {
         verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       const tokenCode = jsonwebtoken.sign(
-        { correo, verificationCode },
+        { email, verificationCode },
         config.JWT.secret,
         { expiresIn: "15m" }
       );
@@ -72,11 +80,11 @@ loginController.login = async (req, res) => {
           rejectUnauthorized: false
         }
       });
-      // Usar plantilla HTMLVerifyAccountEmail
+      //Use HTMLVerifyAccountEmail
       const { HTMLVerifyAccountEmail } = await import('../utils/mailVerifyAccount.js');
       const mailOptions = {
         from: config.email.email_user,
-        to: correo,
+        to: email,
         subject: "Verificación de correo - Código de activación | Diunsolo RentaCar",
         html: HTMLVerifyAccountEmail(verificationCode),
         attachments: [
@@ -102,11 +110,33 @@ loginController.login = async (req, res) => {
       });
       return;
     }
+
+    //Check if user is locked
     if (userType !== "Admin") {
-      const isMatch = await bcryptjs.compare(contraseña, userFound.contraseña);
+        if (userFound.lockTime > Date.now()) {
+            const remainingTIme = Math.ceil((userFound.lockTime - Data.now() / 60000));
+            return res.json({message: `Account locked. Try again in ${remainingTIme} minutes.`});
+        };
+    };
+
+    if (userType !== "Admin") {
+      const isMatch = await bcryptjs.compare(password, userFound.password);
       if (!isMatch) {
-        return res.json({ message: "Contraseña inválida" });
+        //Invalid password, increment login attempts
+          userFound.loginAttempts = (userFound.loginAttempts) + 1;
+          
+          if (userFound.loginAttempts > maxAttempts) {
+              userFound.lockTime = Date.now() + lockTime;
+              await userFound.save();
+              return res.status(403).json({message: "Account locked. Too many failed attempts."});
+          }
+        return res.status(400).json({ message: "Contraseña inválida" });
       }
+
+      //Reset login attempts
+      userFound.loginAttempts = 0;
+      userFound.lockTime = null;
+      await userFound.save();
     }
     jsonwebtoken.sign(
       { id: userFound._id, userType },
@@ -121,18 +151,18 @@ loginController.login = async (req, res) => {
         if (userType === "Cliente") {
           userData = {
             id: userFound._id,
-            nombreCompleto: userFound.nombreCompleto,
-            correo: userFound.correo,
-            telefono: userFound.telefono,
-            fechaDeNacimiento: userFound.fechaDeNacimiento,
-            pasaporteDui: userFound.pasaporteDui,
-            licencia: userFound.licencia,
+            fullName: userFound.fullName,
+            email: userFound.email,
+            phone: userFound.phone,
+            birthDate: userFound.birthDate,
+            passport: userFound.passpor,
+            license: userFound.license,
             isVerified: userFound.isVerified,
-            fechaRegistro: userFound.createdAt
+            registrationDate: userFound.createdAt
           };
         }
 
-        res.json({
+        res.status(200).json({
           message: "login exitoso",
           userType,
           user: userData
@@ -143,4 +173,6 @@ loginController.login = async (req, res) => {
     console.log(error);
   }
 };
+
+//Export
 export default loginController;

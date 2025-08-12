@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import ClientsModel from '../models/Clientes.js';
+import ClientsModel from '../models/Clients.js';
 import { config } from '../config.js';
 
 export const authenticateToken = async (req, res, next) => {

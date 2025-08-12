@@ -21,11 +21,14 @@ const vehiclesController = {};
  */
 vehiclesController.getVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find();
+    // Traer los vehículos y poblar el objeto de la marca
+    const vehicles = await Vehicle.find().populate('brandId');
     return res.status(200).json(vehicles);
   } catch (error) {
+    // Log detallado del error en consola
+    console.error('Error en getVehicles:', error);
     // Error interno del servidor
-    return res.status(500).json({ mensaje: "Error al obtener vehículos", error });
+    return res.status(500).json({ mensaje: "Error al obtener vehículos", error: error?.message || error });
   }
 };
 
@@ -72,7 +75,7 @@ vehiclesController.getVehicleById = async (req, res) => {
     try {
       if (vehicle.brandId) {
         const brand = await Brand.findById(vehicle.brandId);
-        brandName = brand ? brand.brandName : 'N/A';
+        brandName = brand ? brand.nombreMarca : 'N/A';
       }
     } catch (error) {
       // Log de error pero continuar
@@ -174,7 +177,7 @@ vehiclesController.addVehicle = async (req, res) => {
     if (brandId) {
       try {
         const brand = await Brand.findById(brandId);
-        if (brand) brandName = brand.brandName;
+        if (brand) brandName = brand.nombreMarca;
       } catch (error) {
         brandName = 'N/A';
       }
@@ -368,13 +371,13 @@ vehiclesController.updateVehicle = async (req, res) => {
 
     // Si se actualizaron datos relevantes, regenerar el contrato
     if (shouldRegenerateContract) {
-      // Obtener nombre de la marca correctamente
+      // Obtener nombre de la marca
       let brandName = 'N/A';
       let brandIdToUse = updatedVehicle.brandId || req.body.brandId;
       if (brandIdToUse) {
         try {
           const brand = await Brand.findById(brandIdToUse);
-          if (brand && brand.brandName) brandName = brand.brandName;
+          if (brand && brand.nombreMarca) brandName = brand.nombreMarca;
         } catch (error) {
           brandName = 'N/A';
         }

@@ -62,7 +62,7 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
-            alt={`${vehicle.brandName || ''} ${vehicle.model || ''}`}
+            alt={`${vehicle.brandId?.nombreMarca} ${vehicle.model}`}
             className={`vehicle-card-image${isMainView ? ' mainview' : ''}`}
             onError={handleImageError}
           />
@@ -79,9 +79,9 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
 
       <div className="vehicle-card-content">
         <div className="vehicle-card-header">
-          <h3 className="vehicle-card-title" title={vehicle.vehicleName || `${vehicle.brandName || ''} ${vehicle.model || ''}`}>
+          <h3 className="vehicle-card-title" title={vehicle.vehicleName || `${vehicle.brandId?.nombreMarca} ${vehicle.model}`}>
             {/* Mostrar el nombre del vehículo si existe, si no, marca y modelo */}
-            {vehicle.vehicleName || `${vehicle.brandName || ''} ${vehicle.model || ''}`}
+            {vehicle.vehicleName || `${vehicle.brandId?.nombreMarca} ${vehicle.model}`}
           </h3>
           <span className="vehicle-card-year">{vehicle.year}</span>
         </div>
@@ -90,7 +90,7 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
           {/* Información pública del vehículo */}
           <div className="vehicle-detail">
             <span className="detail-label">Marca:</span>
-            <span className="detail-value">{vehicle.brandName}</span>
+            <span className="detail-value">{vehicle.brandId?.nombreMarca}</span>
           </div>
           <div className="vehicle-detail">
             <span className="detail-label">Clase:</span>
