@@ -1,6 +1,6 @@
 // Importaciones principales de React y los íconos usados en el modal
 import { useState } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth } from '../../../../hooks/useAuth';
 import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar } from 'react-icons/fa';
 import './VehicleModal.css';
 

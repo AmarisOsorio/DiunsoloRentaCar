@@ -7,7 +7,7 @@ import LoginModal from '../../home/loginSection/login/LoginModal.jsx';
 import RegisterModal from '../../home/loginSection/register/RegisterModal.jsx';
 import ForgotPasswordModal from '../../home/loginSection/forgotPassword/ForgotPasswordModal.jsx';
 import { useNavbar } from './hooks/useNavbar.jsx';
-import { useAuth } from '../../../context/AuthContext.jsx';
+import { useAuth } from '../../../hooks/useAuth';
 import Submenu from '../subMenu/submenu.jsx';
 import { FaChevronDown } from 'react-icons/fa';
 

@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const AuthContext = createContext();
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const AuthContext = createContext(null);
+export {AuthContext};
 
 export const AuthProvider = ({ children }) => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
   const [userType, setUserType] = useState(() => localStorage.getItem('userType'));
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('isAuthenticated') === 'true');
   const [userInfo, setUserInfo] = useState(() => {
@@ -468,5 +469,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

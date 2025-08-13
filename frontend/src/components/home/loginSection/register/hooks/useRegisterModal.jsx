@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../../../../context/AuthContext.jsx';
+import { useAuth } from '../../../../../hooks/useAuth';
 import { useForm } from 'react-hook-form';
 
 const useRegisterModal = () => {
@@ -25,11 +25,11 @@ const useRegisterModal = () => {
       confirmPassword: '', // changed from confirmPassword
       phone: '',
       email: '',
-      licenciaFrente: null,
-      licenciaReverso: null,
-      pasaporteFrente: null,
-      pasaporteReverso: null,
-      fechaDeNacimiento: '', // <-- update here
+      birthDate: '', // <-- update here
+      licenseFront: null,
+      licenseBack: null,
+      passportFront: null,
+      passportBack: null,
     }
   });
 
@@ -41,10 +41,12 @@ const useRegisterModal = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [loading, setLoading] = useState(false);  const [registrationSuccessData, setRegistrationSuccessData] = useState(null);
-  const [licenciaFrentePreview, setLicenciaFrentePreview] = useState(null);
-  const [licenciaReversoPreview, setLicenciaReversoPreview] = useState(null);
-  const [pasaporteFrentePreview, setPasaporteFrentePreview] = useState(null);
-  const [pasaporteReversoPreview, setPasaporteReversoPreview] = useState(null);
+  const [licenseFrontPreview, setLicenseFrontPreview] = useState(null);
+  const [licenseBackPreview, setLicenseBackPreview] = useState(null);
+  const [passportFrontPreview, setPassportFrontPreview] = useState(null);
+  const [passportBackPreview, setPassportBackPreview] = useState(null);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
 
   const nameRef = useRef();
   const passwordRef = useRef();
@@ -70,16 +72,16 @@ const useRegisterModal = () => {
       const previewUrl = URL.createObjectURL(files[0]);
       switch(name) {
         case 'licenciaFrente':
-          setLicenciaFrentePreview(previewUrl);
+          setLicenseFrontPreview(previewUrl);
           break;
         case 'licenciaReverso':
-          setLicenciaReversoPreview(previewUrl);
+          setLicenseBackPreview(previewUrl);
           break;
         case 'pasaporteFrente':
-          setPasaporteFrentePreview(previewUrl);
+          setPassportFrontPreview(previewUrl);
           break;
         case 'pasaporteReverso':
-          setPasaporteReversoPreview(previewUrl);
+          setPassportBackPreview(previewUrl);
           break;
       }
     } else if (name === 'licenciaFrente' || name === 'licenciaReverso' || name === 'pasaporteFrente' || name === 'pasaporteReverso') {
@@ -87,16 +89,16 @@ const useRegisterModal = () => {
       // Limpiar preview correspondiente
       switch(name) {
         case 'licenciaFrente':
-          setLicenciaFrentePreview(null);
+          setLicenseFrontPreview(null);
           break;
         case 'licenciaReverso':
-          setLicenciaReversoPreview(null);
+          setLicenseBackPreview(null);
           break;
         case 'pasaporteFrente':
-          setPasaporteFrentePreview(null);
+          setPassportFrontPreview(null);
           break;
         case 'pasaporteReverso':
-          setPasaporteReversoPreview(null);
+          setPassportBackPreview(null);
           break;
       }
     } else {
@@ -104,16 +106,16 @@ const useRegisterModal = () => {
       // Limpiar todos los previews si es necesario
       switch(name) {
         case 'licenciaFrente':
-          setLicenciaFrentePreview(null);
+          setLicenseFrontPreview(null);
           break;
         case 'licenciaReverso':
-          setLicenciaReversoPreview(null);
+          setLicenseBackPreview(null);
           break;
         case 'pasaporteFrente':
-          setPasaporteFrentePreview(null);
+          setPassportFrontPreview(null);
           break;
         case 'pasaporteReverso':
-          setPasaporteReversoPreview(null);
+          setPassportBackPreview(null);
           break;
       }
     }
@@ -172,38 +174,37 @@ const useRegisterModal = () => {
     const hasFiles = [data.licenciaFrente, data.licenciaReverso, data.pasaporteFrente, data.pasaporteReverso].some(f => f instanceof File);
     let payload;
     // Asegurarse de que los campos nombres y apellidos existan y sean string
-    const names = data.name || '';
-    const lastNames = data.lastName || '';
+    const name = data.name || '';
+    const lastName = data.lastName || '';
     if (hasFiles) {
       payload = new FormData();
-      payload.append('nombres', names);
-      payload.append('apellidos', lastNames);
-      payload.append('contraseña', data.password);
-      payload.append('confirmarContraseña', data.confirmPassword);
-      payload.append('telefono', phone);
-      payload.append('correo', data.email);
-      payload.append('fechaDeNacimiento', data.fechaDeNacimiento);
-      if (data.licenciaFrente instanceof File) payload.append('licenciaFrente', data.licenciaFrente);
-      if (data.licenciaReverso instanceof File) payload.append('licenciaReverso', data.licenciaReverso);
-      if (data.pasaporteFrente instanceof File) payload.append('pasaporteFrente', data.pasaporteFrente);
-      if (data.pasaporteReverso instanceof File) payload.append('pasaporteReverso', data.pasaporteReverso);
+      payload.append('names', name);
+      payload.append('lastNames', lastName);
+      payload.append('password', data.password);
+      payload.append('confirmPassword', data.confirmPassword);
+      payload.append('phone', phone);
+      payload.append('email', data.email);
+      payload.append('birthdate', data.birthDate);
+      if (data.LicenseFront instanceof File) payload.append('licenciaFrente', data.LicenseFront);
+      if (data.LicenseBack instanceof File) payload.append('licenciaReverso', data.LicenseBack);
+      if (data.PassportFront instanceof File) payload.append('pasaporteFrente', data.PassportFront);
+      if (data.PassportBack instanceof File) payload.append('pasaporteReverso', data.PassportBack);
     } else {
       payload = {
-        names,
-        lastNames,
+        name,
+        lastName,
         email: data.email,
         password: data.password,
         phone: phone,
-        fechaDeNacimiento: data.fechaDeNacimiento,
-        pasaporteFrenteDui: data.pasaporteFrente || undefined,
-        pasaporteReversoDui: data.pasaporteReverso || undefined,
-        licenciaFrente: data.licenciaFrente || undefined,
-        licenciaReverso: data.licenciaReverso || undefined
+        birthDate: data.birthDate,
+        LicenseFront: data.LicenseFront || undefined,
+        LicenseBack: data.LicenseBack || undefined,
+        PassportFront: data.PassportFront || undefined,
+        PassportBack: data.PassportBack || undefined,
       };
     }
     try {
       // Verificar correo duplicado (igual para ambos casos)
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
       const response = await fetch(`${API_URL}/registerClients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -218,16 +219,16 @@ const useRegisterModal = () => {
       if (emailResult.exists) {
         // Si el correo existe, intentamos registrar para ver si está verificado o no
         const payloadToSend = hasFiles ? payload : {
-          names,
-          lastNames,
+          name,
+          lastName,
           email: data.email,
           password: data.password,
           phone: phone,
-          birthDate: data.fechaDeNacimiento,
-          licenseFront: data.pasaporteFrente || undefined,
-          licenseBack: data.pasaporteReverso || undefined,
-          passportFront: data.licenciaFrente || undefined,
-          passportBack: data.licenciaReverso || undefined
+          birthDate: data.birthDate,
+          licenseFront: data.LicenseFront || undefined,
+          licenseBack: data.LicenseBack || undefined,
+          passportFront: data.PassportFront || undefined,
+          passportBack: data.PassportBack || undefined
         };
         const result = await registerUser(payloadToSend);
         if (
@@ -277,7 +278,7 @@ const useRegisterModal = () => {
     try {
       const result = await registerUser(payload);
       if (result.message && result.message.includes('verifica tu correo')) {
-        setRegistrationSuccessData({ name: `${names} ${lastNames}` });
+        setRegistrationSuccessData({ name: `${name} ${lastName}` });
         setRegisterSuccess(result.message);
       } else if (result.message && result.message.toLowerCase().includes('client already exists')) {
         setRegisterError('La cuenta ya está registrada pero no verificada. Se ha enviado un nuevo código de verificación.');
@@ -358,10 +359,11 @@ const useRegisterModal = () => {
     handleInputChange,
     handleOpenEffect,    loading,
     registrationSuccessData,
-    setRegistrationSuccessData,    licenciaFrentePreview,
-    licenciaReversoPreview,
-    pasaporteFrentePreview,
-    pasaporteReversoPreview,
+    setRegistrationSuccessData,    
+    licenseFrontPreview, 
+    licenseBackPreview, 
+    passportFrontPreview,
+    passportBackPreview,
     setLicenciaFrentePreview,
     setLicenciaReversoPreview,
     setPasaporteFrentePreview,

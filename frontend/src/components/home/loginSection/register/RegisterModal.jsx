@@ -5,7 +5,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import TooltipPortal from '../../../interactions/tooltipPortal/TooltipPortal.jsx';
 import useRegisterModal from './hooks/useRegisterModal.jsx';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation.jsx';
-import { useAuth } from '../../../../context/AuthContext.jsx';
+import { useAuth } from '../../../../hooks/useAuth';
 import LoadingModalBackdrop from '../login/LoadingModalBackdrop.jsx';
 import ImageViewSelector from '../../../profile/imageViewSelector/ImageViewSelector.jsx';
 
