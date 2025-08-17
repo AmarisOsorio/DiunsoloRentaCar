@@ -1,7 +1,7 @@
 import jsonwebtoken from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
-import clientsModel from "../models/Clientes.js";
-import empleadosModel from "../models/Empleados.js";
+import clientsModel from "../models/Clients.js";
+import empleadosModel from "../models/Employees.js";
 import { sendEmail, HTMLRecoveryEmail } from "../utils/mailPasswordRecovery.js";
 import { config } from "../config.js";
 

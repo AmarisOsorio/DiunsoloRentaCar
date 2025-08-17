@@ -1,23 +1,15 @@
 import express from "express";
+import registerClientsController from "../controllers/registerClientsController.js";
 
 const router = express.Router();
 
-let registerClientsController;
-try {
-  const controllerModule = await import("../controllers/registerClientsController.js");
-  registerClientsController = controllerModule.default;
-} catch (error) {
-  registerClientsController = {
-    register: (req, res) => res.status(500).json({ message: "Register controller not available" }),
-    verifyCodeEmail: (req, res) => res.status(500).json({ message: "VerifyCodeEmail controller not available" }),
-    resendCodeEmail: (req, res) => res.status(500).json({ message: "ResendCodeEmail controller not available" })
-  };
-}
+// Register client route
+router.route("/").post(registerClientsController.registerClients);
 
-router
-  .route("/")
-  
-router.route("/verifyCodeEmail").post(registerClientsController.verifyCodeEmail);
-router.route("/resendCodeEmail").post(registerClientsController.resendCodeEmail);
+// Email verification route
+router.route("/verifyCodeEmail").post(registerClientsController.verifyEmail);
+
+// Resend verification email route
+router.route("/resendCodeEmail").post(registerClientsController.resendVerificationEmail);
 
 export default router;

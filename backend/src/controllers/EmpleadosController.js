@@ -1,6 +1,6 @@
 // Procesar imagen si existe
     let fotoURL = null;// Controlador para el modelo Empleados
-import EmpleadosModel from "../models/Empleados.js";
+import EmpleadosModel from "../models/Employees.js";
 import bcryptjs from "bcryptjs";
 import cloudinary from 'cloudinary';
 
