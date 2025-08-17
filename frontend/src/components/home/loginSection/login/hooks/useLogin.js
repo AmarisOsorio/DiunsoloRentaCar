@@ -13,7 +13,7 @@ export default function useLogin(onClose) {
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
   const [pendingVerificationPassword, setPendingVerificationPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pendingShowVerify, setPendingShowVerify] = useState(false); // Nuevo estado
+  const [pendingShowVerify, setPendingShowVerify] = useState(false);
 
   const handleEmailChange = (e) => setEmail(e.target.value);
   const handlePasswordChange = (e) => setPassword(e.target.value);
@@ -23,13 +23,23 @@ export default function useLogin(onClose) {
     e.preventDefault();
     setError('');
     setLoading(true);
+    
     try {
-      const result = await login({ correo: email, contraseña: password });
+      // Asegurar que los datos se envíen en el formato correcto
+      const result = await login({ 
+        email: email.trim(), 
+        password: password 
+      });
+      
       if (result.needVerification) {
         setError(result.message || 'Tu cuenta no está verificada. Revisa tu correo.');
-        setShowVerifyModal(true); // solo mostrar modal
+        setPendingVerificationEmail(email);
+        setPendingVerificationPassword(password);
+        setShowVerifyModal(true);
+        setLoading(false);
         return;
       }
+      
       if (result.message !== 'login exitoso') {
         setError(result.message || 'Error al iniciar sesión');
       } else {
@@ -46,18 +56,16 @@ export default function useLogin(onClose) {
     }
   };
 
-
   // Nuevo useEffect para mostrar verify y quitar loading
   useEffect(() => {
     if (pendingShowVerify) {
       setShowVerifyModal(true);
       setPendingShowVerify(false);
-      setLoading(false); // Desactiva loading después de mostrar el modal de verificación
+      setLoading(false);
     }
   }, [pendingShowVerify]);
 
-
-  //Verificar el código y hacer login
+  // Verificar el código y hacer login
   const handleVerifyAndLogin = async (code) => {
     try {
       const res = await fetch('/api/registerClients/verifyCodeEmail', {
@@ -97,7 +105,7 @@ export default function useLogin(onClose) {
     pendingVerificationEmail,
     pendingVerificationPassword,
     loading,
-    pendingShowVerify, // <-- Exponer este estado
-    handleVerifyAndLogin, // <-- Exponer la nueva función
+    pendingShowVerify,
+    handleVerifyAndLogin,
   };
 }
