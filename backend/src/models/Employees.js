@@ -48,6 +48,16 @@ const employeesSchema = new Schema({
         type: String,
         required: false, 
         default: null
+    },
+
+    loginAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    lockTime: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true,
