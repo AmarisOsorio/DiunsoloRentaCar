@@ -83,15 +83,15 @@ const TabButton = (props) => {
           <View style={[stylesAnim.btn, { borderColor: '#fff', backgroundColor: '#fff', marginBottom: 0 }]}> 
             <Animatable.View
               ref={circleRef}
-              style={[stylesAnim.circle, { backgroundColor: '#153A8B' }]}
+              style={[stylesAnim.circle, { backgroundColor: '#1C318C' }]}
               duration={500}
               useNativeDriver
             />
-            <Ionicons name={item.icon + (focused ? '' : '-outline')} size={28} color={focused ? '#fff' : '#153A8B'} />
+            <Ionicons name={item.icon + (focused ? '' : '-outline')} size={28} color={focused ? '#fff' : '#1C318C'} />
           </View>
           <Text
             ref={textRef}
-            style={[stylesAnim.text, { color: focused ? '#153A8B' : '#153A8B', opacity: 1, marginTop: -6, marginBottom: 0 }]}
+            style={[stylesAnim.text, { color: '#1C318C', opacity: 1, marginTop: -6, marginBottom: 0 }]}
           >
             {item.label}
           </Text>
@@ -132,9 +132,9 @@ export default function ManagerTabNavigator() {
           activeOpacity={0.7}
         >
           <View style={{ backgroundColor: '#fff', borderRadius: 20, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.10, shadowRadius: 2, elevation: 2 }}>
-            <Ionicons name="ellipsis-vertical" size={28} color="#153A8B" />
+            <Ionicons name="ellipsis-vertical" size={28} color="#1C318C" />
           </View>
-          <Text style={{ color: '#153A8B', fontWeight: 'bold', fontSize: 12, marginTop: 2 }}>Ver más</Text>
+          <Text style={{ color: '#1C318C', fontWeight: 'bold', fontSize: 12, marginTop: 2 }}>Ver más</Text>
         </TouchableOpacity>
       </View>
       <MorePopout
@@ -151,7 +151,7 @@ export default function ManagerTabNavigator() {
         <View style={{ flex: 1 }} />
         <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfile(true)}>
           <View style={styles.profileIconCircle}>
-            <Ionicons name="person" size={28} color="#4390E1" />
+            <Ionicons name="person" size={28} color="#3D83D2" />
           </View>
         </TouchableOpacity>
       </View>
@@ -166,7 +166,7 @@ export default function ManagerTabNavigator() {
       {/* Tab Navigator con animación personalizada y tabBar custom */}
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          headerStyle: { backgroundColor: '#4390E1', elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, height: 25 },
+          headerStyle: { backgroundColor: '#3D83D2', elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, height: 25 },
           headerTitleStyle: { color: '#fff', fontWeight: 'bold', padding: 0, margin: 0 },
           headerTintColor: '#fff',
         })}
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#4390E1',
+  backgroundColor: '#3D83D2',
     paddingTop: 0,
     paddingBottom: 0,
     paddingHorizontal: 18,
@@ -266,14 +266,14 @@ const stylesAnim = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#153A8B',
+  backgroundColor: '#3D83D2',
     borderRadius: 25,
     zIndex: -1,
   },
   text: {
     fontSize: 12,
     textAlign: 'center',
-    color: '#153A8B',
+  color: '#3D83D2',
     fontWeight: 'bold',
     marginTop: 0,
     marginBottom: 0,
