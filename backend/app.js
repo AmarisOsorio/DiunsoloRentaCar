@@ -17,7 +17,7 @@ import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservationsRoutes from "./src/routes/reservations.js"; //
 import contractsRoutes from "./src/routes/contratos.js";
 import maintenancesRoutes from "./src/routes/maintenances.js";//--
-import brandsRoutes from "./src/routes/marcas.js";
+import brandsRoutes from "./src/routes/brands.js";
 
 // Rutas utilitarias y de comunicación
 import sendWelcomeRoutes from "./src/routes/sendWelcome.js";

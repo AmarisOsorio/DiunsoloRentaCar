@@ -1,52 +1,53 @@
 const reservationsController = {};
-
+ 
 import reservationsModel from "../models/Reservations.js";
 import clientesModel from "../models/Clients.js";
 import vehiculosModel from "../models/Vehicles.js";
 import { Contratos } from "../models/Contratos.js";
 import mongoose from "mongoose";
-
+ 
 // Función para validar ObjectId
 const isValidObjectId = (id) => {
     return mongoose.Types.ObjectId.isValid(id);
 };
-
+ 
 // Función para validar fechas
 const isValidDate = (date) => {
     return date instanceof Date && !isNaN(date);
 };
-
+ 
 // Función para validar que la fecha de inicio sea anterior a la fecha de devolución
 const isValidDateRange = (startDate, returnDate) => {
     return new Date(startDate) < new Date(returnDate);
 };
-
+ 
 //Select - Obtener todas las reservas
 reservationsController.getReservations = async (req, res) => {
     try {
         const reservations = await reservationsModel.find()
             .populate({
                 path: 'clientId',
-                select: 'nombre apellido telefono correo'
+                select: 'name lastName phone email' // Cambiado de 'nombre apellido' a 'name lastName'
             })
             .populate({
                 path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice' // Agregados todos los campos necesarios
             })
             .sort({ creationDate: -1 }); // Mostrar las más recientes primero
-        
+       
         // Verificar si existen reservas
         if (!reservations || reservations.length === 0) {
-            return res.status(200).json({ 
+            return res.status(200).json({
                 success: true,
                 message: "No se encontraron reservas",
                 data: [],
                 count: 0
             });
         }
-
+ 
         console.log('Reservas encontradas:', reservations.length);
-
+        console.log('Muestra de datos:', JSON.stringify(reservations[0], null, 2)); // Para debug
+ 
         res.status(200).json({
             success: true,
             data: reservations,
@@ -54,19 +55,19 @@ reservationsController.getReservations = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al obtener reservas:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: "Error interno del servidor al obtener reservas", 
-            error: error.message 
+            message: "Error interno del servidor al obtener reservas",
+            error: error.message
         });
     }
 };
-
+ 
 // Select by ID - Obtener reserva por ID
 reservationsController.getReservationById = async (req, res) => {
     try {
         const { id } = req.params;
-
+ 
         // Validar que el ID sea válido
         if (!isValidObjectId(id)) {
             return res.status(400).json({
@@ -74,25 +75,25 @@ reservationsController.getReservationById = async (req, res) => {
                 message: "ID de reserva no válido"
             });
         }
-
+ 
         // Buscar reserva por ID con populate completo
         const reservation = await reservationsModel.findById(id)
             .populate({
                 path: 'clientId',
-                select: 'nombre apellido telefono correo'
+                select: 'name lastName phone email'
             })
             .populate({
                 path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice'
             });
-        
+       
         if (!reservation) {
             return res.status(404).json({
                 success: false,
                 message: "Reserva no encontrada"
             });
         }
-
+ 
         res.status(200).json({
             success: true,
             data: reservation
@@ -106,7 +107,145 @@ reservationsController.getReservationById = async (req, res) => {
         });
     }
 };
-
+ 
+// Obtener reservas del usuario autenticado
+reservationsController.getUserReservations = async (req, res) => {
+    try {
+        const userId = req.user && req.user._id;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'No autorizado'
+            });
+        }
+       
+        // Validar que el userId sea válido
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "ID de usuario no válido"
+            });
+        }
+       
+        const reservations = await reservationsModel.find({ clientId: userId })
+            .populate({
+                path: 'vehicleId',
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice',
+                options: { lean: true }
+            })
+            .lean()
+            .sort({ creationDate: -1 });
+       
+        // Adaptar la respuesta para que el frontend tenga acceso directo a los datos del auto y la imagen lateral
+        const reservationsAdapted = reservations.map(reservation => {
+            const vehiculo = reservation.vehicleId || {};
+            return {
+                ...reservation,
+                vehiculoNombre: vehiculo.vehicleName || '',
+                vehiculoModelo: vehiculo.model || '',
+                vehiculoColor: vehiculo.color || '',
+                vehiculoAnio: vehiculo.year || '',
+                vehiculoCapacidad: vehiculo.capacity || '',
+                vehiculoPlaca: vehiculo.plate || '',
+                imagenVehiculo: vehiculo.sideImage || vehiculo.mainViewImage || '',
+            };
+        });
+       
+        res.status(200).json({
+            success: true,
+            data: reservationsAdapted,
+            count: reservationsAdapted.length
+        });
+    } catch (error) {
+        console.error('Error al obtener reservas del usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor al obtener reservas',
+            error: error.message
+        });
+    }
+};
+ 
+// Get reservations by vehicle ID - Obtener reservas por ID de vehículo
+reservationsController.getReservationsByVehicleId = async (req, res) => {
+    try {
+        const { vehicleId } = req.params;
+ 
+        // Validar que el vehicleId sea válido
+        if (!isValidObjectId(vehicleId)) {
+            return res.status(400).json({
+                success: false,
+                message: "ID de vehículo no válido"
+            });
+        }
+ 
+        // Buscar reservas por vehicleId
+        const reservations = await reservationsModel.find({ vehicleId })
+            .populate({
+                path: 'clientId',
+                select: 'name lastName phone email'
+            })
+            .populate({
+                path: 'vehicleId',
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice'
+            })
+            .sort({ creationDate: -1 });
+       
+        res.status(200).json({
+            success: true,
+            data: reservations,
+            count: reservations.length
+        });
+    } catch (error) {
+        console.error('Error al obtener reservas por vehículo:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor al obtener reservas por vehículo",
+            error: error.message
+        });
+    }
+};
+ 
+// Get reservations by status - Obtener reservas por estado
+reservationsController.getReservationsByStatus = async (req, res) => {
+    try {
+        const { status } = req.params;
+ 
+        // Validar que el estado sea válido
+        if (!['Pending', 'Active', 'Completed'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Estado no válido. Debe ser: Pending, Active o Completed"
+            });
+        }
+ 
+        // Buscar reservas por estado
+        const reservations = await reservationsModel.find({ status })
+            .populate({
+                path: 'clientId',
+                select: 'name lastName phone email'
+            })
+            .populate({
+                path: 'vehicleId',
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice'
+            })
+            .sort({ creationDate: -1 });
+       
+        res.status(200).json({
+            success: true,
+            data: reservations,
+            count: reservations.length
+        });
+    } catch (error) {
+        console.error('Error al obtener reservas por estado:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor al obtener reservas por estado",
+            error: error.message
+        });
+    }
+};
+ 
 //Insert - Crear nueva reserva
 reservationsController.createReservation = async (req, res) => {
     try {
@@ -118,7 +257,7 @@ reservationsController.createReservation = async (req, res) => {
             status,
             pricePerDay
         } = req.body;
-
+ 
         // Validaciones básicas de campos requeridos
         if (!clientId) {
             return res.status(400).json({
@@ -126,35 +265,35 @@ reservationsController.createReservation = async (req, res) => {
                 message: "El ID del cliente es requerido"
             });
         }
-
+ 
         if (!vehicleId) {
             return res.status(400).json({
                 success: false,
                 message: "El ID del vehículo es requerido"
             });
         }
-
+ 
         if (!startDate) {
             return res.status(400).json({
                 success: false,
                 message: "La fecha de inicio es requerida"
             });
         }
-
+ 
         if (!returnDate) {
             return res.status(400).json({
                 success: false,
                 message: "La fecha de devolución es requerida"
             });
         }
-
+ 
         if (!pricePerDay || pricePerDay <= 0) {
             return res.status(400).json({
                 success: false,
                 message: "El precio por día es requerido y debe ser mayor a 0"
             });
         }
-
+ 
         // Validar que los IDs sean ObjectIds válidos
         if (!isValidObjectId(clientId)) {
             return res.status(400).json({
@@ -162,32 +301,32 @@ reservationsController.createReservation = async (req, res) => {
                 message: "ID de cliente no válido"
             });
         }
-
+ 
         if (!isValidObjectId(vehicleId)) {
             return res.status(400).json({
                 success: false,
                 message: "ID de vehículo no válido"
             });
         }
-
+ 
         // Validar fechas
         const parsedStartDate = new Date(startDate);
         const parsedReturnDate = new Date(returnDate);
-
+ 
         if (!isValidDate(parsedStartDate)) {
             return res.status(400).json({
                 success: false,
                 message: "Fecha de inicio no válida"
             });
         }
-
+ 
         if (!isValidDate(parsedReturnDate)) {
             return res.status(400).json({
                 success: false,
                 message: "Fecha de devolución no válida"
             });
         }
-
+ 
         // Validar que la fecha de inicio sea anterior a la fecha de devolución
         if (!isValidDateRange(startDate, returnDate)) {
             return res.status(400).json({
@@ -195,7 +334,7 @@ reservationsController.createReservation = async (req, res) => {
                 message: "La fecha de inicio debe ser anterior a la fecha de devolución"
             });
         }
-
+ 
         // Validar estado si se proporciona
         if (status && !['Pending', 'Active', 'Completed'].includes(status)) {
             return res.status(400).json({
@@ -203,19 +342,19 @@ reservationsController.createReservation = async (req, res) => {
                 message: "Estado no válido. Debe ser: Pending, Active o Completed"
             });
         }
-
+ 
         // Usar los datos del cliente que vienen del frontend (cliente beneficiario)
         // Si no vienen datos del cliente, usar los del usuario autenticado como fallback
         let clientData = req.body.client || null;
-
+ 
         if (!clientData || !Array.isArray(clientData) || clientData.length === 0) {
             // Fallback: usar datos del usuario autenticado si no se proporcionaron datos del cliente
             try {
                 const usuarioAutenticado = await clientesModel.findById(clientId);
                 if (!usuarioAutenticado) {
-                    return res.status(404).json({ 
+                    return res.status(404).json({
                         success: false,
-                        message: "Usuario autenticado no encontrado" 
+                        message: "Usuario autenticado no encontrado"
                     });
                 }
                 clientData = [{
@@ -225,16 +364,16 @@ reservationsController.createReservation = async (req, res) => {
                 }];
                 console.log('Usando datos del usuario autenticado como fallback:', clientData);
             } catch (err) {
-                return res.status(500).json({ 
+                return res.status(500).json({
                     success: false,
-                    message: "Error buscando usuario autenticado", 
-                    error: err.message 
+                    message: "Error buscando usuario autenticado",
+                    error: err.message
                 });
             }
         } else {
             console.log('Usando datos del cliente del formulario:', clientData);
         }
-
+ 
         // Crear nueva reserva
         const newReservation = new reservationsModel({
             clientId,
@@ -245,24 +384,24 @@ reservationsController.createReservation = async (req, res) => {
             status: status || 'Pending',
             pricePerDay
         });
-
+ 
         const savedReservation = await newReservation.save();
-        
+       
         // Generar contrato automáticamente
         try {
             // Obtener datos completos del vehículo para el contrato
             const vehiculo = await vehiculosModel.findById(vehicleId);
             const cliente = await clientesModel.findById(clientId);
-            
+           
             if (vehiculo && cliente) {
                 // Calcular días de alquiler
                 const dias = Math.ceil((new Date(returnDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
-                
+               
                 // Usar datos del cliente beneficiario para el contrato
                 const clienteContrato = clientData[0]; // Primer elemento del array client
                 const nombreParaContrato = clienteContrato.name;
                 const correoParaContrato = clienteContrato.email;
-                
+               
                 // Crear el contrato básico
                 const nuevoContrato = new Contratos({
                     reservationId: savedReservation._id.toString(),
@@ -288,16 +427,16 @@ reservationsController.createReservation = async (req, res) => {
                         nombreCliente: nombreParaContrato
                     }
                 });
-                
+               
                 await nuevoContrato.save();
                 console.log(`Contrato generado automáticamente para la reserva ${savedReservation._id}`);
             }
-            
+           
         } catch (contractError) {
             console.error('Error generando contrato automático:', contractError);
             // No fallar la reserva si hay error en el contrato
         }
-        
+       
         // Poblar la reserva guardada antes de enviarla
         const populatedReservation = await reservationsModel.findById(savedReservation._id)
             .populate({
@@ -308,15 +447,15 @@ reservationsController.createReservation = async (req, res) => {
                 path: 'vehicleId',
                 select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
             });
-        
-        res.status(201).json({ 
+       
+        res.status(201).json({
             success: true,
             message: "Reserva creada exitosamente",
             data: populatedReservation
         });
     } catch (error) {
         console.error('Error al crear reserva:', error);
-        
+       
         // Manejar errores de validación de Mongoose
         if (error.name === 'ValidationError') {
             return res.status(400).json({
@@ -325,15 +464,15 @@ reservationsController.createReservation = async (req, res) => {
                 errors: Object.values(error.errors).map(err => err.message)
             });
         }
-
-        res.status(500).json({ 
+ 
+        res.status(500).json({
             success: false,
-            message: "Error interno del servidor al crear la reserva", 
-            error: error.message 
+            message: "Error interno del servidor al crear la reserva",
+            error: error.message
         });
     }
 };
-
+ 
 //Update - Actualizar reserva existente
 reservationsController.updateReservation = async (req, res) => {
     try {
@@ -347,7 +486,7 @@ reservationsController.updateReservation = async (req, res) => {
             status,
             pricePerDay
         } = req.body;
-
+ 
         // Validar que el ID sea válido
         if (!isValidObjectId(id)) {
             return res.status(400).json({
@@ -355,7 +494,7 @@ reservationsController.updateReservation = async (req, res) => {
                 message: "ID de reserva no válido"
             });
         }
-
+ 
         // Verificar que la reserva existe
         const existingReservation = await reservationsModel.findById(id);
         if (!existingReservation) {
@@ -364,10 +503,10 @@ reservationsController.updateReservation = async (req, res) => {
                 message: "Reserva no encontrada"
             });
         }
-
+ 
         // Objeto para almacenar los campos a actualizar
         const updateFields = {};
-
+ 
         // Validar y agregar clientId si se proporciona
         if (clientId !== undefined) {
             if (!isValidObjectId(clientId)) {
@@ -378,7 +517,7 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.clientId = clientId;
         }
-
+ 
         // Validar y agregar vehicleId si se proporciona
         if (vehicleId !== undefined) {
             if (!isValidObjectId(vehicleId)) {
@@ -389,12 +528,12 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.vehicleId = vehicleId;
         }
-
+ 
         // Agregar client si se proporciona
         if (client !== undefined) {
             updateFields.client = client;
         }
-
+ 
         // Validar y agregar fechas si se proporcionan
         if (startDate !== undefined) {
             const parsedStartDate = new Date(startDate);
@@ -406,7 +545,7 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.startDate = parsedStartDate;
         }
-
+ 
         if (returnDate !== undefined) {
             const parsedReturnDate = new Date(returnDate);
             if (!isValidDate(parsedReturnDate)) {
@@ -417,18 +556,18 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.returnDate = parsedReturnDate;
         }
-
+ 
         // Validar rango de fechas si ambas fechas están siendo actualizadas
         const finalStartDate = updateFields.startDate || existingReservation.startDate;
         const finalReturnDate = updateFields.returnDate || existingReservation.returnDate;
-        
+       
         if (!isValidDateRange(finalStartDate, finalReturnDate)) {
             return res.status(400).json({
                 success: false,
                 message: "La fecha de inicio debe ser anterior a la fecha de devolución"
             });
         }
-
+ 
         // Validar y agregar status si se proporciona
         if (status !== undefined) {
             if (!['Pending', 'Active', 'Completed'].includes(status)) {
@@ -439,7 +578,7 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.status = status;
         }
-
+ 
         // Validar y agregar pricePerDay si se proporciona
         if (pricePerDay !== undefined) {
             if (!pricePerDay || pricePerDay <= 0) {
@@ -450,7 +589,7 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.pricePerDay = pricePerDay;
         }
-
+ 
         // Verificar que al menos un campo esté siendo actualizado
         if (Object.keys(updateFields).length === 0) {
             return res.status(400).json({
@@ -458,11 +597,11 @@ reservationsController.updateReservation = async (req, res) => {
                 message: "No se proporcionaron campos para actualizar"
             });
         }
-
+ 
         // Actualizar reserva
         const updatedReservation = await reservationsModel.findByIdAndUpdate(
-            id, 
-            updateFields, 
+            id,
+            updateFields,
             { new: true, runValidators: true }
         ).populate({
             path: 'clientId',
@@ -471,7 +610,7 @@ reservationsController.updateReservation = async (req, res) => {
             path: 'vehicleId',
             select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
         });
-
+ 
         // Cambiar estado del vehículo según el estado de la reserva
         if (updatedReservation && vehicleId) {
             if (status === "Active") {
@@ -480,15 +619,15 @@ reservationsController.updateReservation = async (req, res) => {
                 await vehiculosModel.findByIdAndUpdate(vehicleId, { estado: "Disponible" });
             }
         }
-
-        res.status(200).json({ 
+ 
+        res.status(200).json({
             success: true,
             message: "Reserva actualizada exitosamente",
             data: updatedReservation
         });
     } catch (error) {
         console.error('Error al actualizar reserva:', error);
-        
+       
         // Manejar errores de validación de Mongoose
         if (error.name === 'ValidationError') {
             return res.status(400).json({
@@ -497,20 +636,20 @@ reservationsController.updateReservation = async (req, res) => {
                 errors: Object.values(error.errors).map(err => err.message)
             });
         }
-
-        res.status(500).json({ 
+ 
+        res.status(500).json({
             success: false,
-            message: "Error interno del servidor al actualizar la reserva", 
-            error: error.message 
+            message: "Error interno del servidor al actualizar la reserva",
+            error: error.message
         });
     }
 };
-
+ 
 //Delete - Eliminar reserva
 reservationsController.deleteReservation = async (req, res) => {
     try {
         const { id } = req.params;
-
+ 
         // Validar que el ID sea válido
         if (!isValidObjectId(id)) {
             return res.status(400).json({
@@ -518,7 +657,7 @@ reservationsController.deleteReservation = async (req, res) => {
                 message: "ID de reserva no válido"
             });
         }
-
+ 
         // Verificar que la reserva existe antes de eliminarla
         const reservation = await reservationsModel.findById(id)
             .populate({
@@ -529,43 +668,43 @@ reservationsController.deleteReservation = async (req, res) => {
                 path: 'vehicleId',
                 select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
             });
-            
+           
         if (!reservation) {
             return res.status(404).json({
                 success: false,
                 message: "Reserva no encontrada"
             });
         }
-
+ 
         // Eliminar reserva
         await reservationsModel.findByIdAndDelete(id);
-        
-        res.status(200).json({ 
+       
+        res.status(200).json({
             success: true,
             message: "Reserva eliminada exitosamente",
             data: reservation
         });
     } catch (error) {
         console.error('Error al eliminar reserva:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: "Error interno del servidor al eliminar la reserva", 
-            error: error.message 
+            message: "Error interno del servidor al eliminar la reserva",
+            error: error.message
         });
     }
 };
-
+ 
 // Obtener reservas del usuario autenticado
 reservationsController.getUserReservations = async (req, res) => {
     try {
         const userId = req.user && req.user._id;
         if (!userId) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'No autorizado' 
+            return res.status(401).json({
+                success: false,
+                message: 'No autorizado'
             });
         }
-        
+       
         // Validar que el userId sea válido
         if (!isValidObjectId(userId)) {
             return res.status(400).json({
@@ -573,7 +712,7 @@ reservationsController.getUserReservations = async (req, res) => {
                 message: "ID de usuario no válido"
             });
         }
-        
+       
         const reservations = await reservationsModel.find({ clientId: userId })
             .populate({
                 path: 'vehicleId',
@@ -582,7 +721,7 @@ reservationsController.getUserReservations = async (req, res) => {
             })
             .lean()
             .sort({ creationDate: -1 });
-        
+       
         // Adaptar la respuesta para que el frontend tenga acceso directo a los datos del auto y la imagen lateral
         const reservationsAdapted = reservations.map(reservation => {
             const vehiculo = reservation.vehicleId || {};
@@ -597,27 +736,27 @@ reservationsController.getUserReservations = async (req, res) => {
                 imagenVehiculo: vehiculo.imagenLateral || '',
             };
         });
-        
-        res.status(200).json({ 
-            success: true, 
+       
+        res.status(200).json({
+            success: true,
             data: reservationsAdapted,
             count: reservationsAdapted.length
         });
     } catch (error) {
         console.error('Error al obtener reservas del usuario:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: 'Error interno del servidor al obtener reservas',
             error: error.message
         });
     }
 };
-
+ 
 // Get reservations by vehicle ID - Obtener reservas por ID de vehículo
 reservationsController.getReservationsByVehicleId = async (req, res) => {
     try {
         const { vehicleId } = req.params;
-
+ 
         // Validar que el vehicleId sea válido
         if (!isValidObjectId(vehicleId)) {
             return res.status(400).json({
@@ -625,7 +764,7 @@ reservationsController.getReservationsByVehicleId = async (req, res) => {
                 message: "ID de vehículo no válido"
             });
         }
-
+ 
         // Buscar reservas por vehicleId
         const reservations = await reservationsModel.find({ vehicleId })
             .populate({
@@ -637,7 +776,7 @@ reservationsController.getReservationsByVehicleId = async (req, res) => {
                 select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
             })
             .sort({ creationDate: -1 });
-        
+       
         res.status(200).json({
             success: true,
             data: reservations,
@@ -652,12 +791,12 @@ reservationsController.getReservationsByVehicleId = async (req, res) => {
         });
     }
 };
-
+ 
 // Get reservations by status - Obtener reservas por estado
 reservationsController.getReservationsByStatus = async (req, res) => {
     try {
         const { status } = req.params;
-
+ 
         // Validar que el estado sea válido
         if (!['Pending', 'Active', 'Completed'].includes(status)) {
             return res.status(400).json({
@@ -665,7 +804,7 @@ reservationsController.getReservationsByStatus = async (req, res) => {
                 message: "Estado no válido. Debe ser: Pending, Active o Completed"
             });
         }
-
+ 
         // Buscar reservas por estado
         const reservations = await reservationsModel.find({ status })
             .populate({
@@ -677,7 +816,7 @@ reservationsController.getReservationsByStatus = async (req, res) => {
                 select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
             })
             .sort({ creationDate: -1 });
-        
+       
         res.status(200).json({
             success: true,
             data: reservations,
@@ -692,9 +831,9 @@ reservationsController.getReservationsByStatus = async (req, res) => {
         });
     }
 };
-
+ 
 /************************* VEHICULOS MAS RENTADOS POR MARCAS *******************************/
-
+ 
 reservationsController.getMostRentedVehiclesByBrand = async (req, res) => {
     try {
         const resultado = await reservationsModel.aggregate([
@@ -751,9 +890,9 @@ reservationsController.getMostRentedVehiclesByBrand = async (req, res) => {
                 $limit: 5
             }
         ]);
-
+ 
         console.log("Resultado vehiculos más rentados por marca:", resultado);
-        
+       
         res.status(200).json({
             success: true,
             data: resultado,
@@ -761,22 +900,22 @@ reservationsController.getMostRentedVehiclesByBrand = async (req, res) => {
         });
     } catch (error) {
         console.error("Error en getMostRentedVehiclesByBrand:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: "Error interno del servidor al obtener vehículos más rentados por marca",
             error: error.message
         });
     }
 };
-
+ 
 /************************* VEHICULOS MAS RENTADOS POR MODELOS *******************************/
-
+ 
 reservationsController.getMostRentedVehiclesByModel = async (req, res) => {
     try {
         const resultado = await reservationsModel.aggregate([
             {
                 $lookup: {
-                    from: "vehiculos", 
+                    from: "vehiculos",
                     localField: "vehicleId",
                     foreignField: "_id",
                     as: "vehiculo"
@@ -787,7 +926,7 @@ reservationsController.getMostRentedVehiclesByModel = async (req, res) => {
             },
             {
                 $group: {
-                    _id: "$vehiculo.modelo", 
+                    _id: "$vehiculo.modelo",
                     totalReservations: { $sum: 1 },
                     totalIncome: { $sum: "$pricePerDay" },
                     rentedVehicles: { $addToSet: "$vehiculo.nombreVehiculo" }
@@ -805,7 +944,7 @@ reservationsController.getMostRentedVehiclesByModel = async (req, res) => {
                 $limit: 5
             }
         ]);
-
+ 
         res.status(200).json({
             success: true,
             data: resultado,
@@ -813,12 +952,12 @@ reservationsController.getMostRentedVehiclesByModel = async (req, res) => {
         });
     } catch (error) {
         console.error("Error en getMostRentedVehiclesByModel:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: "Error interno del servidor al obtener vehículos más rentados por modelo",
             error: error.message
         });
     }
 };
-
+ 
 export default reservationsController;
