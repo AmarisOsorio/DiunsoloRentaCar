@@ -167,9 +167,15 @@ loginController.login = async (req, res) => {
           userType,
           user: userData
         });
+        console.log("Login exitoso");
       }
     );
   } catch (error) {
+    res.status(500).json({
+      message: "Error en el servidor",
+      error: error.toString()
+    });
+    // Log the error for debugging
     console.log(error);
   }
 };

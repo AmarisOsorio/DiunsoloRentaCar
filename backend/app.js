@@ -29,7 +29,7 @@ const app = express();
 // Configuración de CORS
 // Permitir solicitudes desde localhost:5173 y localhost:5174
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:19006"],
   credentials: true
 }));
 
