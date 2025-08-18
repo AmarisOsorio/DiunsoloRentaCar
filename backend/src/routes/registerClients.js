@@ -4,7 +4,6 @@ import registerClientsController from "../controllers/registerClientsController.
 
 //Router
 const router = express.Router();
-
 //Route
 router.route("/")
   .post(registerClientsController.registerClients)

@@ -1,11 +1,12 @@
 // Imports
 import Vehicle from "../models/Vehicles.js";
-import Brand from "../models/Marcas.js";
+import Brand from "../models/Brands.js";
+import pdfGenerator from '../utils/pdfGenerator.js';
 
 import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config.js';
 
-// Cloudinary configuration (usa config.js que ya tiene dotenv.config())
+// Cloudinary configuration 
 cloudinary.config({
   cloud_name: config.cloudinary.cloud_name,
   api_key: config.cloudinary.api_key,
@@ -75,7 +76,7 @@ vehiclesController.getVehicleById = async (req, res) => {
     try {
       if (vehicle.brandId) {
         const brand = await Brand.findById(vehicle.brandId);
-        brandName = brand ? brand.nombreMarca : 'N/A';
+        brandName = brand ? brand.brandName : 'N/A';
       }
     } catch (error) {
       // Log de error pero continuar
@@ -177,7 +178,7 @@ vehiclesController.addVehicle = async (req, res) => {
     if (brandId) {
       try {
         const brand = await Brand.findById(brandId);
-        if (brand) brandName = brand.nombreMarca;
+        if (brand) brandName = brand.brandName;
       } catch (error) {
         brandName = 'N/A';
       }
@@ -377,7 +378,7 @@ vehiclesController.updateVehicle = async (req, res) => {
       if (brandIdToUse) {
         try {
           const brand = await Brand.findById(brandIdToUse);
-          if (brand && brand.nombreMarca) brandName = brand.nombreMarca;
+          if (brand && brand.brandName) brandName = brand.brandName;
         } catch (error) {
           brandName = 'N/A';
         }

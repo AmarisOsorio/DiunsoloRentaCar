@@ -53,6 +53,7 @@ app.use("/api/contracts", contractsRoutes);
 app.use("/api/maintenances", maintenancesRoutes);//--
 app.use("/api/brands", brandsRoutes);
 
+
 // Rutas utilitarias y de comunicación
 app.use("/api/sendWelcome", sendWelcomeRoutes);
 app.use("/api/contact", contactRoutes);

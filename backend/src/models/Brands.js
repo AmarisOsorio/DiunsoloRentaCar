@@ -1,15 +1,15 @@
 /*
     Fields:
-        nombre_marca: (String),
+        brandName: (String),
         logo: (String: URL)
 */
 
-//Imports
+// Imports
 import {Schema, model} from "mongoose";
 
-//Schema
-const marcasSchema = new Schema({
-    nombreMarca: {
+// Schema
+const brandsSchema = new Schema({
+    brandName: {
         type: String,
         required: true,
         unique: true
@@ -23,5 +23,5 @@ const marcasSchema = new Schema({
     strict: false
 });
 
-//Export
-export default model("Marcas", marcasSchema);
+// Export
+export default model("Brands", brandsSchema);

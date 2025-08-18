@@ -1,6 +1,0 @@
-/**
- * Navegación del proyecto
- *  
- *  (●'◡'●)
- * 
- * */
