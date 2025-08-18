@@ -50,9 +50,9 @@ const vehicleSchema = new Schema({
         unique: true
     },
     brandId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Brands',
-        required: true
+    type: Schema.Types.ObjectId,
+    ref: 'Brands',
+    required: true
     },
     vehicleClass: {
         type: String,

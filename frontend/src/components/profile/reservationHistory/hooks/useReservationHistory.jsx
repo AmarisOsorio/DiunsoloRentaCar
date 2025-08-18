@@ -58,44 +58,44 @@ export const useReservas = (shouldFetch = false) => {
     const testReservas = [
       {
         _id: '1',
-        clientID: 'test-client-id',
-        vehiculoID: {
+        clientId: 'test-client-id',
+        vehicleId: {
           _id: 'test-vehicle-1',
-          nombreVehiculo: 'Toyota Corolla (Demo)',
-          marca: 'Toyota',
-          modelo: '2023',
+          vehicleName: 'Toyota Corolla (Demo)',
+          brand: 'Toyota',
+          model: '2023',
           color: 'Blanco',
-          imagenLateral: 'https://via.placeholder.com/300x200?text=Toyota+Corolla'
+          sideImage: 'https://via.placeholder.com/300x200?text=Toyota+Corolla'
         },
-        fechaInicio: '2025-01-15T10:00:00.000Z',
-        fechaDevolucion: '2025-01-20T10:00:00.000Z',
-        estado: 'Pendiente',
-        precioPorDia: 30000,
-        cliente: [{
-          nombre: 'Usuario Demo',
-          telefono: '1234567890',
-          correoElectronico: 'demo@example.com'
+        startDate: '2025-01-15T10:00:00.000Z',
+        returnDate: '2025-01-20T10:00:00.000Z',
+        status: 'Pending',
+        pricePerDay: 30000,
+        client: [{
+          name: 'Usuario Demo',
+          phone: '1234567890',
+          email: 'demo@example.com'
         }]
       },
       {
         _id: '2',
-        clientID: 'test-client-id',
-        vehiculoID: {
+        clientId: 'test-client-id',
+        vehicleId: {
           _id: 'test-vehicle-2',
-          nombreVehiculo: 'Honda Civic (Demo)',
-          marca: 'Honda',
-          modelo: '2023',
+          vehicleName: 'Honda Civic (Demo)',
+          brand: 'Honda',
+          model: '2023',
           color: 'Azul',
-          imagenLateral: 'https://via.placeholder.com/300x200?text=Honda+Civic'
+          sideImage: 'https://via.placeholder.com/300x200?text=Honda+Civic'
         },
-        fechaInicio: '2025-02-01T09:00:00.000Z',
-        fechaDevolucion: '2025-02-05T09:00:00.000Z',
-        estado: 'Activa',
-        precioPorDia: 25000,
-        cliente: [{
-          nombre: 'Usuario Demo',
-          telefono: '1234567890',
-          correoElectronico: 'demo@example.com'
+        startDate: '2025-02-01T09:00:00.000Z',
+        returnDate: '2025-02-05T09:00:00.000Z',
+        status: 'Active',
+        pricePerDay: 25000,
+        client: [{
+          name: 'Usuario Demo',
+          phone: '1234567890',
+          email: 'demo@example.com'
         }]
       }
     ];

@@ -182,7 +182,7 @@ const VehicleModal = ({
                   {/* Marca */}
                   <div className="detail-item">
                     <span className="detail-label">Marca:</span>
-                    <span className="detail-value">{vehicle.brandId?.nombreMarca}</span>
+                    <span className="detail-value">{vehicle.brandId?.brandName}</span>
                   </div>
                   {/* Modelo */}
                   <div className="detail-item">

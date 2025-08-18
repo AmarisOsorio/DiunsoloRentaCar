@@ -17,7 +17,7 @@ import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservationsRoutes from "./src/routes/reservations.js"; //
 import contractsRoutes from "./src/routes/contratos.js";
 import maintenancesRoutes from "./src/routes/maintenances.js";//--
-import brandsRoutes from "./src/routes/marcas.js";
+import brandsRoutes from "./src/routes/brands.js";
 
 // Rutas utilitarias y de comunicación
 import sendWelcomeRoutes from "./src/routes/sendWelcome.js";
@@ -26,9 +26,7 @@ import contactRoutes from "./src/routes/contact.js";
 const app = express();
 
 
-// Configuración de CORS
-app.use(cors());
-// Permitir solicitudes desde localhost:5173 y localhost:5174
+// Configuración de CORS para permitir credenciales solo desde los orígenes permitidos
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:5174"],
   credentials: true
