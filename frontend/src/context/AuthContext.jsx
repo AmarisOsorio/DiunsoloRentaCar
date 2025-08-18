@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const AuthContext = createContext();
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const AuthContext = createContext(null);
+export { AuthContext };
 
 export const AuthProvider = ({ children }) => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
   const [userType, setUserType] = useState(() => localStorage.getItem('userType'));
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('isAuthenticated') === 'true');
   const [userInfo, setUserInfo] = useState(() => {
@@ -48,75 +49,82 @@ export const AuthProvider = ({ children }) => {
     loadUserProfile();
   }, [isAuthenticated, userType, userInfo]);
 
-  const login = async ({ correo, contraseña }) => {
-    try {
-      const res = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo, contraseña })
-      });
-      const data = await res.json();
+ // Reemplaza solo esta función en tu AuthContext.jsx
 
+const login = async ({ email, password }) => {
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        email: email.trim(),
+        password: password 
+      })
+    });
+    
+    const data = await res.json();
+    
+    // Log para debug (puedes quitar después)
+    console.log('Response status:', res.status);
+    console.log('Response data:', data);
 
-      if (res.ok && data.userType) {
-        const normalizedType = data.userType.toLowerCase();
+    if (res.ok && data.userType) {
+      const normalizedType = data.userType.toLowerCase();
 
-        if (normalizedType === 'admin') {
-          // Bloquear acceso a usuarios admin
-          return { message: 'Este usuario no tiene permiso para acceder a esta plataforma.' };
-        }
-
-        setUserType(normalizedType);
-        setIsAuthenticated(true);
-        if (data.user) {
-          setUserInfo(data.user);
-        }
-        window.dispatchEvent(new Event('auth-changed'));
-        return { ...data, message: data.message || 'login exitoso' };
-
-        
+      if (normalizedType === 'admin') {
+        return { message: 'Este usuario no tiene permiso para acceder a esta plataforma.' };
       }
-      else if (data.needVerification) {
-        setUserType(null);
-        setIsAuthenticated(false);
-        return data; // <-- Retorna el objeto completo para que useLogin lo detecte
-      } else {
-        setUserType(null);
-        setIsAuthenticated(false);
-        return { message: data.message || 'Credenciales incorrectas' };
+
+      setUserType(normalizedType);
+      setIsAuthenticated(true);
+      if (data.user) {
+        setUserInfo(data.user);
       }
-    } catch (err) {
+      window.dispatchEvent(new Event('auth-changed'));
+      return { ...data, message: data.message || 'login exitoso' };
+    }
+    else if (data.needVerification) {
       setUserType(null);
       setIsAuthenticated(false);
-      return { message: 'Error de red o servidor' };
+      return data;
+    } else {
+      setUserType(null);
+      setIsAuthenticated(false);
+      return { message: data.message || 'Usuario no encontrado' };
     }
-  };
+  } catch (err) {
+    console.error('Login error:', err);
+    setUserType(null);
+    setIsAuthenticated(false);
+    return { message: 'Error de red o servidor' };
+  }
+};
 
   const register = async (data) => {
     try {
-      let formData;
+      let body;
+      let headers = {};
+
       if (data instanceof FormData) {
-        formData = data;
-        // Elimina 'contrasena' si existe
-        if (formData.has('contrasena')) {
-          formData.delete('contrasena');
-        }
+        // Si es FormData (con archivos), enviar como está
+        body = data;
+        // No establecer Content-Type para FormData, el navegador lo hace automáticamente
       } else {
-        formData = new FormData();
-        Object.entries(data).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            if (key === 'confirmarContraseña') return;
-            if (key === 'contrasena') return; // No agregar 'contrasena'
-            formData.append(key, value);
-          }
-        });
+        // Si es objeto regular, enviar como JSON
+        body = JSON.stringify(data);
+        headers['Content-Type'] = 'application/json';
       }
+
       const res = await fetch(`${API_URL}/registerClients`, {
         method: 'POST',
-        body: formData,
+        body: body,
+        headers: headers,
         credentials: 'include',
       });
+      
       return res.json();
     } catch (err) {
       return { message: 'Error de red o servidor' };
@@ -162,6 +170,7 @@ export const AuthProvider = ({ children }) => {
     });
     return res.json();
   };
+
   const logout = async () => {
     await fetch(`${API_URL}/logout`, {
       method: 'POST',
@@ -175,6 +184,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('userInfo');
     window.dispatchEvent(new Event('auth-changed'));
   };
+
   const resendVerificationCode = async () => {
     const res = await fetch(`${API_URL}/registerClients/resendCodeEmail`, {
       method: 'POST',
@@ -342,14 +352,14 @@ export const AuthProvider = ({ children }) => {
   // Obtener reservas del usuario autenticado (memorizada para evitar renders infinitos)
   const getUserReservations = useCallback(async () => {
     try {
-      console.log('🔄 [AuthContext] getUserReservations llamado - API_URL:', API_URL);
+      console.log('📄 [AuthContext] getUserReservations llamado - API_URL:', API_URL);
       const res = await fetch(`${API_URL}/reservas/mis-reservas`, {
         method: 'GET',
         credentials: 'include'
       });
-      console.log('🔄 [AuthContext] Response status:', res.status, 'ok:', res.ok);
+      console.log('📄 [AuthContext] Response status:', res.status, 'ok:', res.ok);
       const data = await res.json();
-      console.log('🔄 [AuthContext] Response data:', data);
+      console.log('📄 [AuthContext] Response data:', data);
 
       if (res.ok && data.success) {
         return { success: true, reservas: data.reservas || [] };
@@ -364,7 +374,7 @@ export const AuthProvider = ({ children }) => {
   // Función para actualizar una reserva
   const updateReservation = useCallback(async (reservaId, reservaData) => {
     try {
-      console.log('🔄 [AuthContext] updateReservation llamado - ID:', reservaId, 'Data:', reservaData);
+      console.log('📄 [AuthContext] updateReservation llamado - ID:', reservaId, 'Data:', reservaData);
       const res = await fetch(`${API_URL}/reservas/${reservaId}`, {
         method: 'PUT',
         credentials: 'include',
@@ -375,7 +385,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await res.json();
-      console.log('🔄 [AuthContext] updateReservation response:', data);
+      console.log('📄 [AuthContext] updateReservation response:', data);
 
       if (res.ok) {
         // Invalidar las reservas para que se recarguen
@@ -415,14 +425,14 @@ export const AuthProvider = ({ children }) => {
   // Función para eliminar una reserva
   const deleteReservation = useCallback(async (reservaId) => {
     try {
-      console.log('🔄 [AuthContext] deleteReservation llamado - ID:', reservaId);
+      console.log('📄 [AuthContext] deleteReservation llamado - ID:', reservaId);
       const res = await fetch(`${API_URL}/reservas/${reservaId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
       const data = await res.json();
-      console.log('🔄 [AuthContext] deleteReservation response:', data);
+      console.log('📄 [AuthContext] deleteReservation response:', data);
 
       if (res.ok) {
         // Invalidar las reservas para que se recarguen
@@ -468,5 +478,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

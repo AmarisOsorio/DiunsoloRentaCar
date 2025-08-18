@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../../../../context/AuthContext';
+import { useAuth } from '../../../../../../hooks/useAuth';
 const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
   // Obtener autenticación y datos de usuario
   const { isAuthenticated, userInfo, createReservation } = useAuth();
