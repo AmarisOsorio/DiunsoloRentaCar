@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navigation from './src/navigation/Navigation.js';
 import { AuthProvider } from './src/Context/AuthContext';

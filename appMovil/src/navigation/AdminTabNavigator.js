@@ -153,7 +153,7 @@ export default function AdminTabNavigator() {
         <View style={{ flex: 1 }} />
         <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfile(true)}>
           <View style={styles.profileIconCircle}>
-            <Ionicons name="person" size={28} color="#4390E1" />
+            <Ionicons name="person" size={28} color="#3D83D2" />
           </View>
         </TouchableOpacity>
       </View>
@@ -168,7 +168,7 @@ export default function AdminTabNavigator() {
       {/* Tab Navigator con animación personalizada y tabBar custom */}
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          headerStyle: { backgroundColor: '#4390E1', elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, height: 25 },
+          headerStyle: { backgroundColor: '#3D83D2', elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, height: 25 },
           headerTitleStyle: { color: '#fff', fontWeight: 'bold', padding: 0, margin: 0 },
           headerTintColor: '#fff',
         })}
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#4390E1',
+    backgroundColor: '#3D83D2',
     paddingTop: 0,
     paddingBottom: 0,
     paddingHorizontal: 18,
