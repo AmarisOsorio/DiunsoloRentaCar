@@ -26,9 +26,7 @@ import contactRoutes from "./src/routes/contact.js";
 const app = express();
 
 
-// Configuración de CORS
-app.use(cors());
-// Permitir solicitudes desde localhost:5173 y localhost:5174
+// Configuración de CORS para permitir credenciales solo desde los orígenes permitidos
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:19006"],
   credentials: true

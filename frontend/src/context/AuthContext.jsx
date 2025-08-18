@@ -353,7 +353,7 @@ const login = async ({ email, password }) => {
   const getUserReservations = useCallback(async () => {
     try {
       console.log('📄 [AuthContext] getUserReservations llamado - API_URL:', API_URL);
-      const res = await fetch(`${API_URL}/reservas/mis-reservas`, {
+  const res = await fetch(`${API_URL}/reservations/my-reservations`, {
         method: 'GET',
         credentials: 'include'
       });
@@ -362,7 +362,7 @@ const login = async ({ email, password }) => {
       console.log('📄 [AuthContext] Response data:', data);
 
       if (res.ok && data.success) {
-        return { success: true, reservas: data.reservas || [] };
+        return { success: true, reservas: data.data || [] };
       }
       return { success: false, message: data.message || 'No se pudieron obtener las reservas' };
     } catch (error) {
@@ -375,7 +375,7 @@ const login = async ({ email, password }) => {
   const updateReservation = useCallback(async (reservaId, reservaData) => {
     try {
       console.log('📄 [AuthContext] updateReservation llamado - ID:', reservaId, 'Data:', reservaData);
-      const res = await fetch(`${API_URL}/reservas/${reservaId}`, {
+  const res = await fetch(`${API_URL}/reservations/${reservaId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
@@ -402,7 +402,7 @@ const login = async ({ email, password }) => {
   // Función para crear una reserva
   const createReservation = useCallback(async (reservaData) => {
     try {
-      const res = await fetch(`${API_URL}/reservas`, {
+  const res = await fetch(`${API_URL}/reservations`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -426,7 +426,7 @@ const login = async ({ email, password }) => {
   const deleteReservation = useCallback(async (reservaId) => {
     try {
       console.log('📄 [AuthContext] deleteReservation llamado - ID:', reservaId);
-      const res = await fetch(`${API_URL}/reservas/${reservaId}`, {
+  const res = await fetch(`${API_URL}/reservations/${reservaId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
