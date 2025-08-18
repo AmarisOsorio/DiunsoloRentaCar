@@ -37,42 +37,64 @@ const AppContent = () => {
     // No es necesario limpiar aquí, el RegisterModal ya lo hace con useEffect
   };
 
+
+  /**************** LÓGICA PARA OCULTAR Y MOSTRAR EL NAVBAR & FOOTER ******************/
+
   // Rutas donde no se debe mostrar el footer
   const routesWithoutFooter = ['/perfil'];
-  const shouldShowFooter = !routesWithoutFooter.some(route =>
+
+  // Rutas válidas
+  const validRoutes = ['/', '/catalogo', '/contacto', '/terminos', '/perfil'];
+
+  // Si la ruta actual NO está en validRoutes, es 404
+  const isNotFoundPage = !validRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
 
+  // Calcular si mostrará el footer
+  let shouldShowFooter = !routesWithoutFooter.some(route =>
+    location.pathname === route || location.pathname.startsWith(route + '/')
+  );
+
+  //Se ocultara el footer, si es 404
+  shouldShowFooter = shouldShowFooter && !isNotFoundPage;
+
+  // Por defecto siempre se mostrara el navbar, excepto en 404
+  const shouldShowNavbar = !isNotFoundPage;
+
+
   return (
     <>
-      <Navbar />
+      {shouldShowNavbar && <Navbar />}
+
       <main>
         <Routes>
           <Route path="/" element={
-              <Home />
+            <Home />
           } />
           <Route path="/catalogo" element={
-              <Catalog />
+            <Catalog />
           } />
           <Route path="/contacto" element={
-              <Contact />
+            <Contact />
           } />
           <Route path="/terminos" element={
-              <TermsAndConditions />
+            <TermsAndConditions />
           } />
-
-         
           <Route path="/perfil" element={
             <ProtectedRoute>
-              <Profile/>
+              <Profile />
             </ProtectedRoute>
           } />
-          
-          {/****** Ruta que permite que mostrar la página de error cuando se ingresa a una dirección erronea *******/}
+
+          {/* 
+           * Ruta que permite que mostrar la página de error cuando 
+           * se ingresa a una dirección erronea 
+           */}
           <Route path="*" element={<ErrorNotFound />} />
 
         </Routes>
-        
+
         <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onOpenRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }} onOpenForgot={() => { setShowLoginModal(false); setShowForgotModal(true); }} />
         <RegisterModal open={showRegisterModal} onClose={handleCloseRegister} onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }} />
         <ForgotPasswordModal open={showForgotModal} onClose={() => { setShowForgotModal(false); setShowLoginModal(true); }} />

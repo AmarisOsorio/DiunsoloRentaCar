@@ -14,9 +14,9 @@ import profileRoutes from "./src/routes/profile.js";
 import clientsRoutes from "./src/routes/clients.js";
 import employeesRoutes from "./src/routes/Empleados.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
-import reservationsRoutes from "./src/routes/reservas.js";
+import reservationsRoutes from "./src/routes/reservations.js"; //
 import contractsRoutes from "./src/routes/contratos.js";
-import maintenancesRoutes from "./src/routes/mantenimientos.js";
+import maintenancesRoutes from "./src/routes/maintenances.js";//--
 import brandsRoutes from "./src/routes/brands.js";
 
 // Rutas utilitarias y de comunicación
@@ -27,6 +27,7 @@ const app = express();
 
 
 // Configuración de CORS
+app.use(cors());
 // Permitir solicitudes desde localhost:5173 y localhost:5174
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:19006"],
@@ -48,9 +49,9 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/employees", employeesRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
-app.use("/api/reservas", reservationsRoutes);
+app.use("/api/reservations", reservationsRoutes);//
 app.use("/api/contracts", contractsRoutes);
-app.use("/api/maintenances", maintenancesRoutes);
+app.use("/api/maintenances", maintenancesRoutes);//--
 app.use("/api/brands", brandsRoutes);
 
 

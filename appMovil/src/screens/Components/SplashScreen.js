@@ -1,23 +1,27 @@
+// Importa los módulos necesarios de React y React Native
 import React, { useRef, useEffect, useState } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 
+// Componente principal de la pantalla de splash
 export default function SplashScreen({ onAnimationEnd }) {
-  const diunAnim = useRef(new Animated.Value(0)).current;
-  const solAnim = useRef(new Animated.Value(0)).current;
-  const oScaleAnim = useRef(new Animated.Value(0.5)).current;
-  const rentaAnim = useRef(new Animated.Value(0)).current;
-  const [showO, setShowO] = useState(false);
+  // Animaciones para cada parte del logo
+  const diunAnim = useRef(new Animated.Value(0)).current; // Opacidad para "DIUN"
+  const solAnim = useRef(new Animated.Value(0)).current;  // Opacidad para "SOL"
+  const oScaleAnim = useRef(new Animated.Value(0.5)).current; // Escala para la "O"
+  const rentaAnim = useRef(new Animated.Value(0)).current; // Opacidad para "RENTA CAR"
+  const [showO, setShowO] = useState(false); // Controla cuándo mostrar la "O"
 
   useEffect(() => {
+    // Secuencia de animaciones: primero DIUN y SOL, luego la O y finalmente RENTA CAR
     Animated.sequence([
       Animated.timing(diunAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 300, // Duración más corta
         useNativeDriver: true,
       }),
       Animated.timing(solAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 300, // Duración más corta
         useNativeDriver: true,
       }),
     ]).start(() => {
@@ -30,10 +34,10 @@ export default function SplashScreen({ onAnimationEnd }) {
         }),
         Animated.timing(rentaAnim, {
           toValue: 1,
-          duration: 500,
+          duration: 250, // Duración más corta
           useNativeDriver: true,
         }),
-        Animated.delay(700),
+        Animated.delay(300), // Espera más corta antes de finalizar
       ]).start(() => {
         if (onAnimationEnd) onAnimationEnd();
       });
@@ -41,15 +45,21 @@ export default function SplashScreen({ onAnimationEnd }) {
   }, []);
 
   return (
+    // Contenedor principal
     <View style={styles.container}>
+      {/* Fondo dividido en dos colores */}
       <View style={styles.bgRow}>
         <View style={styles.bgLeft} />
         <View style={styles.bgRight} />
       </View>
+      {/* Contenido centrado */}
       <View style={styles.centerContent}>
         <View style={styles.logoRow}>
+          {/* Texto DIUN con animación de opacidad */}
           <Animated.Text style={[styles.diun, { opacity: diunAnim }]}>DIUN</Animated.Text>
+          {/* Texto SOL con animación de opacidad */}
           <Animated.Text style={[styles.sol, { opacity: solAnim }]}>SOL</Animated.Text>
+          {/* Letra O animada con punto verde */}
           {showO ? (
             <Animated.View style={[styles.oWrapper, { transform: [{ scale: oScaleAnim }] }]}> 
               <Animated.Text style={styles.oText}>O</Animated.Text>
@@ -59,6 +69,7 @@ export default function SplashScreen({ onAnimationEnd }) {
             <View style={styles.oWrapper} />
           )}
         </View>
+        {/* Texto RENTA CAR con animación de opacidad */}
         <Animated.Text style={[styles.renta, { opacity: rentaAnim }]}>RENTA CAR</Animated.Text>
       </View>
     </View>
@@ -114,6 +125,9 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     marginRight: 2,
     textAlign: 'center',
+    textShadowColor: '#3D83D2',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
   },
   oWrapper: {
     width: 52,
@@ -130,7 +144,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     textAlignVertical: 'center',
-    textShadowColor: '#1EB6E9',
+    textShadowColor: '#3D83D2',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
     zIndex: 1,

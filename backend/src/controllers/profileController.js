@@ -3,7 +3,7 @@ import { sendEmail, HTMLRecoveryEmail } from "../utils/mailPasswordRecovery.js";
 import { HTMLVerifyAccountEmail } from '../utils/mailVerifyAccount.js';
 
 import ClientsModel from "../models/Clients.js";
-import Reservas from "../models/Reservas.js";
+import Reservas from "../models/Reservations.js";
 import { Contratos } from "../models/Contratos.js";
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
