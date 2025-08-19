@@ -88,14 +88,14 @@ const InformacionCuenta = ({
   // Si no está editando, muestra el nombre completo (nombre + apellido del backend)
   // Si está editando, muestra dos inputs: nombre/s y apellido/s
   // Permitir edición si se está editando nombre o apellido
-  const isEditingNombre = editingField === 'nombre' || editingField === 'apellido';
+  const isEditingName = editingField === 'name' || editingField === 'lastName';
 
-  // Usar los datos de la base de datos (nombre y apellido separados)
-  const nombre = localUserInfo.nombre || '';
-  const apellido = localUserInfo.apellido || '';
-  const nombreCompleto = `${nombre} ${apellido}`.trim();
+  // Use English field names from localUserInfo
+  const name = localUserInfo.name || '';
+  const lastName = localUserInfo.lastName || '';
+  const fullName = `${name} ${lastName}`.trim();
 
-  // Para edición, usar tempValues.nombre y tempValues.apellido
+  // For editing, use tempValues.name and tempValues.lastName
 
   // Recibe los props de error y loading del padre
   // emailVerificationError, emailVerifying, emailResending
@@ -124,54 +124,54 @@ const InformacionCuenta = ({
         icon={FaUser}
       >
         {/* Campo Nombre (siempre usando EditableField) */}
-        {!isEditingNombre ? (
+        {!isEditingName ? (
           <EditableField
-            label="Nombre"
-            fieldName="nombre"
-            value={nombreCompleto}
-            displayValue={nombreCompleto}
+            label="Nombre completo"
+            fieldName="name"
+            value={fullName}
+            displayValue={fullName}
             isEditing={false}
             isSaving={isSaving}
             placeholder="Ingresa tu nombre completo"
-            onEdit={() => handleEditField('nombre')}
-            onSave={() => handleSaveField('nombre')}
+            onEdit={() => handleEditField('name')}
+            onSave={() => handleSaveField('name')}
             onCancel={handleCancelEdit}
             onChange={updateTempValue}
-            validationError={validationErrors.nombre || validationErrors.apellido}
+            validationError={validationErrors.name || validationErrors.lastName}
             getInputClassName={getInputClassName}
           />
         ) : (
           <>
             <EditableField
-              label="Nombre/s"
-              fieldName="nombre"
-              value={nombre}
-              tempValue={tempValues.nombre}
+              label="Nombre(s)"
+              fieldName="name"
+              value={name}
+              tempValue={tempValues.name}
               isEditing={true}
               isSaving={isSaving}
               placeholder="Nombre(s)"
               onEdit={handleEditField}
-              onSave={() => handleSaveField('nombre')}
+              onSave={() => handleSaveField('name')}
               onCancel={handleCancelEdit}
               onChange={updateTempValue}
-              validationError={validationErrors.nombre}
+              validationError={validationErrors.name}
               getInputClassName={getInputClassName}
               autoFocus
               showSaveCancel={false}
             />
             <EditableField
-              label="Apellido/s"
-              fieldName="apellido"
-              value={apellido}
-              tempValue={tempValues.apellido}
+              label="Apellido(s)"
+              fieldName="lastName"
+              value={lastName}
+              tempValue={tempValues.lastName}
               isEditing={true}
               isSaving={isSaving}
               placeholder="Apellido(s)"
               onEdit={handleEditField}
-              onSave={() => handleSaveField('apellido')}
+              onSave={() => handleSaveField('lastName')}
               onCancel={handleCancelEdit}
               onChange={updateTempValue}
-              validationError={validationErrors.apellido}
+              validationError={validationErrors.lastName}
               getInputClassName={getInputClassName}
               showSaveCancel={false}
             />
@@ -180,58 +180,58 @@ const InformacionCuenta = ({
         {/* Campo Teléfono */}
         <EditableField
           label="Número de teléfono"
-          fieldName="telefono"
-          value={localUserInfo.telefono}
-          tempValue={tempValues.telefono}
-          isEditing={editingField === 'telefono'}
+          fieldName="phone"
+          value={localUserInfo.phone}
+          tempValue={tempValues.phone}
+          isEditing={editingField === 'phone'}
           isSaving={isSaving}
           type="tel"
           placeholder="2345-6789"
           maxLength="9"
-          displayValue={`+503 ${localUserInfo.telefono}`}
+          displayValue={`+503 ${localUserInfo.phone}`}
           formatValue={formatPhoneNumber}
           onEdit={handleEditField}
-          onSave={() => handleSaveField('telefono')}
+          onSave={() => handleSaveField('phone')}
           onCancel={handleCancelEdit}
           onChange={updateTempValue}
-          validationError={validationErrors.telefono}
+          validationError={validationErrors.phone}
           getInputClassName={getInputClassName}
         />
 
         {/* Campo Fecha de Nacimiento */}
         <EditableField
           label="Fecha de nacimiento"
-          fieldName="fechaNacimiento"
-          value={localUserInfo.fechaNacimiento}
-          tempValue={tempValues.fechaNacimiento}
-          isEditing={editingField === 'fechaNacimiento'}
+          fieldName="birthDate"
+          value={localUserInfo.birthDate}
+          tempValue={tempValues.birthDate}
+          isEditing={editingField === 'birthDate'}
           isSaving={isSaving}
           type="date"
-          displayValue={new Date(localUserInfo.fechaNacimiento).toLocaleDateString('es-ES')}
+          displayValue={localUserInfo.birthDate ? new Date(localUserInfo.birthDate).toLocaleDateString('es-ES') : ''}
           onEdit={handleEditField}
-          onSave={() => handleSaveField('fechaNacimiento')}
+          onSave={() => handleSaveField('birthDate')}
           onCancel={handleCancelEdit}
           onChange={updateTempValue}
-          validationError={validationErrors.fechaNacimiento}
+          validationError={validationErrors.birthDate}
           getInputClassName={getInputClassName}
         />
 
         {/* Licencia */}
         <DocumentUpload
-          label="Licencia (frente y reverso)"
+          label="Licencia de conducir (frente y reverso)"
           documents={{
-            frente: localUserInfo.licenciaFrente,
-            reverso: localUserInfo.licenciaReverso
+            frente: localUserInfo.licenseFront,
+            reverso: localUserInfo.licenseBack
           }}
           fileRefs={{
             frente: licenciaFrenteRef,
             reverso: licenciaReversoRef
           }}
-          onFileUpload={(e, side) => handleFileUpload(e, 'licencia', side)}
-          onRemoveImage={(side) => handleRemoveImage('licencia', side)}
+          onFileUpload={(e, side) => handleFileUpload(e, 'license', side)}
+          onRemoveImage={(side) => handleRemoveImage('license', side)}
           validationErrors={{
-            frente: validationErrors.licenciaFrente,
-            reverso: validationErrors.licenciaReverso
+            frente: validationErrors.licenseFront,
+            reverso: validationErrors.licenseBack
           }}
         />
 
@@ -239,18 +239,18 @@ const InformacionCuenta = ({
         <DocumentUpload
           label="Pasaporte/DUI (frente y reverso)"
           documents={{
-            frente: localUserInfo.pasaporteFrente,
-            reverso: localUserInfo.pasaporteReverso
+            frente: localUserInfo.passportFront,
+            reverso: localUserInfo.passportBack
           }}
           fileRefs={{
             frente: pasaporteFrenteRef,
             reverso: pasaporteReversoRef
           }}
-          onFileUpload={(e, side) => handleFileUpload(e, 'pasaporte', side)}
-          onRemoveImage={(side) => handleRemoveImage('pasaporte', side)}
+          onFileUpload={(e, side) => handleFileUpload(e, 'passport', side)}
+          onRemoveImage={(side) => handleRemoveImage('passport', side)}
           validationErrors={{
-            frente: validationErrors.pasaporteFrente,
-            reverso: validationErrors.pasaporteReverso
+            frente: validationErrors.passportFront,
+            reverso: validationErrors.passportBack
           }}
         />
       </ProfileSection>

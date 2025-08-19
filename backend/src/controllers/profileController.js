@@ -1,3 +1,4 @@
+
 // --- CAMBIO DE EMAIL SEGURO ---
 import { sendEmail, HTMLRecoveryEmail } from "../utils/mailPasswordRecovery.js";
 import { HTMLVerifyAccountEmail } from '../utils/mailVerifyAccount.js';
@@ -40,6 +41,54 @@ const upload = multer({
 });
 
 const profileController = {};
+
+// Eliminar documento específico (licencia/pasaporte, frente/reverso)
+profileController.deleteDocument = async (req, res) => {
+  try {
+    let { documentType, side } = req.body;
+    const userId = req.user._id;
+
+    // Permitir valores en inglés y mapear a español
+    if (documentType === 'license') documentType = 'licencia';
+    if (documentType === 'passport') documentType = 'pasaporte';
+    if (side === 'front') side = 'frente';
+    if (side === 'back') side = 'reverso';
+
+    // Validar parámetros
+    if (!documentType || !side) {
+      return res.status(400).json({ success: false, message: 'Tipo de documento y lado son requeridos' });
+    }
+    if (!['licencia', 'pasaporteDui', 'pasaporte'].includes(documentType)) {
+      return res.status(400).json({ success: false, message: 'Tipo de documento inválido' });
+    }
+    if (!['frente', 'reverso'].includes(side)) {
+      return res.status(400).json({ success: false, message: 'Lado inválido' });
+    }
+
+    // Construir el nombre del campo en la base de datos
+    let fieldName;
+    if (documentType === 'licencia') {
+      fieldName = side === 'frente' ? 'licenseFront' : 'licenseBack';
+    } else {
+      fieldName = side === 'frente' ? 'passportFront' : 'passportBack';
+    }
+
+    // Obtener el usuario
+    const user = await ClientsModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    // Eliminar la referencia al archivo en la base de datos
+    user[fieldName] = null;
+    await user.save();
+
+    res.json({ success: true, message: 'Documento eliminado correctamente' });
+  } catch (error) {
+    console.error('Error al eliminar documento:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+};
 
 // --- CAMBIO DE EMAIL: Solicitar y verificar código de cambio de correo ---
 // Guardar los códigos temporalmente en memoria (en producción usar Redis o DB)
@@ -138,20 +187,20 @@ profileController.getProfile = async (req, res) => {
   try {
     const user = req.user;
     
-    // Formatear la respuesta para el frontend
+    // Use English field names from Clients model
     const profileData = {
       id: user._id,
-      nombres: user.nombre,
-      apellidos: user.apellido,
-      correo: user.correo,
-      telefono: user.telefono,
-      fechaDeNacimiento: user.fechaDeNacimiento,
-      licenciaFrente: user.licenciaFrente,
-      licenciaReverso: user.licenciaReverso,
-      pasaporteFrente: user.pasaporteFrente,
-      pasaporteReverso: user.pasaporteReverso,
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      birthDate: user.birthDate,
+      licenseFront: user.licenseFront,
+      licenseBack: user.licenseBack,
+      passportFront: user.passportFront,
+      passportBack: user.passportBack,
       isVerified: user.isVerified,
-      fechaRegistro: user.createdAt
+      createdAt: user.createdAt
     };
 
     res.json({
@@ -162,7 +211,7 @@ profileController.getProfile = async (req, res) => {
     console.error('Error al obtener perfil:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Internal server error'
     });
   }
 };
@@ -171,11 +220,10 @@ profileController.getProfile = async (req, res) => {
 profileController.updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
-    // Permitir updates parciales
+    // Allow partial updates with English field names
     const allowedFields = [
-      'nombre', 'apellido', 'telefono', 'fechaDeNacimiento',
-      'licenciaFrente', 'licenciaReverso', 'pasaporteFrente', 'pasaporteReverso',
-      'correo'
+      'name', 'lastName', 'email', 'phone', 'birthDate',
+      'licenseFront', 'licenseBack', 'passportFront', 'passportBack'
     ];
     const updateFields = {};
     for (const key of allowedFields) {
@@ -183,40 +231,35 @@ profileController.updateProfile = async (req, res) => {
         updateFields[key] = req.body[key];
       }
     }
-    // Validar correo si se va a actualizar
-    if (updateFields.correo) {
-      if (!/^\S+@\S+\.\S+$/.test(updateFields.correo)) {
+    // Validate email if updating
+    if (updateFields.email) {
+      if (!/^\S+@\S+\.\S+$/.test(updateFields.email)) {
         return res.status(400).json({
           success: false,
-          message: 'El correo electrónico no es válido'
+          message: 'Invalid email address'
         });
       }
-      // Verificar que el correo no esté en uso por otro usuario
-      const exists = await ClientsModel.findOne({ correo: updateFields.correo, _id: { $ne: userId } });
+      // Check if email is already in use by another user
+      const exists = await ClientsModel.findOne({ email: updateFields.email, _id: { $ne: userId } });
       if (exists) {
         return res.status(400).json({
           success: false,
-          message: 'El correo ya está en uso por otro usuario'
+          message: 'Email is already in use by another user'
         });
       }
     }
 
-    // Validaciones solo si se actualizan esos campos
-    if (updateFields.telefono && !/^[267][0-9]{3}-[0-9]{4}$/.test(updateFields.telefono)) {
+    // Validate phone if updating
+    if (updateFields.phone && !/^[267][0-9]{3}-[0-9]{4}$/.test(updateFields.phone)) {
       return res.status(400).json({
         success: false,
-        message: 'El teléfono debe tener el formato correcto (ej: 2345-6789, inicia con 2, 6 o 7)'
+        message: 'Phone must be in format 0000-0000 and start with 2, 6, or 7'
       });
     }
-    if (updateFields.fechaDeNacimiento) {
-      const validacionEdad = validarEdadMinima(updateFields.fechaDeNacimiento);
-      if (!validacionEdad.isValid) {
-        return res.status(400).json({
-          success: false,
-          message: validacionEdad.message
-        });
-      }
-      updateFields.fechaDeNacimiento = new Date(updateFields.fechaDeNacimiento);
+    // Validate birthDate if updating
+    if (updateFields.birthDate) {
+      // You may want to add age validation here if needed
+      updateFields.birthDate = new Date(updateFields.birthDate);
     }
 
     const updatedUser = await ClientsModel.findByIdAndUpdate(
@@ -228,36 +271,36 @@ profileController.updateProfile = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({
         success: false,
-        message: 'Usuario no encontrado'
+        message: 'User not found'
       });
     }
 
-    // Formatear respuesta
+    // Format response (English fields)
     const profileData = {
       id: updatedUser._id,
-      nombres: updatedUser.nombre,
-      apellidos: updatedUser.apellido,
-      correo: updatedUser.correo,
-      telefono: updatedUser.telefono,
-      fechaDeNacimiento: updatedUser.fechaDeNacimiento,
-      licenciaFrente: updatedUser.licenciaFrente,
-      licenciaReverso: updatedUser.licenciaReverso,
-      pasaporteFrente: updatedUser.pasaporteFrente,
-      pasaporteReverso: updatedUser.pasaporteReverso,
+      name: updatedUser.name,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      birthDate: updatedUser.birthDate,
+      licenseFront: updatedUser.licenseFront,
+      licenseBack: updatedUser.licenseBack,
+      passportFront: updatedUser.passportFront,
+      passportBack: updatedUser.passportBack,
       isVerified: updatedUser.isVerified,
-      fechaRegistro: updatedUser.createdAt
+      createdAt: updatedUser.createdAt
     };
 
     res.json({
       success: true,
-      message: 'Perfil actualizado correctamente',
+      message: 'Profile updated successfully',
       user: profileData
     });
   } catch (error) {
     console.error('Error al actualizar perfil:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Internal server error'
     });
   }
 };
@@ -293,7 +336,9 @@ profileController.changePassword = async (req, res) => {
     }
 
     // Comparar la nueva contraseña con la anterior
-    const isSamePassword = await bcrypt.compare(newPassword, user.contraseña);
+
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
       return res.status(400).json({
         success: false,
@@ -307,18 +352,18 @@ profileController.changePassword = async (req, res) => {
 
     // Actualizar contraseña en la base de datos
     await ClientsModel.findByIdAndUpdate(userId, {
-      contraseña: hashedPassword
+      password: hashedPassword
     });
 
     res.json({
       success: true,
-      message: 'Contraseña actualizada correctamente'
+      message: 'Password updated successfully'
     });
   } catch (error) {
     console.error('Error al cambiar contraseña:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Internal server error'
     });
   }
 };
@@ -333,31 +378,10 @@ profileController.deleteAccount = async (req, res) => {
       clientId: userId.toString(),
       estado: { $in: ["Pendiente", "Activa"] }
     });
-
-    // 2. Verificar contratos activos
-    const contratosActivos = await Contratos.findOne({
-      clientID: userId.toString(),
-      estado: "Activo"
-    });
-
-    if (reservasActivas || contratosActivos) {
+    if (reservasActivas) {
       return res.status(400).json({
         success: false,
-        message: "No puedes eliminar tu cuenta porque tienes reservas o contratos activos."
-      });
-    }
-
-    // Eliminar archivos de documentos si existen
-    const user = await ClientsModel.findById(userId);
-    if (user) {
-      // Eliminar archivos de licencia y pasaporte
-      [user.licencia, user.pasaporteDui].forEach(filePath => {
-        if (filePath && typeof filePath === 'string' && filePath.startsWith('/uploads/')) {
-          const fullPath = path.join(__dirname, '../..', filePath);
-          if (fs.existsSync(fullPath)) {
-            fs.unlinkSync(fullPath);
-          }
-        }
+        message: 'No puedes eliminar la cuenta con reservas activas o pendientes.'
       });
     }
 
@@ -366,16 +390,17 @@ profileController.deleteAccount = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Cuenta eliminada correctamente'
+      message: 'Account deleted successfully'
     });
   } catch (error) {
     console.error('Error al eliminar cuenta:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Internal server error'
     });
   }
 };
+
 
 // Subir documento con lado específico (frente o reverso)
 profileController.uploadDocument = [
@@ -383,66 +408,55 @@ profileController.uploadDocument = [
   async (req, res) => {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message: 'No se ha subido ningún archivo'
-        });
+        return res.status(400).json({ success: false, message: 'No se envió ningún archivo' });
       }
 
-      const { documentType, side } = req.body;
+      let { documentType, side } = req.body;
       const userId = req.user._id;
+
+      // Permitir valores en inglés y mapear a español
+      if (documentType === 'license') documentType = 'licencia';
+      if (documentType === 'passport') documentType = 'pasaporte';
+      if (side === 'front') side = 'frente';
+      if (side === 'back') side = 'reverso';
 
       // Validar parámetros
       if (!documentType || !side) {
-        return res.status(400).json({
-          success: false,
-          message: 'Tipo de documento y lado son requeridos'
-        });
+        return res.status(400).json({ success: false, message: 'Tipo de documento y lado son requeridos' });
       }
 
       if (!['licencia', 'pasaporteDui', 'pasaporte'].includes(documentType)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Tipo de documento inválido'
-        });
+        return res.status(400).json({ success: false, message: 'Tipo de documento inválido' });
       }
 
       if (!['frente', 'reverso'].includes(side)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Lado del documento inválido'
-        });
+        return res.status(400).json({ success: false, message: 'Lado inválido' });
       }
 
       // Construir el nombre del campo en la base de datos
       let fieldName;
       if (documentType === 'licencia') {
-        fieldName = side === 'frente' ? 'licenciaFrente' : 'licenciaReverso';
+        fieldName = side === 'frente' ? 'licenseFront' : 'licenseBack';
       } else {
-        fieldName = side === 'frente' ? 'pasaporteFrente' : 'pasaporteReverso';
+        fieldName = side === 'frente' ? 'passportFront' : 'passportBack';
       }
 
       // Obtener el usuario actual para verificar si ya tiene una imagen
       const user = await ClientsModel.findById(userId);
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'Usuario no encontrado'
-        });
+        return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
       }
-
-      // Si ya existe una imagen, podrías eliminarla de Cloudinary si guardas el public_id
-      // (opcional, aquí solo sobreescribimos la URL)
 
       // Subir el archivo a Cloudinary
       let fileUrl = null;
       try {
-        fileUrl = await uploadBufferToCloudinary(req.file.buffer, `usuarios/${userId}`);
+        fileUrl = await uploadBufferToCloudinary(req.file.buffer, `diunsolo/${fieldName}`);
       } catch (cloudErr) {
-        return res.status(500).json({ success: false, message: 'Error subiendo a Cloudinary', error: cloudErr.message });
+        return res.status(500).json({ success: false, message: 'Error al subir a Cloudinary' });
       }
 
       // Guardar la URL de Cloudinary en la base de datos
+
       user[fieldName] = fileUrl;
       await user.save();
 
@@ -463,80 +477,5 @@ profileController.uploadDocument = [
   }
 ];
 
-// Eliminar documento específico (frente o reverso)
-profileController.deleteDocument = async (req, res) => {
-  try {
-    const { documentType, side } = req.body;
-    const userId = req.user._id;
 
-    // Validar parámetros
-    if (!documentType || !side) {
-      return res.status(400).json({
-        success: false,
-        message: 'Tipo de documento y lado son requeridos'
-      });
-    }
-
-    if (!['licencia', 'pasaporteDui'].includes(documentType)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Tipo de documento inválido'
-      });
-    }
-
-    if (!['frente', 'reverso'].includes(side)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Lado del documento inválido'
-      });
-    }
-
-    // Construir el nombre del campo
-    let fieldName;
-    if (documentType === 'licencia') {
-      fieldName = side === 'frente' ? 'licenciaFrente' : 'licenciaReverso';
-    } else {
-      fieldName = side === 'frente' ? 'pasaporteFrente' : 'pasaporteReverso';
-    }
-
-    // Obtener el usuario
-    const user = await ClientsModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Usuario no encontrado'
-      });
-    }
-
-    // Eliminar el archivo físico si existe
-    if (user[fieldName]) {
-      const filePath = user[fieldName];
-      if (typeof filePath === 'string' && filePath.startsWith('/uploads/')) {
-        const fullPath = path.join(__dirname, '../..', filePath);
-        if (fs.existsSync(fullPath)) {
-          fs.unlinkSync(fullPath);
-        }
-      }
-    }
-
-    // Actualizar la base de datos
-    const updateData = { [fieldName]: null };
-    await ClientsModel.findByIdAndUpdate(userId, updateData);
-
-    res.json({
-      success: true,
-      message: `${documentType === 'licencia' ? 'Licencia' : 'Pasaporte/DUI'} (${side}) eliminado correctamente`,
-      updatedFields: updateData
-    });
-
-  } catch (error) {
-    console.error('Error al eliminar documento:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
-  }
-};
-
-// Ensure all blocks are closed above. If not, add a closing bracket here.
 export default profileController;
