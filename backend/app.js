@@ -28,7 +28,7 @@ const app = express();
 
 // Configuración de CORS para permitir credenciales solo desde los orígenes permitidos
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:8081"],
   credentials: true
 }));
 

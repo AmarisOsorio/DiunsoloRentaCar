@@ -12,11 +12,12 @@ passwordRecoveryController.requestCode = async (req, res) => {
   try {
     let userFound;
     let userType;
-    userFound = await clientsModel.findOne({ correo });
+    // Buscar por email en ambos modelos
+    userFound = await clientsModel.findOne({ email: correo });
     if (userFound) {
       userType = "cliente";
     } else {
-      userFound = await empleadosModel.findOne({ correo });
+      userFound = await empleadosModel.findOne({ email: correo });
       userType = "empleado";
     }
     if (!userFound) {
@@ -88,28 +89,28 @@ passwordRecoveryController.newPassword = async (req, res) => {
     // Verificar que la nueva contraseña no sea igual a la anterior
     let user;
     if (decoded.userType === "cliente") {
-      user = await clientsModel.findOne({ correo });
+      user = await clientsModel.findOne({ email: correo });
     } else if (decoded.userType === "empleado") {
-      user = await empleadosModel.findOne({ correo });
+      user = await empleadosModel.findOne({ email: correo });
     }
     if (!user) {
       return res.json({ message: "Usuario no encontrado" });
     }
-    const isSame = await bcryptjs.compare(newPassword, user.contraseña);
+    const isSame = await bcryptjs.compare(newPassword, user.password);
     if (isSame) {
       return res.json({ message: "La nueva contraseña no puede ser igual a la anterior." });
     }
     const hashedPassword = await bcryptjs.hash(newPassword, 10);
     if (decoded.userType === "cliente") {
       await clientsModel.findOneAndUpdate(
-        { correo },
-        { contraseña: hashedPassword },
+        { email: correo },
+        { password: hashedPassword },
         { new: true }
       );
     } else if (decoded.userType === "empleado") {
       await empleadosModel.findOneAndUpdate(
-        { correo },
-        { contraseña: hashedPassword },
+        { email: correo },
+        { password: hashedPassword },
         { new: true }
       );
     }
