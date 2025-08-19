@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../../hooks/useAuth';
 
-/**
+/*
  * Hook para la lógica de reservas del usuario
- * @param {boolean} shouldFetch - Indica si se deben cargar las reservas
  */
 
-export const useReservas = (shouldFetch = false) => {
-  const { 
-    getUserReservations, 
+export const useReservas = () => {
+  const {
+    getUserReservations,
     updateReservation, 
     deleteReservation, 
     isAuthenticated, 
@@ -26,6 +25,8 @@ export const useReservas = (shouldFetch = false) => {
   const [reservationToDelete, setReservationToDelete] = useState(null);
   const hasInitializedRef = useRef(false);
 
+  // Flag para controlar si se debe hacer fetch de reservas
+  const shouldFetch = isAuthenticated && (reservasInvalidated || !hasInitializedRef.current);
   // Función para cargar reservas
   const loadReservas = async () => {
     console.log('🔄 loadReservas iniciado');
@@ -38,8 +39,18 @@ export const useReservas = (shouldFetch = false) => {
       console.log('🔄 Resultado de getUserReservations:', result);
       
       if (result.success && Array.isArray(result.reservas)) {
-        console.log('✅ Reservas reales cargadas:', result.reservas.length);
-        setReservas(result.reservas);
+        // Adaptar los campos a lo que espera el frontend
+        const reservasAdaptadas = result.reservas.map((r) => ({
+          ...r,
+          fechaInicio: r.startDate || r.fechaInicio || '',
+          fechaDevolucion: r.returnDate || r.fechaDevolucion || '',
+          vehiculoID: r.vehicleId || r.vehiculoID || r.vehiculoId || {},
+          estado: r.status || r.estado || '',
+          precioPorDia: r.pricePerDay || r.precioPorDia || '',
+          cliente: r.client || r.cliente || [],
+        }));
+        console.log('✅ Reservas reales cargadas:', reservasAdaptadas.length);
+        setReservas(reservasAdaptadas);
         setError(null);
         markReservationsAsValid();
         setLoading(false);

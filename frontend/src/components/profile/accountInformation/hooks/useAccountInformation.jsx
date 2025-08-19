@@ -33,7 +33,7 @@ export function useInfoPerfil() {
     setImageConfirmModal({
       isOpen: true,
       action: 'delete',
-      documentType,
+      documentType: documentType === 'licencia' ? 'license' : documentType === 'pasaporte' ? 'passport' : documentType,
       side,
       file: null,
       imagePreview: null
@@ -43,31 +43,59 @@ export function useInfoPerfil() {
   // --- Confirmar acción del modal (subida o eliminación) ---
   // --- Confirmar acción del modal (subida o eliminación) ---
   const handleImageConfirm = async () => {
+    // Determina documentType y side para el backend
+    let documentType = '';
+    let side = '';
+    if (imageConfirmModal.documentType === 'license' || imageConfirmModal.documentType === 'licencia') {
+      documentType = 'license';
+      side = imageConfirmModal.side === 'frente' ? 'front' : 'back';
+    } else if (imageConfirmModal.documentType === 'passport' || imageConfirmModal.documentType === 'pasaporte') {
+      documentType = 'passport';
+      side = imageConfirmModal.side === 'frente' ? 'front' : 'back';
+    } else {
+      documentType = imageConfirmModal.documentType;
+      side = imageConfirmModal.side;
+    }
+    // Determina la key del estado local
+    let documentTypeKey = '';
+    if (documentType === 'license') {
+      documentTypeKey = side === 'front' ? 'licenseFront' : 'licenseBack';
+    } else if (documentType === 'passport') {
+      documentTypeKey = side === 'front' ? 'passportFront' : 'passportBack';
+    }
     if (imageConfirmModal.action === 'upload') {
       // Subir imagen al backend
       const formData = new FormData();
       formData.append('document', imageConfirmModal.file);
-      formData.append('documentType', imageConfirmModal.documentType);
-      formData.append('side', imageConfirmModal.side);
+      formData.append('documentType', documentType);
+      formData.append('side', side);
+      // --- LOG DE DEPURACIÓN ---
+      console.log('[DEBUG] FormData a enviar:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0]+ ':', pair[1]);
+      }
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/upload-document`, {
           method: 'POST',
           credentials: 'include',
           body: formData
         });
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = { message: 'Respuesta no es JSON', raw: await res.text() };
+        }
         if (data.success && data.fileUrl) {
           setLocalUserInfo((prev) => {
-            const key = imageConfirmModal.documentType === 'licencia'
-              ? (imageConfirmModal.side === 'frente' ? 'licenciaFrente' : 'licenciaReverso')
-              : (imageConfirmModal.side === 'frente' ? 'pasaporteFrente' : 'pasaporteReverso');
-            return { ...prev, [key]: data.fileUrl };
+            return { ...prev, [documentTypeKey]: data.fileUrl };
           });
           setSuccessMessage('¡Imagen subida correctamente!');
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 2000);
         } else {
-          setSuccessMessage(data.message || 'Error al subir la imagen');
+          console.error('[DEBUG] Error backend:', data);
+          setSuccessMessage((data && data.message) ? data.message : 'Error al subir la imagen');
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 2000);
         }
@@ -83,15 +111,12 @@ export function useInfoPerfil() {
           method: 'DELETE',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ documentType: imageConfirmModal.documentType, side: imageConfirmModal.side })
+          body: JSON.stringify({ documentType, side })
         });
         const data = await res.json();
         if (data.success) {
           setLocalUserInfo((prev) => {
-            const key = imageConfirmModal.documentType === 'licencia'
-              ? (imageConfirmModal.side === 'frente' ? 'licenciaFrente' : 'licenciaReverso')
-              : (imageConfirmModal.side === 'frente' ? 'pasaporteFrente' : 'pasaporteReverso');
-            return { ...prev, [key]: null };
+            return { ...prev, [documentTypeKey]: null };
           });
           setSuccessMessage('Imagen eliminada correctamente');
           setShowSuccess(true);
@@ -257,16 +282,15 @@ export function useInfoPerfil() {
 
   // Estados para información del usuario (conectado con la base de datos)
   const [localUserInfo, setLocalUserInfo] = useState({
-    nombre: '',
-    apellido: '',
-    telefono: '',
-    correo: '',
-    fechaNacimiento: '',
-    miembroDesde: '',
-    licenciaFrente: null,
-    licenciaReverso: null,
-    pasaporteFrente: null,
-    pasaporteReverso: null
+    name: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    birthDate: '',
+    licenseFront: null,
+    licenseBack: null,
+    passportFront: null,
+    passportBack: null
   });
 
   // Estados para el modal de confirmación de imágenes
@@ -287,46 +311,29 @@ export function useInfoPerfil() {
           const result = await getProfile();
           if (result.success) {
             const userData = result.user;
-            // Adaptar para nombres/apellidos o nombre/apellido
-            let nombre = userData.nombre || userData.nombres || userData.nombreCompleto || '';
-            let apellido = userData.apellido || userData.apellidos || '';
-            if (!apellido && nombre && nombre.split(' ').length > 1) {
-              const partes = nombre.split(' ');
-              nombre = partes.slice(0, -1).join(' ');
-              apellido = partes.slice(-1).join(' ');
+            // Use English field names from backend
+            let memberSince = '';
+            if (userData.createdAt) {
+              const date = new Date(userData.createdAt);
+              memberSince = isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-US');
             }
-            // Fecha de registro robusta
-            let fechaRegistro = userData.fechaRegistro || userData.createdAt || '';
-            let miembroDesde = '';
-            if (fechaRegistro) {
-              // Si es objeto tipo Date, conviértelo a string ISO
-              let fechaStr = fechaRegistro;
-              if (typeof fechaRegistro === 'object' && fechaRegistro !== null && fechaRegistro.toISOString) {
-                fechaStr = fechaRegistro.toISOString();
-              }
-              const fecha = new Date(fechaStr);
-              miembroDesde = isNaN(fecha.getTime()) ? '' : fecha.toLocaleDateString('es-ES');
-            }
-            // Unificar campo de fecha de nacimiento
-            let fechaNacimientoRaw = userData.fechaNacimiento || userData.fechaDeNacimiento || '';
-            let fechaNacimiento = '';
-            if (fechaNacimientoRaw) {
-              const d = new Date(fechaNacimientoRaw);
+            let birthDate = '';
+            if (userData.birthDate) {
+              const d = new Date(userData.birthDate);
               if (!isNaN(d.getTime())) {
-                fechaNacimiento = d.toISOString().split('T')[0];
+                birthDate = d.toISOString().split('T')[0];
               }
             }
             setLocalUserInfo({
-              nombre,
-              apellido,
-              telefono: userData.telefono || '',
-              correo: userData.correo || userData.email || '',
-              fechaNacimiento,
-              miembroDesde,
-              licenciaFrente: userData.licenciaFrente || userData.licencia || null,
-              licenciaReverso: userData.licenciaReverso || null,
-              pasaporteFrente: userData.pasaporteFrente || userData.pasaporteDui || null,
-              pasaporteReverso: userData.pasaporteReverso || null
+              name: userData.name || '',
+              lastName: userData.lastName || '',
+              email: userData.email || '',
+              phone: userData.phone || '',
+              birthDate,
+              licenseFront: userData.licenseFront || null,
+              licenseBack: userData.licenseBack || null,
+              passportFront: userData.passportFront || null,
+              passportBack: userData.passportBack || null
             });
           }
         } catch (error) {
@@ -358,73 +365,72 @@ export function useInfoPerfil() {
     return numbers;
   };
 
-  // Validación de campos
+  // Validación de campos para el modelo Clients
   const validateField = (field, value) => {
     const errors = { ...validationErrors };
     let isValid = true;
     switch (field) {
-      case 'telefono':
+      case 'phone':
         if (!/^[267][0-9]{3}-[0-9]{4}$/.test(value)) {
-          errors.telefono = 'El teléfono debe tener el formato correcto (ej: 2345-6789, inicia con 2, 6 o 7)';
+          errors.phone = 'El teléfono debe tener el formato correcto (ej: 2345-6789, inicia con 2, 6 o 7)';
           isValid = false;
         } else {
-          delete errors.telefono;
+          delete errors.phone;
         }
         break;
-      case 'correo':
       case 'email':
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          errors.correo = 'Ingresa un correo electrónico válido';
+          errors.email = 'Ingresa un correo electrónico válido';
           isValid = false;
         } else {
-          delete errors.correo;
+          delete errors.email;
         }
         break;
-      case 'fechaNacimiento': {
-        const fechaNacimiento = new Date(value);
-        const fechaActual = new Date();
-        if (isNaN(fechaNacimiento.getTime())) {
-          errors.fechaNacimiento = 'Por favor ingresa una fecha de nacimiento válida';
+      case 'birthDate': {
+        const birthDate = new Date(value);
+        const now = new Date();
+        if (isNaN(birthDate.getTime())) {
+          errors.birthDate = 'Por favor ingresa una fecha de nacimiento válida';
           isValid = false;
-        } else if (fechaNacimiento > fechaActual) {
-          errors.fechaNacimiento = 'La fecha de nacimiento no puede ser en el futuro';
+        } else if (birthDate > now) {
+          errors.birthDate = 'La fecha de nacimiento no puede ser en el futuro';
           isValid = false;
         } else {
-          const edad = fechaActual.getFullYear() - fechaNacimiento.getFullYear();
-          const mesActual = fechaActual.getMonth();
-          const diaActual = fechaActual.getDate();
-          const mesNacimiento = fechaNacimiento.getMonth();
-          const diaNacimiento = fechaNacimiento.getDate();
+          const edad = now.getFullYear() - birthDate.getFullYear();
+          const mesActual = now.getMonth();
+          const diaActual = now.getDate();
+          const mesNacimiento = birthDate.getMonth();
+          const diaNacimiento = birthDate.getDate();
           const edadReal = edad - (mesActual < mesNacimiento || (mesActual === mesNacimiento && diaActual < diaNacimiento) ? 1 : 0);
           if (edadReal < 18) {
-            errors.fechaNacimiento = `Debes ser mayor de 18 años. Tu edad actual es de ${edadReal} años.`;
+            errors.birthDate = `Debes ser mayor de 18 años. Tu edad actual es de ${edadReal} años.`;
             isValid = false;
           } else {
-            delete errors.fechaNacimiento;
+            delete errors.birthDate;
           }
         }
         break;
       }
-      case 'nombre':
+      case 'name':
         if (!value || value.trim().length < 2) {
-          errors.nombre = 'El nombre debe tener al menos 2 caracteres';
+          errors.name = 'El nombre debe tener al menos 2 caracteres';
           isValid = false;
         } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+$/.test(value)) {
-          errors.nombre = 'El nombre solo puede contener letras y espacios';
+          errors.name = 'El nombre solo puede contener letras y espacios';
           isValid = false;
         } else {
-          delete errors.nombre;
+          delete errors.name;
         }
         break;
-      case 'apellido':
+      case 'lastName':
         if (!value || value.trim().length < 2) {
-          errors.apellido = 'El apellido debe tener al menos 2 caracteres';
+          errors.lastName = 'El apellido debe tener al menos 2 caracteres';
           isValid = false;
         } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+$/.test(value)) {
-          errors.apellido = 'El apellido solo puede contener letras y espacios';
+          errors.lastName = 'El apellido solo puede contener letras y espacios';
           isValid = false;
         } else {
-          delete errors.apellido;
+          delete errors.lastName;
         }
         break;
       default:
@@ -435,10 +441,10 @@ export function useInfoPerfil() {
     return isValid;
   };
 
-  // Actualizar valores temporales con validación en tiempo real y filtrar nombre/apellido
+  // Actualizar valores temporales con validación en tiempo real y filtrar name/lastName
   const updateTempValue = (field, value) => {
     let filteredValue = value;
-    if (field === 'nombre' || field === 'apellido') {
+    if (field === 'name' || field === 'lastName') {
       // Solo letras, espacios y tildes
       filteredValue = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]/g, '');
     }
@@ -519,20 +525,20 @@ export function useInfoPerfil() {
       }
       return;
     }
-    // Si se está editando nombre o apellido, guardar ambos juntos
-    if (field === 'nombre' || field === 'apellido') {
+    // Si se está editando name o lastName, guardar ambos juntos
+    if (field === 'name' || field === 'lastName') {
       fieldsToSave = {
-        nombre: tempValues.nombre ?? localUserInfo.nombre,
-        apellido: tempValues.apellido ?? localUserInfo.apellido,
+        name: tempValues.name ?? localUserInfo.name,
+        lastName: tempValues.lastName ?? localUserInfo.lastName,
       };
       // Validar ambos
-      const validNombre = validateField('nombre', fieldsToSave.nombre);
-      const validApellido = validateField('apellido', fieldsToSave.apellido);
-      if (!validNombre || !validApellido) return;
-    } else if (field === 'fechaNacimiento') {
-      // Validar y formatear fechaNacimiento
-      const fecha = tempValues.fechaNacimiento ?? localUserInfo.fechaNacimiento;
-      if (!validateField('fechaNacimiento', fecha)) return;
+      const validName = validateField('name', fieldsToSave.name);
+      const validLastName = validateField('lastName', fieldsToSave.lastName);
+      if (!validName || !validLastName) return;
+    } else if (field === 'birthDate') {
+      // Validar y formatear birthDate
+      const fecha = tempValues.birthDate ?? localUserInfo.birthDate;
+      if (!validateField('birthDate', fecha)) return;
       // Formatear a YYYY-MM-DD si es posible
       let formattedDate = fecha;
       if (fecha) {
@@ -541,8 +547,7 @@ export function useInfoPerfil() {
           formattedDate = d.toISOString().split('T')[0];
         }
       }
-      // Enviar al backend como fechaDeNacimiento, pero mantener local como fechaNacimiento
-      fieldsToSave.fechaDeNacimiento = formattedDate;
+      fieldsToSave.birthDate = formattedDate;
     } else {
       fieldsToSave[field] = tempValues[field];
       if (!validateField(field, tempValues[field])) return;
@@ -582,12 +587,13 @@ export function useInfoPerfil() {
     // Abre el modal de confirmación de imagen antes de subir
     const file = event.target.files[0];
     if (!file) return;
+    const normalizedType = documentType === 'licencia' ? 'license' : documentType === 'pasaporte' ? 'passport' : documentType;
     const reader = new FileReader();
     reader.onload = (e) => {
       setImageConfirmModal({
         isOpen: true,
         action: 'upload',
-        documentType,
+        documentType: normalizedType,
         side,
         file,
         imagePreview: e.target.result

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Navigation from './src/navigation/Navigation.js';
 import { AuthProvider } from './src/Context/AuthContext';
-import SplashScreen from './src/screens/Components/SplashScreen';
+import SplashScreen from './src/screens/SplashScreen/SplashScreen';
+import Navigation from './src/navigation/Navigation';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);

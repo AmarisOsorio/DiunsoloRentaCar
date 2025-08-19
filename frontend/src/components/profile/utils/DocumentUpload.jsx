@@ -25,7 +25,7 @@ const DocumentUpload = ({
                 <img src={documents.frente} alt={`${label} Frente`} />
                 <div className="perfil-document-actions">
                   <button 
-                    onClick={() => fileRefs.frente.current?.click()}
+                    onClick={() => fileRefs?.frente?.current?.click()}
                     className="perfil-btn perfil-btn-change"
                   >
                     <FaUpload size={32} />
@@ -40,7 +40,7 @@ const DocumentUpload = ({
               </div>
             ) : (
               <button 
-                onClick={() => fileRefs.frente.current?.click()}
+                onClick={() => fileRefs?.frente?.current?.click()}
                 className="perfil-upload-button"
               >
                 <FaUpload size={32} />
@@ -48,7 +48,7 @@ const DocumentUpload = ({
               </button>
             )}
             <input
-              ref={fileRefs.frente}
+              ref={fileRefs?.frente}
               type="file"
               accept="image/*"
               onChange={(e) => onFileUpload(e, 'frente')}
@@ -69,7 +69,7 @@ const DocumentUpload = ({
                 <img src={documents.reverso} alt={`${label} Reverso`} />
                 <div className="perfil-document-actions">
                   <button 
-                    onClick={() => fileRefs.reverso.current?.click()}
+                    onClick={() => fileRefs?.reverso?.current?.click()}
                     className="perfil-btn perfil-btn-change"
                   >
                     <FaUpload size={32} />
@@ -84,7 +84,7 @@ const DocumentUpload = ({
               </div>
             ) : (
               <button 
-                onClick={() => fileRefs.reverso.current?.click()}
+                onClick={() => fileRefs?.reverso?.current?.click()}
                 className="perfil-upload-button"
               >
                 <FaUpload size={32} />
@@ -92,7 +92,7 @@ const DocumentUpload = ({
               </button>
             )}
             <input
-              ref={fileRefs.reverso}
+              ref={fileRefs?.reverso}
               type="file"
               accept="image/*"
               onChange={(e) => onFileUpload(e, 'reverso')}

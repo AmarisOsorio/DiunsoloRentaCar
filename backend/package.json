@@ -1,6 +1,7 @@
 {
     "type": "module",
     "dependencies": {
+        "@sparticuz/chromium": "^138.0.2",
         "bcryptjs": "^3.0.2",
         "cloudinary": "^2.7.0",
         "cookie-parser": "^1.4.7",
@@ -8,13 +9,16 @@
         "crypto": "^1.0.1",
         "dotenv": "^16.6.1",
         "express": "^5.1.0",
+        "fs": "^0.0.1-security",
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.14.1",
         "multer": "^2.0.1",
         "multer-storage-cloudinary": "^4.0.0",
         "nodemailer": "^7.0.3",
         "nodemon": "^3.1.10",
-        "puppeteer": "^24.16.2"
+        "path": "^0.12.7",
+        "puppeteer": "^24.16.2",
+        "swagger-ui-express": "^5.0.1"
     },
     "scripts": {
         "dev": "nodemon index.js"
