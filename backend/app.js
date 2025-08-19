@@ -23,6 +23,11 @@ import brandsRoutes from "./src/routes/brands.js";
 import sendWelcomeRoutes from "./src/routes/sendWelcome.js";
 import contactRoutes from "./src/routes/contact.js";
 
+//Imports para utilizar Swagger
+import swaggerUI from "swagger-ui-express"
+import fs from "fs";
+import path from "path";
+
 const app = express();
 
 
@@ -35,6 +40,19 @@ app.use(cors({
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
+
+
+/**
+ * Utilizar el sistema de archivos para leer el JSON
+ * de swagger y ver mi documentación
+ */
+const swaggerDocument = JSON.parse(fs.readFileSync(
+  path.resolve("./Documentacion_DiunsoloRentaCar.json"),"utf-8"
+))
+ 
+//Documentación
+app.use("/api/docs" , swaggerUI.serve , swaggerUI.setup(swaggerDocument));
+
 
 // Rutas de autenticación y usuarios
 app.use("/api/registerClients", registerClientsRoutes);

@@ -1,0 +1,1906 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DiunsoloRentaCar",
+    "description": "La API de Diunsolo Renta Car está documentada para mostrar los endpoints disponibles con sus métodos, descripciones, códigos de estado y ejemplos de uso.",
+    "contact": {
+      "email": "you@your-company.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://virtserver.swaggerhub.com/my_house/DiunsoloRentaCar/1.0.0",
+      "description": "SwaggerHub API Auto Mocking"
+    }
+  ],
+  "tags": [
+    {
+      "name": "admins",
+      "description": "Secured Admin-only calls"
+    },
+    {
+      "name": "developers",
+      "description": "Operations available to regular developers"
+    }
+  ],
+  "paths": {
+    "/inventory": {
+      "get": {
+        "tags": [
+          "developers"
+        ],
+        "summary": "searches inventory",
+        "description": "By passing in the appropriate options, you can search for\navailable inventory in the system\n",
+        "operationId": "searchInventory",
+        "parameters": [
+          {
+            "name": "searchString",
+            "in": "query",
+            "description": "pass an optional search string for looking up inventory",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "number of records to skip for pagination",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "maximum number of records to return",
+            "required": false,
+            "schema": {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "search results matching criteria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryItem"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "bad input parameter"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admins"
+        ],
+        "summary": "adds an inventory item",
+        "description": "Adds an item to the system",
+        "operationId": "addInventory",
+        "requestBody": {
+          "description": "Inventory item to add",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "item created"
+          },
+          "400": {
+            "description": "invalid input, object invalid"
+          },
+          "409": {
+            "description": "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/clients": {
+      "get": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Seleccionar Clientes",
+        "description": "Muestra los datos de la colección de **\"Clients\"**",
+        "operationId": "get-clients",
+        "responses": {
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Actualizar Clientes",
+        "description": "Permite actualizar un cliente, haciendo cambios en su información personal, ya sea un error en su nombre hasta actualizar las imagenes de su licencia y DUI",
+        "operationId": "put-clients",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/clients_body"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "name": "string",
+                    "lastName": "string",
+                    "email": "string",
+                    "password": "string",
+                    "birthDate": "2019-08-24",
+                    "licenseFront": "string",
+                    "licenseBack": "string",
+                    "passportFront": "string",
+                    "passportBack": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Eliminar Clientes",
+        "description": "Permite eliminar la cuenta de un usuario o eliminar a un cliente deshabilitado como administrador.",
+        "operationId": "delete-clients",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "404": {
+            "description": "Cliente no encontrado"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/brands": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Seleccionar Marcas",
+        "description": "Muestra las marcas de la colección **\"Brands\"**",
+        "operationId": "get-brands",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Actualizar Marcas",
+        "description": "Permite actualizar una marca a la vez, donde podrá cambiar el nombre de la marca o la imagen de esta.",
+        "operationId": "put-brands",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/brands_body"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "brandName": "string",
+                    "": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "404": {
+            "description": "Marca no encontrada."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Insertar Marcas",
+        "description": "Permite agregar una nueva marca, la cual se utilizara en el apartado de vehiculos por medio de su id, facilitando su almacenamiento y que se vea organizado.",
+        "operationId": "post-brands",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/brands_body_1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Se ha registro existosamente."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Eliminar Marcas",
+        "description": "Permite eliminar una marca a la vez.",
+        "operationId": "delete-brands",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/registerClientsController": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Insertar un Cliente",
+        "description": "Por medio de **registerClientsController** se agrega un nuevo cliente, en el cual le pedira su información personal donde tendrá que establecer su correo y contraseña que luego más adelante se utilizara en el **login**.",
+        "operationId": "post-registerClientsController",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/registerClientsController_body"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "name": "string",
+                    "lastName": "string",
+                    "email": "string",
+                    "password": "string",
+                    "phone": "string",
+                    "birthDate": "2019-08-24",
+                    "licenseFront": "string",
+                    "licenseBack": "string",
+                    "passportFront": "string",
+                    "passportBack": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente registrado exitosamente."
+          },
+          "400": {
+            "description": "Este usuario ya existe"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "Iniciar Sesión",
+        "description": "Permite iniciar sesión luego de haber registrado un cliente o empleado. Para eso necesita el correo y contraseña que coloco o se le asigno al momento de registrarse.",
+        "operationId": "post-login",
+        "parameters": [
+          {
+            "name": "authToken",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/login_body"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "email": "string",
+                    "password": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "Cerrar Sesión",
+        "description": "Permite salir de la sesión, luego de haber iniciado.",
+        "operationId": "post-logout",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/employee": {
+      "get": {
+        "tags": [
+          "Employees"
+        ],
+        "summary": "Seleccionar Empleados",
+        "description": "Muestra todos los registros de la colección \"Employee\"",
+        "operationId": "get-employee",
+        "responses": {
+          "400": {
+            "description": "ID inválido o error en la consulta"
+          },
+          "404": {
+            "description": "Empleado no encontrado."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Employees"
+        ],
+        "summary": "Actualizar Empleado",
+        "description": "Actualizara la información de los datos de los empleados, para que los empleados tenga su perfil actualizado en dado caso este sea transferido a otra área, es decir, cambié su rol ya sea a gestor o empleado común.",
+        "operationId": "put-employee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/employee_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Ya existe ese empleado."
+          },
+          "404": {
+            "description": "No se encontro el empleado."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Employees"
+        ],
+        "summary": "Insertar Empleados",
+        "description": "Permite insertar un nuevo registro de empleado, los cuales todos los campos son **requeridos** incluyendo la foto del perfil del usuario. Además de que no puede guardar un usuario con el mismo correo ya que este válida que sea único.",
+        "operationId": "post-employee",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/employee_body_1"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "name": "string",
+                    "email": "string",
+                    "password": "string",
+                    "phone": "string",
+                    "dui": "string",
+                    "rol": "string",
+                    "photo": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Se ha registrado un nuevo empleado."
+          },
+          "400": {
+            "description": "Todos los campos son obligatorios."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Employees"
+        ],
+        "summary": "Eliminar Empleado",
+        "description": "Permite eliminar un empleado a la vez. Un registro se puede eliminar si se ha creado anteriormente.",
+        "operationId": "delete-employee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/passwordRecovery/request": {
+      "post": {
+        "tags": [
+          "PasswordRecovery"
+        ],
+        "summary": "Recuperar contraseña / código de recuperación",
+        "description": "Este endpoint permite enviar el código de recuperación cuando se nos ha extraviado la contraseña. Primero se coloca lo que es el correo donde se enviara el código.",
+        "operationId": "post-passwordRecovery",
+        "parameters": [
+          {
+            "name": "tokenRecoveryCode",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/passwordRecovery_request_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "404": {
+            "description": "Usuario no encontrado"
+          }
+        }
+      }
+    },
+    "/passwordRecovery/verify": {
+      "post": {
+        "tags": [
+          "PasswordRecovery"
+        ],
+        "summary": "Recuperar contraseña / verificación de código",
+        "description": "Este endpoint permite verificar el código que se nos mando anteriormente a nuestro correo. Colocas el código enviado en el espacio indicado. El código solo esta activo durante 15 minutos.",
+        "operationId": "post-passwordRecovery-verify",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/passwordRecovery_verify_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Token de recuperación no proporcionado o expirado."
+          }
+        }
+      }
+    },
+    "/passwordRecovery/newPassword": {
+      "post": {
+        "tags": [
+          "PasswordRecovery"
+        ],
+        "summary": "Recuperación de contraseña / Nueva Contraseña",
+        "description": "Permite el cambio de la contraseña, si se ha seguido el proceso de recuperación al final el resultado es el cambio de contraseña de su cuenta.",
+        "operationId": "post-passwordRecovery-newPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/passwordRecovery_newPassword_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La contraseña se actualizo satisfactoriamente."
+          },
+          "400": {
+            "description": "La nueva contraseña no puede ser igual a la anterior."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/vehicles": {
+      "get": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Seleccionar Vehículos",
+        "description": "Muestra los datos de la colección **\"Vehicles\"**",
+        "operationId": "get-vehicles",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Actualizar Vehículos",
+        "description": "Permite actualizar los datos de los vehículos. Esto facilita que cuando hay un error en algun campo, poder arreglarlo.",
+        "operationId": "put-vehicles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error al actualizar un vehículo."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Insertar Vehículos",
+        "description": "Permite insertar un nuevo vehículo en nuestra base de datos, anteriormente que se han registrado las marcas, se puede utilizar el id de estas para colocarselas en el registro del nuevo vehículo a registrar.",
+        "operationId": "post-vehicles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/vehicles_body"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "mainViewImage": "string",
+                    "sideImage": "string",
+                    "galleryImages": "string",
+                    "vehicleName": "string",
+                    "dailyPrice": 0,
+                    "plate": "string",
+                    "brandId": "string",
+                    "vehicleClass": "string",
+                    "color": "string",
+                    "year": 0,
+                    "capacity": 0,
+                    "model": "string",
+                    "engineNumber": "string",
+                    "chassisNumber": "string",
+                    "status": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Se ha registrado un nuevo vehículo."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Eliminar Vehículos",
+        "description": "Permite eliminar un vehículo a la vez.",
+        "operationId": "delete-vehicles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Se elimino el registro."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Seleccionar Reservas",
+        "description": "Muestra los datos de la colección de **\"Reservations\"**.",
+        "operationId": "get-reservations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Actualizar Reservas",
+        "description": "Permite actualizar una reserva previamente agregada. ",
+        "operationId": "put-reservations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reservations_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reserva actualizada exitosamente."
+          },
+          "404": {
+            "description": "Reserva no encontrada."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Insertar Reservas",
+        "description": "Permite insertar nuevas reservas, para esto, necesitas tener vehículos en la base (con su respectiva marca) y se ingresa el cliente que esta rentando, se terminan de completar los campos requeridos",
+        "operationId": "post-reservations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reservations_body_1"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "clientId": "string",
+                    "vehicleId": "string",
+                    "startDate": "string",
+                    "returnDate": "string",
+                    "status": "string",
+                    "pricePerDay": "string",
+                    "creationDate": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reserva creada existosamente"
+          },
+          "400": {
+            "description": "Todos lo campos son obligatorios."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Eliminar Reservas",
+        "description": "Permite eliminar una reserva ya agregada.",
+        "operationId": "delete-reservations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Reserva no encontrada."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/maintenances": {
+      "get": {
+        "tags": [
+          "Maintenances"
+        ],
+        "summary": "Seleccionar Mantenimientos",
+        "description": "Muestra los datos de la colección de **\"Maintenances\"**.",
+        "operationId": "get-maintenances",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Maintenances"
+        ],
+        "summary": "Actualizar Mantenimientos",
+        "description": "Permite actualizar un mantenimiento, si en dado caso el usuario comete un error al momento de agregarlo.",
+        "operationId": "put-maintenances",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/maintenances_body"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "vehicleId": "string",
+                    "maintenanceType": "string",
+                    "startDate": "2019-08-24",
+                    "returnDate": "2019-08-24",
+                    "status": "string",
+                    "creationDate": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mantenimiento actualizado exitosamente"
+          },
+          "400": {
+            "description": "Error de validación"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Maintenances"
+        ],
+        "summary": "Insertar Mantenimientos",
+        "description": "Este endpoint permite insertar mantenimientos de los vehículos previamente agregados, permitiendo agendar la fecha de inicio y retorno del mantenimiento, además de agregar detalles generales sobre el tipo de mantenimiento que se le dio al vehículo. Para eso es necesario lo que sería el id del vehículo.",
+        "operationId": "post-maintenances",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/maintenances_body_1"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "vehicleId": "string",
+                    "maintenanceType": "string",
+                    "startDate": "2019-08-24",
+                    "returnDate": "2019-08-24",
+                    "status": "string",
+                    "creationDate": "2019-08-24"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mantenimiento creado existosamente."
+          },
+          "400": {
+            "description": "ID de vehículo no válido."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Maintenances"
+        ],
+        "summary": "Eliminar Mantenimientos",
+        "description": "Permite eliminar un mantenimiento de uno en uno.",
+        "operationId": "delete-maintenances",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "ID de mantenimiento no válido."
+          }
+        }
+      }
+    },
+    "/sendWelcome": {
+      "post": {
+        "tags": [
+          "Send Welcome"
+        ],
+        "summary": "Enviar Bienvenida",
+        "description": "Este endpoint tiene la funcion de enviar un correo de bienvenida al usuario despues de registrarse y verificar su cuenta.",
+        "operationId": "post-sendWelcome",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sendWelcome_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correo de bienvenida enviado exitosamente."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/contact": {
+      "post": {
+        "tags": [
+          "Send Contact Email"
+        ],
+        "summary": "Contactanos",
+        "description": "Permite enviar un correo de parte de los clientes a la empresa DiunsoloRentaCar.",
+        "operationId": "post-contact",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/contact_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correo enviado correctamente."
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "tags": [],
+        "summary": "Seleccionar Datos del Perfil",
+        "description": "Este endpoint nos permite mostrar la información en el apartado del perfil.",
+        "operationId": "get-profile",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [],
+        "summary": "Actualizar Perfil",
+        "description": "Este endpoint permite actualizar todos los datos del usuario, incluyendo las imagenes del DUI y la licencia, ademas de actualizar todos sus datos personales para mayor vericidad al momento de recibir contratos, este apartado posee validaciones por lo que las imagenes son las únicas que son opcionales.",
+        "operationId": "put-profile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/profile_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "El correo ya está en uso por otro usuario"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Eliminar Cuenta",
+        "description": "Permite al usuario elminar su cuenta, anteriormente creada, al elimnar la cuenta este usuario pasa a ser inactivo o eliminado de la base de datos.",
+        "operationId": "delete-profile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "InventoryItem": {
+        "required": [
+          "id",
+          "manufacturer",
+          "name",
+          "releaseDate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "name": {
+            "type": "string",
+            "example": "Widget Adapter"
+          },
+          "releaseDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2016-08-29T09:12:33.001Z"
+          },
+          "manufacturer": {
+            "$ref": "#/components/schemas/Manufacturer"
+          }
+        }
+      },
+      "Manufacturer": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ACME Corporation"
+          },
+          "homePage": {
+            "type": "string",
+            "format": "url",
+            "example": "https://www.acme-corp.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "408-867-5309"
+          }
+        }
+      },
+      "clients_body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "vju59z1tc6thy"
+            }
+          },
+          "lastName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "s86xdpthrs6gm"
+            }
+          },
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "a6uqkmlfzutba"
+            }
+          },
+          "password": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "qxt9h80b29421"
+            }
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "qpf7c6mfavkh1"
+            }
+          },
+          "licenseFront": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "0yu1kasdmt27b"
+            }
+          },
+          "licenseBack": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "qayrax7c5hilg"
+            }
+          },
+          "passportFront": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "4x0mt9fm4xwic"
+            }
+          },
+          "passportBack": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "3v11dwzx20q0y"
+            }
+          }
+        }
+      },
+      "brands_body": {
+        "type": "object",
+        "properties": {
+          "brandName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "shez20sphi1hy"
+            }
+          },
+          "logo": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "3lr5ex5fa8zda"
+            }
+          }
+        }
+      },
+      "brands_body_1": {
+        "type": "object",
+        "properties": {
+          "brandName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "wvkzrzyjfs5ra"
+            }
+          },
+          "logo": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "a4wibc515umdf"
+            }
+          }
+        }
+      },
+      "registerClientsController_body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "p9u0xq7eiu79h"
+            }
+          },
+          "lastName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "xucd7w4xva891"
+            }
+          },
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "3i4uf4hgfvf4n"
+            }
+          },
+          "password": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ko7ied8maacio"
+            }
+          },
+          "phone": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "5jmdvor3uxn9o"
+            }
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "wj8m3mwdscrnu"
+            }
+          },
+          "licenseFront": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "soy9nzcdignq0"
+            }
+          },
+          "licenseBack": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "fseq93ax6vj7e"
+            }
+          },
+          "passportFront": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ncfgay2dnlaj8"
+            }
+          },
+          "passportBack": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "s2uwxcbrrvho7"
+            }
+          }
+        }
+      },
+      "login_body": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "m3usr0qbyrmpc"
+            }
+          },
+          "password": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "omn5jacu8r6f8"
+            }
+          }
+        }
+      },
+      "employee_body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "leyzmjpxsf925"
+            }
+          },
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "zyhghuf3uvlpn"
+            }
+          },
+          "password": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "qiqaqaxizcd1u"
+            }
+          },
+          "phone": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "25gqp52k7vjnx"
+            }
+          },
+          "dui": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "fvplci4sj7goc"
+            }
+          },
+          "rol": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "fzlc08zac28u5"
+            }
+          },
+          "photo": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "vhxmo0q5gpupk"
+            }
+          }
+        }
+      },
+      "employee_body_1": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "blj3y0ihk6u7y"
+            }
+          },
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "xaej306eiu2ob"
+            }
+          },
+          "password": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "y9l2yal3fxllk"
+            }
+          },
+          "phone": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "8d9tkbei1787r"
+            }
+          },
+          "dui": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "hin9q9dimgpwd"
+            }
+          },
+          "rol": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "k5awsqvozzsw6"
+            }
+          },
+          "photo": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "n8x1f3327pkan"
+            }
+          }
+        }
+      },
+      "passwordRecovery_request_body": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "mg9ch2q7tbcgf"
+            }
+          }
+        }
+      },
+      "passwordRecovery_verify_body": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "copgn72edo6xa"
+            }
+          }
+        }
+      },
+      "passwordRecovery_newPassword_body": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "14q2rokzintff"
+            }
+          }
+        }
+      },
+      "vehicles_body": {
+        "type": "object",
+        "properties": {
+          "mainViewImage": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "rgu4wt6km41ua"
+            }
+          },
+          "sideImage": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "bda3ntrexbwfa"
+            }
+          },
+          "galleryImages": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "hu9boc1st4e1g"
+            }
+          },
+          "vehicleName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "4izrrn4fr65hw"
+            }
+          },
+          "dailyPrice": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "68sm8yvenqm1b"
+            }
+          },
+          "plate": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "xj8xqo4fsqa7b"
+            }
+          },
+          "brandId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "hmmm3i9y2d01i"
+            }
+          },
+          "vehicleClass": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "gz8nbmf17s2rj"
+            }
+          },
+          "color": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "2k06gnynwawdw"
+            }
+          },
+          "year": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "ikjk9r0hd0dfb"
+            }
+          },
+          "capacity": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "ddloowu470h5y"
+            }
+          },
+          "model": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ek3zeojtuo840"
+            }
+          },
+          "engineNumber": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "85iqlvbu61lzs"
+            }
+          },
+          "chassisNumber": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "nt3vbje5hi5wz"
+            }
+          },
+          "status": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "0zcgjnuvyxs3b"
+            }
+          }
+        }
+      },
+      "reservations_body": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "xtv86yva6pkz9"
+            }
+          },
+          "vehicleId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "6idp0udlmicxq"
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "018zg77czgqto"
+            }
+          },
+          "returnDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "pekk5f8di1qbn"
+            }
+          },
+          "status": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "3wov3ljqf6s4e"
+            }
+          },
+          "pricePerDay": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "lqprmmwd3a0e4"
+            }
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "ruqyi335gayws"
+            }
+          }
+        }
+      },
+      "reservations_body_1": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "iksv7krv20msm"
+            }
+          },
+          "vehicleId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "by75fzqv5kos1"
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "6232delqscz0i"
+            }
+          },
+          "returnDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "dz7v4exc3y1jq"
+            }
+          },
+          "status": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ur9l6fsxtw7ze"
+            }
+          },
+          "pricePerDay": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "nkxnv8ku8fo9c"
+            }
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "ows2vf9vjy66i"
+            }
+          }
+        }
+      },
+      "maintenances_body": {
+        "type": "object",
+        "properties": {
+          "vehicleId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "r687uz64npf5g"
+            }
+          },
+          "maintenanceType": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "nou7hfc92d1bw"
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "y6gwz8jp0drmw"
+            }
+          },
+          "returnDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "l575uyo3oajnt"
+            }
+          },
+          "status": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "8cbcw0aub8w7q"
+            }
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "32o96iisashs6"
+            }
+          }
+        }
+      },
+      "maintenances_body_1": {
+        "type": "object",
+        "properties": {
+          "vehicleId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "vcj798z9hcto7"
+            }
+          },
+          "maintenanceType": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "cey0vhr85vjmb"
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "hgg4oraoedvxu"
+            }
+          },
+          "returnDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "kykvev95igwi9"
+            }
+          },
+          "status": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "asayupvyxe9j7"
+            }
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "kuycq8ymdgjfb"
+            }
+          }
+        }
+      },
+      "sendWelcome_body": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "p3hupfw85cmue"
+            }
+          },
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "13d6ra7nwbzrb"
+            }
+          }
+        }
+      },
+      "contact_body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "5gddvsnld5n8u"
+            }
+          },
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "p86d9rfdasut4"
+            }
+          },
+          "phone": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "mqgcn62494r7w"
+            }
+          },
+          "message": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ndjaq5m5a5u08"
+            }
+          }
+        }
+      },
+      "profile_body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "tyvh9cjyp8mcr"
+            }
+          },
+          "lastName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "t8nje2afa4kh3"
+            }
+          },
+          "email": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "8hurzxq44wsfk"
+            }
+          },
+          "password": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "5fysy0kivndpn"
+            }
+          },
+          "phone": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "p76hjjozk3id5"
+            }
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "x-stoplight": {
+              "id": "or5ut9aqa9o83"
+            }
+          },
+          "licenseFront": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "w9gms74u9t4bw"
+            }
+          },
+          "licenseBack": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "o5iqpqpyxijap"
+            }
+          },
+          "passportFront": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "q4qisbqysf0w2"
+            }
+          },
+          "passportBack": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "rea72wqklyqjt"
+            }
+          }
+        }
+      }
+    }
+  }
+}
