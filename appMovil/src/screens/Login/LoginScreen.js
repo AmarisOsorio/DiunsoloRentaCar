@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity, TextInput, Animated, ActivityIndicator } from 'react-native';
-import useLogin from './Hooks/useLogin';
+import { useAuth } from '../../context/AuthContext';
+import useLogin from './hooks/useLogin';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ onLogin }) {
     const tireTopSlide = useRef(new Animated.Value(-200)).current;
     const tireBottomSlide = useRef(new Animated.Value(-200)).current;
     const bottomElementsFade = useRef(new Animated.Value(0)).current;
@@ -12,8 +13,9 @@ export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    // Custom hook
-    const { loading, error, login } = useLogin();
+    // Custom hook y contexto
+    const { loading, error, login: loginRequest, userType, user } = useLogin();
+    const { login: authLogin } = useAuth();
 
     useEffect(() => {
         setTimeout(() => {
@@ -42,11 +44,20 @@ export default function LoginScreen({ navigation }) {
         }, 100);
     }, [tireTopSlide, tireBottomSlide, bottomElementsFade, bottomElementsSlide]);
 
+    // Efecto para manejar login exitoso
+    useEffect(() => {
+        if (userType && user) {
+            authLogin(user, userType);
+            if (onLogin) onLogin();
+        }
+    }, [userType, user, authLogin, onLogin]);
+
     // Handler para login
     const handleLogin = async () => {
-        await login({ email, password });
-        // Puedes navegar o mostrar mensaje según resultado
-        // if (userType) navigation.navigate('Home');
+        const success = await loginRequest({ email, password });
+        if (success) {
+            // El login será manejado por el useEffect anterior
+        }
     };
 
     return (
@@ -72,6 +83,7 @@ export default function LoginScreen({ navigation }) {
             }]}>
                 <Image source={require('./assets/Login-Car.png')} style={styles.car} />
             </Animated.View>
+            
             <Animated.View style={[styles.formSection, {
                 opacity: bottomElementsFade,
                 transform: [{ translateY: bottomElementsSlide }]
@@ -102,7 +114,7 @@ export default function LoginScreen({ navigation }) {
                     />
                 </View>
                 {error ? (
-                    <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text>
+                    <Text style={styles.errorText}>{error}</Text>
                 ) : null}
                 <View style={styles.forgotContainer}>
                     <Text style={styles.forgotText}>¿No recuerdas tu contraseña?</Text>
@@ -227,6 +239,12 @@ const styles = StyleSheet.create({
         height: 40,
         fontSize: 16,
         color: '#3571B8',
+    },
+    errorText: {
+        color: 'red',
+        marginBottom: 8,
+        fontSize: 14,
+        textAlign: 'center',
     },
     forgotContainer: {
         flexDirection: 'row',

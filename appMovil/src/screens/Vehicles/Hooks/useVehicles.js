@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 // URL base de la API del backend
-const API_BASE = 'http://localhost:4000'; 
+const API_BASE = 'http://10.0.2.2:4000'; 
 
 // Hook principal que maneja el estado y lógica de la pantalla de vehículos
 export default function useVehicles() {

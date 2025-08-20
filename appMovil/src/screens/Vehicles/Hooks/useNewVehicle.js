@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 
-const BRANDS_API_URL = 'http://localhost:4000/api/brands';
+const BRANDS_API_URL = 'http://10.0.2.2:4000/api/brands';
 const vehicleTypes = [
   { label: 'Pick up', value: 'Pick up' },
   { label: 'SUV', value: 'SUV' },
