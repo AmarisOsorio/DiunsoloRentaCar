@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from '../appMovil/src/Context/AuthContext';
 import SplashScreen from './src/screens/SplashScreen/SplashScreen';
 import LoginScreen from './src/screens/Login/LoginScreen';
 import AppNavigationContainer from './src/navigation/NavigatorContainer';

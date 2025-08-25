@@ -1,59 +1,50 @@
-//Imports
 import clientsModel from "../models/Clients.js";
-import employeesModel from "../models/Employees.js";
+import empleadosModel from "../models/Employees.js";
 import bcryptjs from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 import { config } from "../config.js";
 
-//Controller
 const loginController = {};
 
-//Maximum login attempts
-const maxAttempts = 3;
-//Lock time in milliseconds (15 minutes)
-const lockTime = 15 * 60 * 1000;
-
-//Login
 loginController.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body; // Changed from correo/contraseña to email/password
+  
   try {
     let userFound;
     let userType;
 
-
-    //Email check
+    // Validación robusta de emailAdmin
     if (!config.emailAdmin || !config.emailAdmin.email || !config.emailAdmin.password) {
-      //Error
-      console.log("Configuración de emailAdmin incompleta en config.js");
       return res.status(500).json({ message: "Configuración de emailAdmin incompleta en config.js" });
     }
-    if (
-      //Admin check
-      email === config.emailAdmin.email &&
-      password === config.emailAdmin.password
-    ) {
-      userType = "Admin";
+    
+    if (email === config.emailAdmin.email && password === config.emailAdmin.password) {
+      userType = "Administrador";
       userFound = { _id: "Admin" };
     }
     else {
-      //Employee check
-      userFound = await employeesModel.findOne({ email: email });
-      userType = "Empleado";
-
-      //Client check
+      // Buscar empleados por email (changed from correo_electronico)
+      userFound = await empleadosModel.findOne({ email: email });
+      if (userFound) {
+        userType = userFound.rol; // Use the actual role from database
+      }
+      
       if (!userFound) {
-        userFound = await clientsModel.findOne({ email });
-        userType = "Cliente";
+        // Buscar clientes por correo
+        userFound = await clientsModel.findOne({ correo: email });
+        if (userFound) {
+          userType = "Cliente";
+        }
       }
     }
+
     if (!userFound) {
-      //User not found
-      console.log("Usuario no encontrado");
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(401).json({ message: "Usuario no encontrado" });
     }
-    //Client not verified
+
+    // Si es cliente y no está verificado
     if (userType === "Cliente" && userFound.isVerified === false) {
-      //Generate vefification code
+      // Generar y enviar código de verificación
       const nodemailer = await import("nodemailer");
       const { fileURLToPath } = await import('url');
       const path = await import('path');
@@ -70,7 +61,7 @@ loginController.login = async (req, res) => {
         { expiresIn: "15m" }
       );
       res.cookie("VerificationToken", tokenCode, { maxAge: 15 * 60 * 1000 });
-      const transporter = nodemailer.default.createTransport({
+      const transporter = nodemailer.default.createTransporter({
         service: "gmail",
         auth: {
           user: config.email.email_user,
@@ -80,7 +71,7 @@ loginController.login = async (req, res) => {
           rejectUnauthorized: false
         }
       });
-      //Use HTMLVerifyAccountEmail
+      // Usar plantilla HTMLVerifyAccountEmail
       const { HTMLVerifyAccountEmail } = await import('../utils/mailVerifyAccount.js');
       const mailOptions = {
         from: config.email.email_user,
@@ -98,52 +89,31 @@ loginController.login = async (req, res) => {
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error('Error enviando correo de verificación:', error);
-          if (error.response) {
-            console.error('Respuesta SMTP:', error.response);
-          }
-          if (error.code === 'EAUTH') {
-            console.error('TIP: Verifica usuario y contraseña de Gmail y que la cuenta permita acceso a apps menos seguras o uses una App Password.');
-          }
-          return res.status(500).json({ message: "Error enviando correo de verificación", error: error.toString(), smtp: error.response });
+          return res.status(500).json({ message: "Error enviando correo de verificación", error: error.toString() });
         }
         return res.json({ message: "Cuenta no verificada. Se ha enviado un nuevo código de verificación a tu correo.", needVerification: true });
       });
       return;
     }
 
-    //Check if user is locked
-    if (userType !== "Admin") {
-        if (userFound.lockTime > Date.now()) {
-            const remainingTIme = Math.ceil((userFound.lockTime - Data.now() / 60000));
-            return res.json({message: `Account locked. Try again in ${remainingTIme} minutes.`});
-        };
-    };
-
-    if (userType !== "Admin") {
+    // Verificar contraseña (changed from contraseña to password)
+    if (userType !== "Administrador") {
       const isMatch = await bcryptjs.compare(password, userFound.password);
       if (!isMatch) {
-        //Invalid password, increment login attempts
-          userFound.loginAttempts = (userFound.loginAttempts) + 1;
-          
-          if (userFound.loginAttempts > maxAttempts) {
-              userFound.lockTime = Date.now() + lockTime;
-              await userFound.save();
-              return res.status(403).json({message: "Account locked. Too many failed attempts."});
-          }
-        return res.status(400).json({ message: "Contraseña inválida" });
+        return res.status(401).json({ message: "Contraseña inválida" });
       }
-
-      //Reset login attempts
-      userFound.loginAttempts = 0;
-      userFound.lockTime = null;
-      await userFound.save();
     }
+
     jsonwebtoken.sign(
       { id: userFound._id, userType },
       config.JWT.secret,
       { expiresIn: config.JWT.expiresIn },
       (error, token) => {
-        if (error) console.log(error);
+        if (error) {
+          console.log(error);
+          return res.status(500).json({ message: "Error generando token" });
+        }
+        
         res.cookie("authToken", token);
 
         // Formatear información del usuario para enviar al frontend
@@ -151,34 +121,47 @@ loginController.login = async (req, res) => {
         if (userType === "Cliente") {
           userData = {
             id: userFound._id,
-            fullName: userFound.fullName,
+            nombreCompleto: userFound.nombreCompleto,
+            correo: userFound.correo,
+            telefono: userFound.telefono,
+            fechaDeNacimiento: userFound.fechaDeNacimiento,
+            pasaporteDui: userFound.pasaporteDui,
+            licencia: userFound.licencia,
+            isVerified: userFound.isVerified,
+            fechaRegistro: userFound.createdAt
+          };
+        } else if (userType === "Administrador") {
+          userData = {
+            id: userFound._id,
+            name: "Administrador",
+            email: config.emailAdmin.email,
+            rol: "Administrador"
+          };
+        } else {
+          // Empleados (Gestor, Empleado)
+          userData = {
+            id: userFound._id,
+            name: userFound.name,
             email: userFound.email,
             phone: userFound.phone,
-            birthDate: userFound.birthDate,
-            passport: userFound.passpor,
-            license: userFound.license,
-            isVerified: userFound.isVerified,
-            registrationDate: userFound.createdAt
+            dui: userFound.dui,
+            rol: userFound.rol,
+            photo: userFound.photo,
+            fechaRegistro: userFound.createdAt
           };
         }
 
-        res.status(200).json({
-          message: "login exitoso",
+        res.json({
+          message: "Login exitoso",
           userType,
           user: userData
         });
-        console.log("Login exitoso");
       }
     );
   } catch (error) {
-    res.status(500).json({
-      message: "Error en el servidor",
-      error: error.toString()
-    });
-    // Log the error for debugging
     console.log(error);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
-//Export
 export default loginController;

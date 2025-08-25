@@ -4,9 +4,10 @@ import { config } from "../config.js";
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: config.cloudinary.cloud_name,
-  api_key: config.cloudinary.api_key,
-  api_secret: config.cloudinary.api_secret,
+    cloud_name: config.cloudinary.cloud_name,
+    api_key: config.cloudinary.api_key,
+    api_secret: config.cloudinary.api_secret,
+    secure: true
 });
 
 const BrandsController = {}

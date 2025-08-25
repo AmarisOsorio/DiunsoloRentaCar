@@ -79,28 +79,32 @@ clientsController.updateClient = async (req, res) => {
     }
 
     let updateData = {
-      name,
-      lastName,
-      phone,
-      birthDate
+      name: name || currentClient.name,
+      lastName: lastName || currentClient.lastName,
+      phone: phone || currentClient.phone,
+      birthDate: birthDate || currentClient.birthDate
     };
 
+    // Verificar si el email cambió y si ya existe
     if (email && email !== currentClient.email) {
-      const existsEmail = await clientsModel.findOne({ correo, _id: { $ne: id } });
+      const existsEmail = await clientsModel.findOne({ email, _id: { $ne: id } });
       if (existsEmail) {
         return res.status(400).json({ message: "El correo ya está en uso por otro cliente" });
       }
       updateData.email = email;
     }
 
-    if (password && password.trim()) {
+    // Solo actualizar contraseña si se proporciona y no son solo asteriscos
+    if (password && password.trim() && password !== '••••••••••••') {
       updateData.password = await bcryptjs.hash(password, 10);
     }
 
-    //Validate phone format
-    const phoneRegex = /^[267]\d{3}-\d{4}$/;
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({ message: "El teléfono debe estar completo y en formato 0000-0000, iniciando con 2, 6 o 7" });
+    // Validar formato de teléfono si se proporciona
+    if (phone) {
+      const phoneRegex = /^[267]\d{3}-\d{4}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ message: "El teléfono debe estar completo y en formato 0000-0000, iniciando con 2, 6 o 7" });
+      }
     }
 
     //Setup images for cloudinary
@@ -108,22 +112,33 @@ clientsController.updateClient = async (req, res) => {
     let lBackUrl = "";
     let pFrontUrl = "";
     let pBackUrl = "";
+    let photoUrl = "";
 
     if (req.files) {      
       if (req.files.licenseFront && req.files.licenseFront[0]) {
         lFrontUrl = await uploadImage(req.files.licenseFront[0], "diunsolo/licenses");
+        updateData.licenseFront = lFrontUrl;
       }
       
       if (req.files.licenseBack && req.files.licenseBack[0]) {
         lBackUrl = await uploadImage(req.files.licenseBack[0], "diunsolo/licenses");
+        updateData.licenseBack = lBackUrl;
       }
       
       if (req.files.passportFront && req.files.passportFront[0]) {
         pFrontUrl = await uploadImage(req.files.passportFront[0], "diunsolo/passports");
+        updateData.passportFront = pFrontUrl;
       }
       
       if (req.files.passportBack && req.files.passportBack[0]) {
         pBackUrl = await uploadImage(req.files.passportBack[0], "diunsolo/passports");
+        updateData.passportBack = pBackUrl;
+      }
+
+      // Manejar foto de perfil
+      if (req.files.photo && req.files.photo[0]) {
+        photoUrl = await uploadImage(req.files.photo[0], "diunsolo/profiles");
+        updateData.photo = photoUrl;
       }
     }
 
@@ -134,6 +149,20 @@ clientsController.updateClient = async (req, res) => {
       client: updated
     });
   } catch (error) {
+    console.error('Error al actualizar cliente:', error);
+    
+    // Manejar errores específicos
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "El correo electrónico ya está en uso" });
+    }
+    
+    if (error.name === 'ValidationError') {
+      const errorMessages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "Error de validación: " + errorMessages.join(', ') 
+      });
+    }
+    
     res.status(500).json({ message: "Error al actualizar cliente", error: error.message });
   }
 };
@@ -150,31 +179,32 @@ clientsController.deleteClient = async (req, res) => {
 
     res.json({ message: "Cliente eliminado exitosamente" });
   } catch (error) {
+    console.error('Error al eliminar cliente:', error);
     res.status(500).json({ message: "Error al eliminar cliente", error: error.message });
   }
 };
 
 //Get [Recent Clients]
 clientsController.getNewClients = async (req, res) => {
-try {
-const result = await clientsModel.aggregate([
-  {
-    $group: {
-      _id: {
-        $dateToString: {
-          format: "%Y-%m-%d",
-          date: "$createdAt"
+  try {
+    const result = await clientsModel.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt"
+            }
+          },
+          totalClients: { $sum: 1 }
         }
       },
-      totalClients: { $sum: 1 }
-    }
-  },
-  {
-    $sort: { _id: -1 }
-  }
-]);
+      {
+        $sort: { _id: -1 }
+      }
+    ]);
 
-  res.status(200).json(result);
+    res.status(200).json(result);
   } catch (error) {
     console.log("Error: " + error);
     res.status(500).json({ message: "Internal server error" });
@@ -183,16 +213,21 @@ const result = await clientsModel.aggregate([
 
 //Existing email check
 clientsController.checkEmailExists = async (req, res) => {
-try {
-  const { correo } = req.body;
+  try {
+    const { email } = req.body;
 
-  const exists = await clientsModel.findOne({ correo });
-  const result = { exists: !!exists };
+    if (!email) {
+      return res.status(400).json({ message: "Email es requerido" });
+    }
 
-  res.json(result);
-} catch (error) {
-  res.status(500).json({ message: "Error al verificar el correo" });
-}
+    const exists = await clientsModel.findOne({ email });
+    const result = { exists: !!exists };
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error al verificar email:', error);
+    res.status(500).json({ message: "Error al verificar el correo" });
+  }
 };
 
 //Export

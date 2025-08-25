@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity, TextInput, Animated, ActivityIndicator } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
-import useLogin from './hooks/useLogin';
+import { useAuth } from '../../Context/AuthContext';
+import useLogin from './Hooks/useLogin';
 
 export default function LoginScreen({ onLogin }) {
     const tireTopSlide = useRef(new Animated.Value(-200)).current;

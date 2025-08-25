@@ -12,7 +12,7 @@ import profileRoutes from "./src/routes/profile.js";
 
 // Rutas de recursos principales
 import clientsRoutes from "./src/routes/clients.js";
-import employeesRoutes from "./src/routes/Empleados.js";
+import employeesRoutes from "./src/routes/Employees.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservationsRoutes from "./src/routes/reservations.js"; //
 import contractsRoutes from "./src/routes/contratos.js";
