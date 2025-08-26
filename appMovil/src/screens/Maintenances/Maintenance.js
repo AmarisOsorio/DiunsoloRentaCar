@@ -40,7 +40,7 @@ const MaintenanceScreen = ({ navigation }) => {
     }
 
     const filtered = maintenances?.filter(maintenance => {
-      const vehicleName = maintenance.vehicleId?.name?.toLowerCase() || '';
+      const vehicleName = maintenance.vehicleId?.vehicleName?.toLowerCase() || '';
       const vehicleBrand = maintenance.vehicleId?.brand?.toLowerCase() || '';
       const maintenanceType = maintenance.maintenanceType?.toLowerCase() || '';
       const searchLower = searchText.toLowerCase();
@@ -64,6 +64,13 @@ const MaintenanceScreen = ({ navigation }) => {
 
   const handleAddMaintenance = () => {
     navigation.navigate('AddMaintenance');
+  };
+
+  const handleMaintenancePress = (maintenance) => {
+    // Navegar a la pantalla de detalles
+    navigation.navigate('MaintenanceDetails', { 
+      maintenanceId: maintenance._id 
+    });
   };
 
   const handleDeleteMaintenance = async (id) => {
@@ -133,7 +140,7 @@ const MaintenanceScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Add Maintenance Button - Estilo mejorado */}
+      {/* Add Maintenance Button */}
       <View style={styles.addButtonContainer}>
         <TouchableOpacity
           style={styles.addButton}
@@ -183,6 +190,7 @@ const MaintenanceScreen = ({ navigation }) => {
               key={maintenance._id}
               maintenance={maintenance}
               getStatusText={getStatusText}
+              onPress={handleMaintenancePress}
             />
           ))
         )}
@@ -358,11 +366,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
-  },
-  retryText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
 

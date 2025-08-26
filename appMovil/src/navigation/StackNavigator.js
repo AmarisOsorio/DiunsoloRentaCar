@@ -6,6 +6,7 @@ import TabNavigator from './TabNavigator'; // Importa el nuevo TabNavigator mejo
 import AddMaintenanceScreen from '../screens/Maintenances/AddMaintenance';
 import NewVehicleScreen from '../screens/Vehicles/NewVehicle';
 import BrandsScreen from '../screens/Vehicles/Brands';
+import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails';
 //import AddReservationScreen from '../screens/Reservations/AddReservation';
 
 const Stack = createNativeStackNavigator();
@@ -27,6 +28,17 @@ const StackNavigator = () => {
       <Stack.Screen
         name="AddMaintenance"
         component={AddMaintenanceScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
+
+       {/* Pantalla detalles mantenimiento */}
+       <Stack.Screen
+        name="MaintenanceDetails"
+        component={MaintenanceDetailsScreen}
         options={{
           headerShown: false,
           presentation: 'card',

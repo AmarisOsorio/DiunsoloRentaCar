@@ -4,12 +4,14 @@ import {
   Text,
   StyleSheet,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const MaintenanceCard = ({
   maintenance,
-  getStatusText
+  getStatusText,
+  onPress
 }) => {
 
   const formatDate = (date) => {
@@ -78,7 +80,11 @@ const MaintenanceCard = ({
   const badgeStyle = getStatusBadgeStyle(status);
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={() => onPress && onPress(maintenance)}
+      activeOpacity={0.7}
+    >
       {/* Status Badge - Dinámico basado en el estado de la BD */}
       <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
         <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{statusText}</Text>
@@ -118,7 +124,12 @@ const MaintenanceCard = ({
           />
         </View>
       </View>
-    </View>
+
+      {/* Touch Indicator */}
+      <View style={styles.touchIndicator}>
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -134,6 +145,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
     minHeight: 200,
+    position: 'relative',
   },
   statusBadge: {
     alignSelf: 'flex-start',
@@ -197,6 +209,14 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 0,
     backgroundColor: 'transparent',
+  },
+  touchIndicator: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+    borderRadius: 12,
+    padding: 4,
   },
 });
 
