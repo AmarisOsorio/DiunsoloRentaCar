@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../Context/AuthContext'; // Importar el contexto de autenticación
 import EmployeeCard from './Empleados/components/EmployeeCard';
 import ClientCard from './Clientes/components/ClientCard';
 import AddEmployeeModal from './Empleados/modals/AddEmployeeModal';
@@ -25,14 +26,30 @@ import { useFetchClientes } from './Clientes/hooks/useFetchClientes';
 const { width, height } = Dimensions.get('window');
 
 export default function Usuarios() {
+  // Obtener el tipo de usuario del contexto de autenticación
+  const { userType } = useAuth();
+  
   // Usar solo los hooks useFetch
   const { empleados, addEmpleado, updateEmpleado, loading, error, setError } = useFetchEmpleados();
   const { clientes, addCliente, updateCliente, loading: clientesLoading, error: clientesError, setError: setClientesError } = useFetchClientes();
   
-  const [activeTab, setActiveTab] = useState('empleados');
+  // Determinar la pestaña inicial basada en el rol del usuario
+  const getInitialTab = () => {
+    if (userType === 'Empleado') {
+      return 'clientes'; // Los empleados solo ven clientes
+    }
+    return 'empleados'; // Administradores y Gestores ven empleados por defecto
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
   const [modalType, setModalType] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Actualizar la pestaña activa cuando cambie el userType
+  useEffect(() => {
+    setActiveTab(getInitialTab());
+  }, [userType]);
 
   const openModal = (type, user = null) => {
     setModalType(type);
@@ -185,73 +202,19 @@ export default function Usuarios() {
     );
   };
 
-  if (loading || clientesLoading) {
+  // Función para determinar si se debe mostrar las pestañas
+  const shouldShowTabs = () => {
+    return userType === 'Administrador' || userType === 'Gestor';
+  };
+
+  // Función para renderizar las pestañas solo si corresponde
+  const renderTabs = () => {
+    if (!shouldShowTabs()) {
+      // Si es empleado, no mostrar pestañas ya que solo puede ver clientes
+      return null;
+    }
+
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#5B9BD5" />
-        
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Usuarios</Text>
-          </View>
-          <TouchableOpacity style={styles.profileButton}>
-            <Ionicons name="person-circle" size={28} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.subtitleContainer}>
-          <Text style={styles.subtitle}>Conoce a tu equipo.</Text>
-        </View>
-
-        <View style={styles.loadingContainer}>
-          <Ionicons name="hourglass" size={48} color="#5B9BD5" />
-          <Text style={styles.loadingText}>Cargando usuarios...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Mostrar error solo si ambos tienen error o si el tab activo tiene error
-  const shouldShowError = (activeTab === 'empleados' && error) || (activeTab === 'clientes' && clientesError);
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#5B9BD5" />
-      
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Usuarios</Text>
-        </View>
-        <TouchableOpacity style={styles.profileButton}>
-          <Ionicons name="person-circle" size={28} color="white" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>Conoce a tu equipo.</Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-        <TouchableOpacity style={styles.menuSearchButton}>
-          <Ionicons name="menu" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'empleados' && styles.activeTab]}
@@ -270,7 +233,26 @@ export default function Usuarios() {
           </Text>
         </TouchableOpacity>
       </View>
+    );
+  };
 
+  // Función para renderizar el botón de agregar solo si tiene permisos
+  const renderAddButton = () => {
+    // Los empleados solo pueden agregar clientes
+    const canAddEmployees = userType === 'Administrador' || userType === 'Gestor';
+    const canAddClients = userType === 'Administrador' || userType === 'Empleado';
+    
+    // Si está en la pestaña de empleados pero no puede agregarlos, no mostrar botón
+    if (activeTab === 'empleados' && !canAddEmployees) {
+      return null;
+    }
+    
+    // Si está en la pestaña de clientes pero no puede agregarlos, no mostrar botón
+    if (activeTab === 'clientes' && !canAddClients) {
+      return null;
+    }
+
+    return (
       <View style={styles.addButtonContainer}>
         <TouchableOpacity
           style={styles.addEmployeeButton}
@@ -282,6 +264,91 @@ export default function Usuarios() {
           <Ionicons name="add" size={20} color="#5B9BD5" />
         </TouchableOpacity>
       </View>
+    );
+  };
+
+  if (loading || clientesLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#5B9BD5" />
+        
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {userType === 'Empleado' ? 'Clientes' : 'Usuarios'}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person-circle" size={28} color="white" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.subtitleContainer}>
+          <Text style={styles.subtitle}>
+            {userType === 'Empleado' ? 'Gestiona los clientes.' : 'Conoce a tu equipo.'}
+          </Text>
+        </View>
+
+        <View style={styles.loadingContainer}>
+          <Ionicons name="hourglass" size={48} color="#5B9BD5" />
+          <Text style={styles.loadingText}>
+            {userType === 'Empleado' ? 'Cargando clientes...' : 'Cargando usuarios...'}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Mostrar error solo si ambos tienen error o si el tab activo tiene error
+  const shouldShowError = (activeTab === 'empleados' && error) || (activeTab === 'clientes' && clientesError);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#5B9BD5" />
+      
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {userType === 'Empleado' ? 'Clientes' : 'Usuarios'}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.profileButton}>
+          <Ionicons name="person-circle" size={28} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.subtitle}>
+          {userType === 'Empleado' ? 'Gestiona los clientes.' : 'Conoce a tu equipo.'}
+        </Text>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        <TouchableOpacity style={styles.menuSearchButton}>
+          <Ionicons name="menu" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Renderizar las pestañas solo si corresponde al rol */}
+      {renderTabs()}
+
+      {/* Renderizar el botón de agregar solo si tiene permisos */}
+      {renderAddButton()}
 
       {shouldShowError ? (
         renderError(activeTab === 'empleados' ? error : clientesError, activeTab === 'empleados')
@@ -312,7 +379,8 @@ export default function Usuarios() {
         </ScrollView>
       )}
 
-      {modalType === 'addEmployee' && (
+      {/* Modales - Solo mostrar los modales que corresponden al rol del usuario */}
+      {modalType === 'addEmployee' && (userType === 'Administrador' || userType === 'Gestor') && (
         <AddEmployeeModal
           visible={true}
           onClose={closeModal}
@@ -320,7 +388,7 @@ export default function Usuarios() {
         />
       )}
 
-      {modalType === 'addClient' && (
+      {modalType === 'addClient' && (userType === 'Administrador' || userType === 'Empleado') && (
         <AddClientModal
           visible={true}
           onClose={closeModal}
@@ -328,7 +396,7 @@ export default function Usuarios() {
         />
       )}
 
-      {modalType === 'employeeDetails' && (
+      {modalType === 'employeeDetails' && (userType === 'Administrador' || userType === 'Gestor') && (
         <EmployeeDetailsModal
           visible={true}
           empleado={selectedUser}
@@ -549,3 +617,4 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
 });
+
