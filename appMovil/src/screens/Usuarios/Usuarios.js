@@ -10,6 +10,7 @@ import {
   StatusBar,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../Context/AuthContext'; // Importar el contexto de autenticación
@@ -45,6 +46,11 @@ export default function Usuarios() {
   const [modalType, setModalType] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showRoleFilter, setShowRoleFilter] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('Todos');
+
+  // Lista de roles disponibles para filtrar
+  const availableRoles = ['Todos', 'Administrador', 'Gestor', 'Empleado'];
 
   // Actualizar la pestaña activa cuando cambie el userType
   useEffect(() => {
@@ -115,6 +121,7 @@ export default function Usuarios() {
   const filteredUsers = () => {
     let users = activeTab === 'empleados' ? empleados : clientes;
     
+    // Aplicar filtro de búsqueda
     if (searchQuery.trim()) {
       users = users.filter(user => {
         if (activeTab === 'empleados') {
@@ -128,6 +135,11 @@ export default function Usuarios() {
                  user.email?.toLowerCase().includes(searchQuery.toLowerCase());
         }
       });
+    }
+
+    // Aplicar filtro de rol solo para empleados
+    if (activeTab === 'empleados' && selectedRole !== 'Todos') {
+      users = users.filter(user => user.rol === selectedRole);
     }
     
     return users;
@@ -218,7 +230,10 @@ export default function Usuarios() {
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'empleados' && styles.activeTab]}
-          onPress={() => setActiveTab('empleados')}
+          onPress={() => {
+            setActiveTab('empleados');
+            setSelectedRole('Todos'); // Reset role filter when changing tabs
+          }}
         >
           <Text style={[styles.tabText, activeTab === 'empleados' && styles.activeTabText]}>
             Empleados
@@ -266,6 +281,49 @@ export default function Usuarios() {
       </View>
     );
   };
+
+  // Modal para filtro de roles
+  const RoleFilterModal = () => (
+    <Modal
+      visible={showRoleFilter}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowRoleFilter(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay} 
+        activeOpacity={1} 
+        onPress={() => setShowRoleFilter(false)}
+      >
+        <View style={styles.filterModal}>
+          <Text style={styles.filterModalTitle}>Filtrar por rol</Text>
+          {availableRoles.map((role) => (
+            <TouchableOpacity
+              key={role}
+              style={[
+                styles.roleOption,
+                selectedRole === role && styles.selectedRoleOption
+              ]}
+              onPress={() => {
+                setSelectedRole(role);
+                setShowRoleFilter(false);
+              }}
+            >
+              <Text style={[
+                styles.roleOptionText,
+                selectedRole === role && styles.selectedRoleOptionText
+              ]}>
+                {role}
+              </Text>
+              {selectedRole === role && (
+                <Ionicons name="checkmark" size={20} color="#5B9BD5" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
 
   if (loading || clientesLoading) {
     return (
@@ -339,10 +397,34 @@ export default function Usuarios() {
             onChangeText={setSearchQuery}
           />
         </View>
-        <TouchableOpacity style={styles.menuSearchButton}>
-          <Ionicons name="menu" size={24} color="#666" />
-        </TouchableOpacity>
+        
+        {/* Solo mostrar el botón de filtro cuando esté en empleados */}
+        {activeTab === 'empleados' && (
+          <TouchableOpacity 
+            style={[
+              styles.menuSearchButton,
+              selectedRole !== 'Todos' && styles.filterActiveButton
+            ]}
+            onPress={() => setShowRoleFilter(true)}
+          >
+            <Ionicons name="funnel" size={24} color={selectedRole !== 'Todos' ? "#5B9BD5" : "#666"} />
+            {selectedRole !== 'Todos' && <View style={styles.filterIndicator} />}
+          </TouchableOpacity>
+        )}
       </View>
+
+      {/* Mostrar filtro activo para empleados */}
+      {activeTab === 'empleados' && selectedRole !== 'Todos' && (
+        <View style={styles.activeFilterContainer}>
+          <Text style={styles.activeFilterText}>Filtrado por: {selectedRole}</Text>
+          <TouchableOpacity 
+            style={styles.clearFilterButton}
+            onPress={() => setSelectedRole('Todos')}
+          >
+            <Ionicons name="close" size={16} color="#5B9BD5" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Renderizar las pestañas solo si corresponde al rol */}
       {renderTabs()}
@@ -363,11 +445,11 @@ export default function Usuarios() {
                   color="#CCC" 
                 />
                 <Text style={styles.emptyTitle}>
-                  {searchQuery ? 'No se encontraron resultados' : `No hay ${activeTab} registrados`}
+                  {searchQuery || selectedRole !== 'Todos' ? 'No se encontraron resultados' : `No hay ${activeTab} registrados`}
                 </Text>
                 <Text style={styles.emptyText}>
-                  {searchQuery 
-                    ? 'Intenta con otros términos de búsqueda' 
+                  {searchQuery || selectedRole !== 'Todos'
+                    ? 'Intenta con otros términos de búsqueda o filtros' 
                     : `Agrega tu primer ${activeTab === 'empleados' ? 'empleado' : 'cliente'} usando el botón de arriba`
                   }
                 </Text>
@@ -378,6 +460,9 @@ export default function Usuarios() {
           </View>
         </ScrollView>
       )}
+
+      {/* Modal de filtro de roles */}
+      <RoleFilterModal />
 
       {/* Modales - Solo mostrar los modales que corresponden al rol del usuario */}
       {modalType === 'addEmployee' && (userType === 'Administrador' || userType === 'Gestor') && (
@@ -554,6 +639,43 @@ const styles = StyleSheet.create({
   },
   menuSearchButton: {
     padding: 4,
+    position: 'relative',
+  },
+  filterActiveButton: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    padding: 8,
+  },
+  filterIndicator: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#5B9BD5',
+  },
+  activeFilterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  activeFilterText: {
+    fontSize: 14,
+    color: '#5B9BD5',
+    fontWeight: '500',
+  },
+  clearFilterButton: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -616,5 +738,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 0,
   },
+  // Estilos para el modal de filtro
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterModal: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginHorizontal: 40,
+    minWidth: 250,
+    maxHeight: '80%',
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedRoleOption: {
+    backgroundColor: '#E3F2FD',
+  },
+  roleOptionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedRoleOptionText: {
+    color: '#5B9BD5',
+    fontWeight: '500',
+  },
 });
-
