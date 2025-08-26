@@ -228,25 +228,33 @@ export default function Usuarios() {
 
     return (
       <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'empleados' && styles.activeTab]}
-          onPress={() => {
-            setActiveTab('empleados');
-            setSelectedRole('Todos'); // Reset role filter when changing tabs
-          }}
-        >
-          <Text style={[styles.tabText, activeTab === 'empleados' && styles.activeTabText]}>
-            Empleados
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'clientes' && styles.activeTab]}
-          onPress={() => setActiveTab('clientes')}
-        >
-          <Text style={[styles.tabText, activeTab === 'clientes' && styles.activeTabText]}>
-            Clientes
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.tabWrapper}>
+          <TouchableOpacity
+            style={[
+              styles.tab, 
+              activeTab === 'empleados' ? styles.activeTab : styles.inactiveTab
+            ]}
+            onPress={() => {
+              setActiveTab('empleados');
+              setSelectedRole('Todos'); // Reset role filter when changing tabs
+            }}
+          >
+            <Text style={[styles.tabText, activeTab === 'empleados' && styles.activeTabText]}>
+              Empleados
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab, 
+              activeTab === 'clientes' ? styles.activeTab : styles.inactiveTab
+            ]}
+            onPress={() => setActiveTab('clientes')}
+          >
+            <Text style={[styles.tabText, activeTab === 'clientes' && styles.activeTabText]}>
+              Clientes
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -330,30 +338,29 @@ export default function Usuarios() {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#5B9BD5" />
         
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="white" />
+        <View style={styles.headerContainer}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <TouchableOpacity style={styles.backButton}>
+                <Ionicons name="chevron-back" size={24} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>
+                {userType === 'Empleado' ? 'Clientes' : 
+                 shouldShowTabs() ? (activeTab === 'empleados' ? 'Empleados' : 'Clientes') : 'Clientes'}
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.profileButton}>
+              <Ionicons name="person-circle" size={28} color="white" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>
-              {userType === 'Empleado' ? 'Clientes' : 'Usuarios'}
-            </Text>
           </View>
-          <TouchableOpacity style={styles.profileButton}>
-            <Ionicons name="person-circle" size={28} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.subtitleContainer}>
-          <Text style={styles.subtitle}>
-            {userType === 'Empleado' ? 'Gestiona los clientes.' : 'Conoce a tu equipo.'}
-          </Text>
+          <View style={styles.headerCurve} />
         </View>
 
         <View style={styles.loadingContainer}>
           <Ionicons name="hourglass" size={48} color="#5B9BD5" />
           <Text style={styles.loadingText}>
-            {userType === 'Empleado' ? 'Cargando clientes...' : 'Cargando usuarios...'}
+            {userType === 'Empleado' ? 'Cargando clientes...' : 
+             shouldShowTabs() ? (activeTab === 'empleados' ? 'Cargando empleados...' : 'Cargando clientes...') : 'Cargando clientes...'}
           </Text>
         </View>
       </SafeAreaView>
@@ -367,24 +374,22 @@ export default function Usuarios() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#5B9BD5" />
       
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="white" />
+      <View style={styles.headerContainer}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {userType === 'Empleado' ? 'Clientes' : 
+               shouldShowTabs() ? (activeTab === 'empleados' ? 'Empleados' : 'Clientes') : 'Clientes'}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person-circle" size={28} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {userType === 'Empleado' ? 'Clientes' : 'Usuarios'}
-          </Text>
         </View>
-        <TouchableOpacity style={styles.profileButton}>
-          <Ionicons name="person-circle" size={28} color="white" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>
-          {userType === 'Empleado' ? 'Gestiona los clientes.' : 'Conoce a tu equipo.'}
-        </Text>
+        <View style={styles.headerCurve} />
       </View>
 
       <View style={styles.searchContainer}>
@@ -577,14 +582,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
+  headerContainer: {
+    position: 'relative',
+  },
   header: {
     backgroundColor: '#5B9BD5',
-    height: 60,
+    height: 80,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 20,
+    zIndex: 1,
+  },
+  headerCurve: {
+    height: 20,
+    backgroundColor: '#5B9BD5',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginTop: -1,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -601,16 +617,6 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 4,
-  },
-  subtitleContainer: {
-    backgroundColor: '#5B9BD5',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  subtitle: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '300',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -678,23 +684,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabContainer: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  tabWrapper: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 25,
+    padding: 3,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderRadius: 22,
   },
   activeTab: {
-    borderBottomColor: '#5B9BD5',
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  inactiveTab: {
+    backgroundColor: 'transparent',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
     fontWeight: '500',
   },
@@ -737,6 +760,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 0,
+    gap: 8, // Espacio entre cards como en los bocetos
   },
   // Estilos para el modal de filtro
   modalOverlay: {
