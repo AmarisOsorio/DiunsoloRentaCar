@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 
-const BRANDS_API_URL = 'http://localhost:4000/api/brands';
+const BRANDS_API_URL = 'https://diunsolorentacar.onrender.com/api/brands';
 const vehicleTypes = [
   { label: 'Pick up', value: 'Pick up' },
   { label: 'SUV', value: 'SUV' },
@@ -80,7 +80,7 @@ const useNewVehicle = () => {
         });
       }
       // Llamada al backend
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = 'https://diunsolorentacar.onrender.com/api';
       const res = await fetch(`${apiUrl}/vehicles`, {
         method: 'POST',
         headers: {
