@@ -1,11 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, Platform } from 'react-native';
-let LottieView;
-if (Platform.OS === 'web') {
-	LottieView = require('lottie-react').default;
-} else {
-	LottieView = require('lottie-react-native');
-}
+import LottieView from 'lottie-react-native';
+import WebLottie from 'lottie-react';
 
 export default function SuccesLogout({ visible }) {
 	return (
@@ -17,7 +13,7 @@ export default function SuccesLogout({ visible }) {
 			<View style={styles.overlay}>
 				<View style={styles.logoutAnimContainer}>
 					{Platform.OS === 'web' ? (
-						<LottieView
+						<WebLottie
 							animationData={require('../../../assets/Animations/Logout.json')}
 							autoPlay
 							loop={false}

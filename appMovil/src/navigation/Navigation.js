@@ -8,6 +8,9 @@ import EmployeeTabNavigator from './EmployeeTabNavigator';
 //paginas en Vehicles
 import NewVehicle from '../screens/Vehicles/NewVehicle';
 import Brands from '../screens/Vehicles/Brands';
+import VehicleDetails from '../screens/Vehicles/VehicleDetails';
+//otras paginas
+import Calendario from '../screens/Calendario/Calendario';
 export default function Navigation() {
 
   const Stack = createNativeStackNavigator(); // Crea una instancia del stack navigator
@@ -15,7 +18,7 @@ export default function Navigation() {
   return (
     <NavigationContainer> 
       <Stack.Navigator
-        initialRouteName='Login'
+        initialRouteName='AdminTabs'
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -24,6 +27,8 @@ export default function Navigation() {
         <Stack.Screen name="EmployeeTabs" component={EmployeeTabNavigator} />
         <Stack.Screen name="NewVehicle" component={NewVehicle} options={{ headerShown: false }} />
         <Stack.Screen name="Brands" component={Brands} options={{ headerShown: false }} />
+        <Stack.Screen name="VehicleDetails" component={VehicleDetails} options={{ headerShown: false }} />
+        <Stack.Screen name="Calendario" component={Calendario} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -55,7 +55,7 @@ const HTMLRecoveryEmail = (code) => {
       <hr style="margin: 32px 0 18px 0; border: none; border-top: 1px solid #eee;" />
       <p style="font-size: 0.97em; color: #888; text-align: center;">¿Necesitas ayuda? Contáctanos en <a href="mailto:soporte@diunsolo.com" style="color:#009BDB;">soporte@diunsolo.com</a></p>
       <div style="text-align: center; margin-top: 18px;">
-        <a href="http://localhost:5173" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
+        <a href="https://diunsolo-rent-car.vercel.app" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
       </div>
     </div>
   `;

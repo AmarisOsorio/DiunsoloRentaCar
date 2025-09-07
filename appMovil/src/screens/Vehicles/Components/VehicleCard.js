@@ -1,12 +1,16 @@
 import React, { useRef, useEffect } from 'react';
-import { Animated, View, Text, Image, StyleSheet } from 'react-native';
+import { Animated, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function VehicleCard({ item, index }) {
+	const navigation = useNavigation();
+	
 	// Solo animar en el primer render
 	const hasAnimated = useRef(false);
 	const translateY = useRef(new Animated.Value(40)).current;
 	const opacity = useRef(new Animated.Value(0)).current;
+	
 	useEffect(() => {
 		if (!hasAnimated.current) {
 			Animated.parallel([
@@ -31,23 +35,31 @@ export default function VehicleCard({ item, index }) {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+	
 	// Determinar color de fondo del badge según estado
 	const badgeBg =
-		item.status === 'Disponible' ? { backgroundColor: 'rgba(46,204,113,0.18)' } :
-		item.status === 'Reservado' ? { backgroundColor: 'rgba(231,76,60,0.18)' } :
-		item.status === 'Mantenimiento' ? { backgroundColor: 'rgba(241,196,15,0.18)' } :
+		item.status === 'Disponible' ? { backgroundColor: 'rgba(180, 255, 184, 1)' } :
+		item.status === 'Reservado' ? { backgroundColor: 'rgba(255, 210, 210, 1)' } :
+		item.status === 'Mantenimiento' ? { backgroundColor: 'rgba(255, 230, 195, 1)' } :
 		{};
+	
+	// Navegar a detalles del vehículo
+	const handlePress = () => {
+		navigation.navigate('VehicleDetails', { vehicleId: item._id });
+	};
+	
 	return (
-		<Animated.View style={[styles.vehicleCardNew, { opacity, transform: [{ translateY }] }]}> 
-			{/* Estado en la esquina superior izquierda */}
-			<View style={[styles.statusBadgeContainer, badgeBg]}>
-				<View style={[styles.statusDotNew, styles[item.status]]} />
-				<Text style={[styles.statusBadgeText, styles[item.status+"Text"]]}>{item.status === 'Disponible' ? 'Disponible' : item.status}</Text>
-			</View>
-			{/* Imagen lateral grande y centrada (sideImage, fallback a mainViewImage) */}
-			<View style={styles.vehicleImageContainer}>
-				<Image source={{ uri: item.sideImage || item.mainViewImage }} style={styles.vehicleImageFull} resizeMode="cover" />
-			</View>
+		<TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
+			<Animated.View style={[styles.vehicleCardNew, { opacity, transform: [{ translateY }] }]}> 
+				{/* Estado en la esquina superior izquierda */}
+				<View style={[styles.statusBadgeContainer, badgeBg]}>
+					<View style={[styles.statusDotNew, styles[item.status]]} />
+					<Text style={[styles.statusBadgeText, styles[item.status+"Text"]]}>{item.status === 'Disponible' ? 'Disponible' : item.status}</Text>
+				</View>
+				{/* Imagen lateral grande y centrada (sideImage, fallback a mainViewImage) */}
+				<View style={styles.vehicleImageContainer}>
+					<Image source={{ uri: item.sideImage || item.mainViewImage }} style={styles.vehicleImageFull} resizeMode="cover" />
+				</View>
 			{/* Info principal */}
 			<View style={styles.vehicleInfoRow}>
 				<View style={{flex:1}}>
@@ -67,6 +79,7 @@ export default function VehicleCard({ item, index }) {
 				</View>
 			</View>
 		</Animated.View>
+		</TouchableOpacity>
 	);
 }
 
@@ -175,10 +188,10 @@ const styles = StyleSheet.create({
 		color: '#3D83D2',
 		fontWeight: 'bold',
 	},
-	Disponible: { backgroundColor: '#2ecc71' },
-	Reservado: { backgroundColor: '#e74c3c' },
-	Mantenimiento: { backgroundColor: '#f1c40f' },
-	DisponibleText: { color: '#2ecc71' },
-	ReservadoText: { color: '#e74c3c' },
-	MantenimientoText: { color: '#f1c40f' },
+	Disponible: { backgroundColor: '#4CAF50' },
+	Reservado: { backgroundColor: '#FF6B6B' },
+	Mantenimiento: { backgroundColor: '#FFB347' },
+	DisponibleText: { color: '#2E7D32' },
+	ReservadoText: { color: '#D32F2F' },
+	MantenimientoText: { color: '#F57C00' },
 });

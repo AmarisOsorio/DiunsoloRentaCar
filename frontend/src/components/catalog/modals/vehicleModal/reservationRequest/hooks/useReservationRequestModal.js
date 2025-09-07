@@ -65,7 +65,9 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
       setValidationErrors({});
       if (isAuthenticated && userInfo) {
         let fullName = '';
-        if (userInfo.nombres && userInfo.apellidos) {
+        if (userInfo.fullname) {
+          fullName = userInfo.fullname.trim();
+        } else if (userInfo.nombres && userInfo.apellidos) {
           fullName = `${userInfo.nombres} ${userInfo.apellidos}`.trim();
         }
         setFormData(prev => ({

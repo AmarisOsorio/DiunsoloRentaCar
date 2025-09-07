@@ -1,6 +1,6 @@
 // Importaciones principales de React y componentes de React Native
 import React, { useRef, useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Animated, ActivityIndicator } from 'react-native';
 import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, FlatList, StyleSheet, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -24,7 +24,8 @@ export default function Vehicles() {
 		handleBrandSelect, // Función para seleccionar marca
 		statusFilter, // Estado actual del filtro de estado
 		setStatusFilter, // Setter para filtro de estado
-		loading // Estado de carga (debe estar en el hook useVehicles)
+		loading, // Estado de carga (debe estar en el hook useVehicles)
+		refreshVehicles // Función para refrescar la lista de vehículos
 	} = useVehicles();
 
 	// Estado local para el input de búsqueda
@@ -34,7 +35,15 @@ export default function Vehicles() {
 	const [submenuVisible, setSubmenuVisible] = useState(false);
 	const [submenuPos] = useState({ x: 250, y: 80 }); // posición fija para todos
 
-	// Handler para agregar vehículo (navega a NewVehicle)
+	// Refrescar vehículos cuando la pantalla recibe el foco
+	// Esto se ejecuta cuando volvemos de NewVehicle
+	useFocusEffect(
+		React.useCallback(() => {
+			refreshVehicles();
+		}, [refreshVehicles])
+	);
+
+	// Handler para agregar vehículo (navega a NewVehicle sin pasar funciones)
 	const handleAddVehicle = () => {
 		navigation.navigate('NewVehicle');
 	};

@@ -1,3 +1,4 @@
+import React from 'react';
 import useReservationRequestModal from './hooks/useReservationRequestModal';
 import { FaCar, FaTimes, FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa';
 import SuccessCheckAnimation from '../../../../interactions/SuccessCheck/SuccessCheckAnimation';

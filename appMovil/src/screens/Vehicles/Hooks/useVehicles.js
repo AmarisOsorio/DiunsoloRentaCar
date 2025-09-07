@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 // URL base de la API del backend
-const API_BASE = 'http://localhost:4000'; 
+const API_BASE = 'https://diunsolorentacar.onrender.com'; 
 
 // Hook principal que maneja el estado y lógica de la pantalla de vehículos
 export default function useVehicles() {
@@ -100,6 +100,7 @@ export default function useVehicles() {
 	       setStatusFilter,
 	       loading,
 	       hasAnimated,
-	       setHasAnimated
+	       setHasAnimated,
+	       refreshVehicles: fetchVehicles // Exportar función para refrescar vehículos
        };
 }

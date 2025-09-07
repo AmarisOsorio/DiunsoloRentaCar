@@ -7,7 +7,7 @@ import ProfilePopout from './Components/ProfilePopout';
 import { useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Platform, StatusBar } from 'react-native';
 // Importación de las pantallas que se mostrarán en el tab
 import HomeAdmin from '../screens/HomeAdmin/HomeAdmin';
 import Vehicles from '../screens/Vehicles/Vehicles';
@@ -108,6 +108,7 @@ export default function AdminTabNavigator() {
   // Estado para mostrar/ocultar el popout de perfil y el submenu
   const [showProfile, setShowProfile] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [currentTab, setCurrentTab] = useState('Inicio');
   const navigation = useNavigation();
   // TabBar personalizado para poder usar hooks correctamente
   const CustomTabBar = (props) => (
@@ -147,46 +148,67 @@ export default function AdminTabNavigator() {
     </>
   );
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Header superior solo con botón de perfil a la derecha */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#3D83D2' }} edges={['top']}>
+      {/* Configuración de la barra de estado solo para la parte superior */}
+      <StatusBar backgroundColor="#3D83D2" barStyle="light-content" translucent={false} />
+      
+      {/* Header superior con título dinámico y botón de perfil */}
       <View style={styles.headerContainer}>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfile(true)}>
-          <View style={styles.profileIconCircle}>
-            <Ionicons name="person" size={28} color="#3D83D2" />
-          </View>
-        </TouchableOpacity>
+        <View style={styles.headerTopRow}>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity style={styles.profileButton} onPress={() => setShowProfile(true)}>
+            <View style={styles.profileIconCircle}>
+              <Ionicons name="person" size={28} color="#3D83D2" />
+            </View>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.titleRow}>
+          <Text style={styles.headerTitle}>{currentTab}</Text>
+        </View>
       </View>
-      {/* Popout de perfil */}
-      <ProfilePopout
-        visible={showProfile}
-        onClose={() => setShowProfile(false)}
-        navigation={navigation}
-        onRequestReopen={() => setShowProfile(true)}
-        onRequestCloseProfile={() => setShowProfile(false)}
-      />
-      {/* Tab Navigator con animación personalizada y tabBar custom */}
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerStyle: { backgroundColor: '#3D83D2', elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, height: 25 },
-          headerTitleStyle: { color: '#fff', fontWeight: 'bold', padding: 0, margin: 0 },
-          headerTintColor: '#fff',
-        })}
-        tabBar={CustomTabBar}
-      >
-        {/* Definición de las pantallas del tab */}
-        {TabArr.map((item, idx) => (
-          <Tab.Screen
-            key={item.route}
-            name={item.route}
-            component={item.component}
-            options={{
-              title: item.label,
-              tabBarButton: item.hidden ? () => null : undefined,
-            }}
+      
+      {/* Contenedor para el resto del contenido con fondo blanco */}
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['bottom']}>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+          {/* Popout de perfil */}
+          <ProfilePopout
+            visible={showProfile}
+            onClose={() => setShowProfile(false)}
+            navigation={navigation}
+            onRequestReopen={() => setShowProfile(true)}
+            onRequestCloseProfile={() => setShowProfile(false)}
           />
-        ))}
-      </Tab.Navigator>
+          {/* Tab Navigator con animación personalizada y tabBar custom */}
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              headerShown: false,
+            })}
+            tabBar={CustomTabBar}
+            screenListeners={{
+              state: (e) => {
+                const currentRoute = e.data.state.routes[e.data.state.index];
+                const tabItem = TabArr.find(item => item.route === currentRoute.name);
+                if (tabItem) {
+                  setCurrentTab(tabItem.label);
+                }
+              },
+            }}
+          >
+            {/* Definición de las pantallas del tab */}
+            {TabArr.map((item, idx) => (
+              <Tab.Screen
+                key={item.route}
+                name={item.route}
+                component={item.component}
+                options={{
+                  title: item.label,
+                  tabBarButton: item.hidden ? () => null : undefined,
+                }}
+              />
+            ))}
+          </Tab.Navigator>
+        </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -195,18 +217,31 @@ export default function AdminTabNavigator() {
 const styles = StyleSheet.create({
   headerContainer: {
     width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#3D83D2',
-    paddingTop: 0,
-    paddingBottom: 0,
+    paddingTop: 8,
+    paddingBottom: 8,
     paddingHorizontal: 18,
-    height: 65,
+    height: 85,
     zIndex: 10,
     borderBottomWidth: 0, 
     elevation: 0,
     shadowOpacity: 0,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  titleRow: {
+    width: '100%',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   profileButton: {
     backgroundColor: 'transparent',
@@ -243,15 +278,16 @@ const stylesAnim = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
     paddingHorizontal: 8,
     height: Platform.OS === 'ios' ? 80 : 70,
+    paddingBottom: Platform.OS === 'android' ? 8 : 0,
   },
   btn: {
     width: 50,
