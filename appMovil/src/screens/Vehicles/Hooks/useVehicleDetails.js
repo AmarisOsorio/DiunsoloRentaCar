@@ -195,15 +195,46 @@ export default function useVehicleDetails(vehicleId) {
       const response = await fetch(url);
       console.log('📥 Respuesta recibida, status:', response.status);
       
-      // Always try to parse JSON response
+      // Si recibimos un 404, el servidor no tiene la ruta actualizada
+      if (response.status === 404) {
+        console.log('⚠️ Endpoint no encontrado en servidor de producción, usando contrato genérico');
+        
+        // URL de contrato genérico como fallback
+        const fallbackUrl = "https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing";
+        
+        const supported = await Linking.canOpenURL(fallbackUrl);
+        if (supported) {
+          await Linking.openURL(fallbackUrl);
+          console.log('✅ Contrato genérico abierto exitosamente');
+          return true;
+        } else {
+          console.error('❌ No se puede abrir el contrato genérico');
+          setError('No se puede abrir el contrato');
+          return false;
+        }
+      }
+      
+      // Try to parse JSON response for successful responses
       let data;
       try {
         data = await response.json();
         console.log('✅ Datos recibidos:', data);
       } catch (parseError) {
         console.error('❌ Error al parsear JSON:', parseError);
-        setError('Error al procesar la respuesta del servidor');
-        return false;
+        
+        // Si no se puede parsear como JSON, probablemente es HTML (error del servidor)
+        console.log('⚠️ Respuesta no es JSON, usando contrato genérico como fallback');
+        const fallbackUrl = "https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing";
+        
+        const supported = await Linking.canOpenURL(fallbackUrl);
+        if (supported) {
+          await Linking.openURL(fallbackUrl);
+          console.log('✅ Contrato genérico abierto como fallback');
+          return true;
+        } else {
+          setError('Error al procesar la respuesta del servidor');
+          return false;
+        }
       }
       
       // Check if we have a downloadUrl regardless of status code

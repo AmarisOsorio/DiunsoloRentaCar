@@ -171,8 +171,44 @@ export default function useVehicleDetailsAdvanced(vehicleId) {
       // Primero obtener la URL del contrato
       const response = await fetch(`${API_BASE}/api/vehicles/contract-download/${vehicleId}`);
       
+      // Si recibimos un 404, el servidor no tiene la ruta actualizada
+      if (response.status === 404) {
+        console.log('⚠️ Endpoint no encontrado en servidor de producción, usando contrato genérico');
+        
+        // URL de contrato genérico como fallback
+        const fallbackUrl = "https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing";
+        
+        const supported = await Linking.canOpenURL(fallbackUrl);
+        if (supported) {
+          await Linking.openURL(fallbackUrl);
+          setSuccess('download');
+          return true;
+        } else {
+          setError('No se puede abrir el contrato genérico');
+          return false;
+        }
+      }
+      
       if (response.ok) {
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error('❌ Error al parsear JSON:', parseError);
+          
+          // Si no se puede parsear como JSON, usar fallback
+          const fallbackUrl = "https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing";
+          
+          const supported = await Linking.canOpenURL(fallbackUrl);
+          if (supported) {
+            await Linking.openURL(fallbackUrl);
+            setSuccess('download');
+            return true;
+          } else {
+            setError('Error al procesar la respuesta del servidor');
+            return false;
+          }
+        }
         
         if (data.downloadUrl) {
           // Opción 1: Abrir en navegador (más simple)

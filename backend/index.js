@@ -8,7 +8,6 @@ import { config } from "./src/config.js";
 async function main() {
   app.listen(config.server.port || 4000, '0.0.0.0', () => {
     console.log("Server on port " + (config.server.port || 4000));
-    console.log("Server listening on all network interfaces (0.0.0.0)");
   });
 }
 
