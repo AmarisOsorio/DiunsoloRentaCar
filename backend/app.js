@@ -12,31 +12,47 @@ import profileRoutes from "./src/routes/profile.js";
 
 // Rutas de recursos principales
 import clientsRoutes from "./src/routes/clients.js";
-import employeesRoutes from "./src/routes/Empleados.js";
+import employeesRoutes from "./src/routes/Employees.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
-import reservationsRoutes from "./src/routes/reservas.js";
+import reservationsRoutes from "./src/routes/reservations.js"; //
 import contractsRoutes from "./src/routes/contratos.js";
-import maintenancesRoutes from "./src/routes/mantenimientos.js";
+import maintenancesRoutes from "./src/routes/maintenances.js";//--
 import brandsRoutes from "./src/routes/brands.js";
 
 // Rutas utilitarias y de comunicación
 import sendWelcomeRoutes from "./src/routes/sendWelcome.js";
 import contactRoutes from "./src/routes/contact.js";
 
+//Imports para utilizar Swagger
+import swaggerUI from "swagger-ui-express"
+import fs from "fs";
+import path from "path";
+
 const app = express();
 
 
-// Configuración de CORS
-app.use(cors());
-// Permitir solicitudes desde localhost:5173 y localhost:5174
+// Configuración de CORS para permitir credenciales solo desde los orígenes permitidos
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:19006"],
   credentials: true
 }));
 
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
+
+
+/**
+ * Utilizar el sistema de archivos para leer el JSON
+ * de swagger y ver mi documentación
+ */
+const swaggerDocument = JSON.parse(fs.readFileSync(
+  path.resolve("./Documentacion_DiunsoloRentaCar.json"),"utf-8"
+))
+ 
+//Documentación
+app.use("/api/docs" , swaggerUI.serve , swaggerUI.setup(swaggerDocument));
+
 
 // Rutas de autenticación y usuarios
 app.use("/api/registerClients", registerClientsRoutes);
@@ -49,9 +65,9 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/employees", employeesRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
-app.use("/api/reservas", reservationsRoutes);
+app.use("/api/reservations", reservationsRoutes);//
 app.use("/api/contracts", contractsRoutes);
-app.use("/api/maintenances", maintenancesRoutes);
+app.use("/api/maintenances", maintenancesRoutes);//--
 app.use("/api/brands", brandsRoutes);
 
 

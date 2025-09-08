@@ -13,6 +13,7 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
 
   // Obtiene la URL de la imagen del vehículo (prioridad: mainViewImage, luego galleryImages[0], luego sideImage)
   const getImageUrl = (vehicle) => {
+    if (!vehicle) return null;
     if (vehicle.mainViewImage) {
       return vehicle.mainViewImage;
     }
@@ -24,6 +25,17 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
     }
     return null;
   };
+
+  if (!vehicle) {
+    return (
+      <div className="vehicle-card">
+        <div className="vehicle-card-no-image">
+          <div className="no-image-icon"></div>
+          <span>Sin datos del vehículo</span>
+        </div>
+      </div>
+    );
+  }
 
   // Devuelve la clase CSS según el estado del vehículo
   const getStatusClass = (status) => {
@@ -62,7 +74,7 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
-            alt={`${vehicle.brandId?.nombreMarca} ${vehicle.model}`}
+            alt={`${vehicle.brandId?.brandName} ${vehicle.model}`}
             className={`vehicle-card-image${isMainView ? ' mainview' : ''}`}
             onError={handleImageError}
           />
@@ -79,9 +91,9 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
 
       <div className="vehicle-card-content">
         <div className="vehicle-card-header">
-          <h3 className="vehicle-card-title" title={vehicle.vehicleName || `${vehicle.brandId?.nombreMarca} ${vehicle.model}`}>
+          <h3 className="vehicle-card-title" title={vehicle.vehicleName || `${vehicle.brandId?.brandName} ${vehicle.model}`}>
             {/* Mostrar el nombre del vehículo si existe, si no, marca y modelo */}
-            {vehicle.vehicleName || `${vehicle.brandId?.nombreMarca} ${vehicle.model}`}
+            {vehicle.vehicleName || `${vehicle.brandId?.brandName} ${vehicle.model}`}
           </h3>
           <span className="vehicle-card-year">{vehicle.year}</span>
         </div>
@@ -90,7 +102,7 @@ const VehicleCard = ({ vehicle, onClick, onReserve }) => {
           {/* Información pública del vehículo */}
           <div className="vehicle-detail">
             <span className="detail-label">Marca:</span>
-            <span className="detail-value">{vehicle.brandId?.nombreMarca}</span>
+            <span className="detail-value">{vehicle.brandId?.brandName}</span>
           </div>
           <div className="vehicle-detail">
             <span className="detail-label">Clase:</span>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../../../../context/AuthContext';
+import { useAuth } from '../../../../../../hooks/useAuth';
 const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
   // Obtener autenticación y datos de usuario
   const { isAuthenticated, userInfo, createReservation } = useAuth();
@@ -163,16 +163,16 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
     setSuccess(false);
     // Construir datos para el backend
     const reservaData = {
-      clientID: userInfo?._id,
-      vehiculoID: vehicle?._id,
-      fechaInicio: formData.startDate,
-      fechaDevolucion: formData.endDate,
-      estado: 'Pendiente',
-      precioPorDia: vehicle?.pricePerDay || 0,
-      cliente: [{
-        nombre: formData.clientName,
-        telefono: formData.clientPhone,
-        correoElectronico: formData.clientEmail
+  clientId: userInfo?._id || userInfo?.id,
+      vehicleId: vehicle?._id,
+      startDate: formData.startDate,
+      returnDate: formData.endDate,
+      status: 'Pending',
+  pricePerDay: vehicle?.dailyPrice || 0,
+      client: [{
+        name: formData.clientName,
+        phone: formData.clientPhone,
+        email: formData.clientEmail
       }]
     };
     // Llamar a createReservation del contexto

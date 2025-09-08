@@ -3,7 +3,11 @@ import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 
+<<<<<<< HEAD
 const BRANDS_API_URL = 'https://diunsolorentacar.onrender.com/api/brands';
+=======
+const BRANDS_API_URL = 'http://10.0.2.2:4000/api/brands';
+>>>>>>> c37d093ce5cdd626f8d66ead3b494422c39876b0
 const vehicleTypes = [
   { label: 'Pick up', value: 'Pick up' },
   { label: 'SUV', value: 'SUV' },

@@ -1,6 +1,6 @@
 // Importaciones principales de React y los íconos usados en el modal
 import { useState } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth } from '../../../../hooks/useAuth';
 import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar } from 'react-icons/fa';
 import './VehicleModal.css';
 
@@ -182,7 +182,7 @@ const VehicleModal = ({
                   {/* Marca */}
                   <div className="detail-item">
                     <span className="detail-label">Marca:</span>
-                    <span className="detail-value">{vehicle.brandId?.nombreMarca}</span>
+                    <span className="detail-value">{vehicle.brandId?.brandName}</span>
                   </div>
                   {/* Modelo */}
                   <div className="detail-item">

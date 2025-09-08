@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth } from '../../../../hooks/useAuth';
 
-/**
+/*
  * Hook para la lógica de reservas del usuario
- * @param {boolean} shouldFetch - Indica si se deben cargar las reservas
  */
 
-export const useReservas = (shouldFetch = false) => {
-  const { 
-    getUserReservations, 
+export const useReservas = () => {
+  const {
+    getUserReservations,
     updateReservation, 
     deleteReservation, 
     isAuthenticated, 
@@ -26,6 +25,8 @@ export const useReservas = (shouldFetch = false) => {
   const [reservationToDelete, setReservationToDelete] = useState(null);
   const hasInitializedRef = useRef(false);
 
+  // Flag para controlar si se debe hacer fetch de reservas
+  const shouldFetch = isAuthenticated && (reservasInvalidated || !hasInitializedRef.current);
   // Función para cargar reservas
   const loadReservas = async () => {
     console.log('🔄 loadReservas iniciado');
@@ -38,8 +39,18 @@ export const useReservas = (shouldFetch = false) => {
       console.log('🔄 Resultado de getUserReservations:', result);
       
       if (result.success && Array.isArray(result.reservas)) {
-        console.log('✅ Reservas reales cargadas:', result.reservas.length);
-        setReservas(result.reservas);
+        // Adaptar los campos a lo que espera el frontend
+        const reservasAdaptadas = result.reservas.map((r) => ({
+          ...r,
+          fechaInicio: r.startDate || r.fechaInicio || '',
+          fechaDevolucion: r.returnDate || r.fechaDevolucion || '',
+          vehiculoID: r.vehicleId || r.vehiculoID || r.vehiculoId || {},
+          estado: r.status || r.estado || '',
+          precioPorDia: r.pricePerDay || r.precioPorDia || '',
+          cliente: r.client || r.cliente || [],
+        }));
+        console.log('✅ Reservas reales cargadas:', reservasAdaptadas.length);
+        setReservas(reservasAdaptadas);
         setError(null);
         markReservationsAsValid();
         setLoading(false);
@@ -58,44 +69,44 @@ export const useReservas = (shouldFetch = false) => {
     const testReservas = [
       {
         _id: '1',
-        clientID: 'test-client-id',
-        vehiculoID: {
+        clientId: 'test-client-id',
+        vehicleId: {
           _id: 'test-vehicle-1',
-          nombreVehiculo: 'Toyota Corolla (Demo)',
-          marca: 'Toyota',
-          modelo: '2023',
+          vehicleName: 'Toyota Corolla (Demo)',
+          brand: 'Toyota',
+          model: '2023',
           color: 'Blanco',
-          imagenLateral: 'https://via.placeholder.com/300x200?text=Toyota+Corolla'
+          sideImage: 'https://via.placeholder.com/300x200?text=Toyota+Corolla'
         },
-        fechaInicio: '2025-01-15T10:00:00.000Z',
-        fechaDevolucion: '2025-01-20T10:00:00.000Z',
-        estado: 'Pendiente',
-        precioPorDia: 30000,
-        cliente: [{
-          nombre: 'Usuario Demo',
-          telefono: '1234567890',
-          correoElectronico: 'demo@example.com'
+        startDate: '2025-01-15T10:00:00.000Z',
+        returnDate: '2025-01-20T10:00:00.000Z',
+        status: 'Pending',
+        pricePerDay: 30000,
+        client: [{
+          name: 'Usuario Demo',
+          phone: '1234567890',
+          email: 'demo@example.com'
         }]
       },
       {
         _id: '2',
-        clientID: 'test-client-id',
-        vehiculoID: {
+        clientId: 'test-client-id',
+        vehicleId: {
           _id: 'test-vehicle-2',
-          nombreVehiculo: 'Honda Civic (Demo)',
-          marca: 'Honda',
-          modelo: '2023',
+          vehicleName: 'Honda Civic (Demo)',
+          brand: 'Honda',
+          model: '2023',
           color: 'Azul',
-          imagenLateral: 'https://via.placeholder.com/300x200?text=Honda+Civic'
+          sideImage: 'https://via.placeholder.com/300x200?text=Honda+Civic'
         },
-        fechaInicio: '2025-02-01T09:00:00.000Z',
-        fechaDevolucion: '2025-02-05T09:00:00.000Z',
-        estado: 'Activa',
-        precioPorDia: 25000,
-        cliente: [{
-          nombre: 'Usuario Demo',
-          telefono: '1234567890',
-          correoElectronico: 'demo@example.com'
+        startDate: '2025-02-01T09:00:00.000Z',
+        returnDate: '2025-02-05T09:00:00.000Z',
+        status: 'Active',
+        pricePerDay: 25000,
+        client: [{
+          name: 'Usuario Demo',
+          phone: '1234567890',
+          email: 'demo@example.com'
         }]
       }
     ];

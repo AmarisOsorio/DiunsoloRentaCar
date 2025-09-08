@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import './submenu.css';
 import LogoutConfirmModal from '../../home/loginSection/logout/LogoutConfirmModal.jsx';
 import { useSubmenuLog } from './hooks/useSubmenuLog.js';
-import { useAuth } from '../../../context/AuthContext.jsx';
+import { useAuth } from '../../../hooks/useAuth.js';
+
 
 const ANIMATION_OUT_DURATION = 280; // ms, igual que en el CSS
 

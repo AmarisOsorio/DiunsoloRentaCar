@@ -2,7 +2,11 @@
 import { useState, useEffect } from 'react';
 
 // URL base de la API del backend
+<<<<<<< HEAD
 const API_BASE = 'https://diunsolorentacar.onrender.com'; 
+=======
+const API_BASE = 'http://10.0.2.2:4000'; 
+>>>>>>> c37d093ce5cdd626f8d66ead3b494422c39876b0
 
 // Hook principal que maneja el estado y lógica de la pantalla de vehículos
 export default function useVehicles() {

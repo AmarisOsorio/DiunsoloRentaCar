@@ -29,21 +29,29 @@ const EditReservationModal = ({
   // Cargar datos de la reserva cuando se abre el modal
   useEffect(() => {
     if (reservation && show) {
-      const fechaInicio = reservation.fechaInicio ? 
-        new Date(reservation.fechaInicio).toISOString().slice(0, 16) : '';
-      const fechaDevolucion = reservation.fechaDevolucion ? 
-        new Date(reservation.fechaDevolucion).toISOString().slice(0, 16) : '';
-      
-      // Extraer información del cliente
-      const cliente = (reservation.cliente && reservation.cliente[0]) || {};
-      
+      // Fechas
+      const fechaInicioRaw = reservation.fechaInicio || reservation.startDate || reservation.inicio || '';
+      const fechaDevolucionRaw = reservation.fechaDevolucion || reservation.returnDate || reservation.fin || '';
+      const fechaInicio = fechaInicioRaw ? new Date(fechaInicioRaw).toISOString().slice(0, 16) : '';
+      const fechaDevolucion = fechaDevolucionRaw ? new Date(fechaDevolucionRaw).toISOString().slice(0, 16) : '';
+
+      // Cliente
+      const cliente = (reservation.cliente && reservation.cliente[0]) || (reservation.client && reservation.client[0]) || {};
+      const nombreCliente = cliente.nombre || cliente.name || '';
+      const telefonoCliente = cliente.telefono || cliente.phone || '';
+      const correoCliente = cliente.correoElectronico || cliente.email || '';
+
+      // Vehículo
+      const vehiculo = reservation.vehiculoID || reservation.vehiculoId || reservation.vehicleId || {};
+      const vehiculoID = vehiculo._id || reservation.vehiculoID || reservation.vehiculoId || reservation.vehicleId || '';
+
       setFormData({
-        nombreCliente: cliente.nombre || '',
-        telefonoCliente: cliente.telefono || '',
-        correoCliente: cliente.correoElectronico || '',
+        nombreCliente,
+        telefonoCliente,
+        correoCliente,
         fechaInicio,
         fechaDevolucion,
-        vehiculoID: reservation.vehiculoID?._id || reservation.vehiculoID
+        vehiculoID
       });
       setErrors({});
     }
@@ -130,8 +138,13 @@ const EditReservationModal = ({
 
   if (!show) return null;
 
-  const vehiculo = reservation?.vehiculoID || {};
-  const nombreVehiculo = vehiculo.nombreVehiculo || vehiculo.marca || 'Vehículo';
+  // Vehículo robusto
+  const vehiculo = reservation?.vehiculoID || reservation?.vehiculoId || reservation?.vehicleId || {};
+  const nombreVehiculo = vehiculo.nombreVehiculo || vehiculo.vehicleName || vehiculo.marca || vehiculo.brand || 'Vehículo';
+  const modelo = vehiculo.modelo || vehiculo.model || '';
+  const color = vehiculo.color || '';
+  const anio = vehiculo.anio || vehiculo.year || vehiculo.año || '';
+  const imagenVehiculo = vehiculo.imagenLateral || vehiculo.sideImage || vehiculo.mainViewImage || '';
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -149,9 +162,14 @@ const EditReservationModal = ({
         <div className="modal-body">
           <div className="vehicle-info">
             <h4>Vehículo: {nombreVehiculo}</h4>
-            {vehiculo.modelo && <p>Modelo: {vehiculo.modelo}</p>}
-            {vehiculo.color && <p>Color: {vehiculo.color}</p>}
-            {vehiculo.anio && <p>Año: {vehiculo.anio}</p>}
+            {modelo && <p>Modelo: {modelo}</p>}
+            {color && <p>Color: {color}</p>}
+            {anio && <p>Año: {anio}</p>}
+            {imagenVehiculo && (
+              <div style={{marginTop: 8}}>
+                <img src={imagenVehiculo} alt={nombreVehiculo} style={{maxWidth: 180, borderRadius: 8}} />
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="edit-form">
@@ -271,12 +289,12 @@ const DeleteConfirmationModal = ({
 }) => {
   if (!show) return null;
 
-  const vehiculo = reservation?.vehiculoID || {};
-  const nombreVehiculo = vehiculo.nombreVehiculo || vehiculo.marca || 'Vehículo';
-  const fechaInicio = reservation?.fechaInicio ? 
-    new Date(reservation.fechaInicio).toLocaleDateString() : '';
-  const fechaDevolucion = reservation?.fechaDevolucion ? 
-    new Date(reservation.fechaDevolucion).toLocaleDateString() : '';
+    const vehiculo = reservation?.vehiculoID || reservation?.vehiculoId || reservation?.vehicleId || {};
+    const nombreVehiculo = vehiculo.nombreVehiculo || vehiculo.vehicleName || vehiculo.marca || vehiculo.brand || 'Vehículo';
+    const fechaInicioRaw = reservation?.fechaInicio || reservation?.startDate || reservation?.inicio || '';
+    const fechaDevolucionRaw = reservation?.fechaDevolucion || reservation?.returnDate || reservation?.fin || '';
+    const fechaInicio = fechaInicioRaw ? new Date(fechaInicioRaw).toLocaleDateString() : '';
+    const fechaDevolucion = fechaDevolucionRaw ? new Date(fechaDevolucionRaw).toLocaleDateString() : '';
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -342,26 +360,30 @@ const ReservaCard = React.memo(({
   const isPendiente = reserva.estado?.toLowerCase() === 'pendiente';
   
   // Info del auto desde vehiculoID
-  const vehiculo = reserva.vehiculoID || {};
-  const marca = vehiculo.marca || vehiculo.idMarca || '';
-  const nombreVehiculo = vehiculo.nombreVehiculo || '';
-  const modelo = vehiculo.modelo || '';
+
+  // Vehículo: usar el primer campo disponible
+  const vehiculo = reserva.vehiculoID || reserva.vehiculoId || reserva.vehicleId || {};
+  const marca = vehiculo.marca || vehiculo.brand || vehiculo.idMarca || '';
+  const nombreVehiculo = vehiculo.nombreVehiculo || vehiculo.vehicleName || '';
+  const modelo = vehiculo.modelo || vehiculo.model || '';
   const color = vehiculo.color || '';
-  const anio = vehiculo.anio || vehiculo.año || '';
-  const capacidad = vehiculo.capacidad || '';
-  const clase = vehiculo.clase || '';
-  const placa = vehiculo.placa || '';
-  const imagenVehiculo = vehiculo.imagenLateral || reserva.imagenVehiculo || '';
-  
+  const anio = vehiculo.anio || vehiculo.year || vehiculo.año || '';
+  const capacidad = vehiculo.capacidad || vehiculo.capacity || '';
+  const clase = vehiculo.clase || vehiculo.vehicleClass || '';
+  const placa = vehiculo.placa || vehiculo.plate || '';
+  const imagenVehiculo = vehiculo.imagenLateral || vehiculo.sideImage || reserva.imagenVehiculo || vehiculo.mainViewImage || '';
+
   // Info del usuario desde cliente[0]
-  const cliente = (reserva.cliente && reserva.cliente[0]) || {};
-  const nombreCliente = cliente.nombre || reserva.nombreCliente || reserva.nombre || '';
-  const emailCliente = cliente.correoElectronico || reserva.emailCliente || reserva.email || '';
-  const telefonoCliente = cliente.telefono || reserva.telefonoCliente || reserva.telefono || reserva.celular || '';
-  
+  const cliente = (reserva.cliente && reserva.cliente[0]) || (reserva.client && reserva.client[0]) || {};
+  const nombreCliente = cliente.nombre || cliente.name || reserva.nombreCliente || reserva.nombre || '';
+  const emailCliente = cliente.correoElectronico || cliente.email || reserva.emailCliente || reserva.email || '';
+  const telefonoCliente = cliente.telefono || cliente.phone || reserva.telefonoCliente || reserva.telefono || reserva.celular || '';
+
   // Fechas
-  const fechaInicio = reserva.fechaInicio ? new Date(reserva.fechaInicio) : null;
-  const fechaFin = reserva.fechaDevolucion ? new Date(reserva.fechaDevolucion) : (reserva.fechaFin ? new Date(reserva.fechaFin) : null);
+  const fechaInicio = reserva.fechaInicio || reserva.startDate || reserva.inicio || null;
+  const fechaDevolucion = reserva.fechaDevolucion || reserva.returnDate || reserva.fin || null;
+  const fechaFin = fechaDevolucion ? new Date(fechaDevolucion) : (reserva.fechaFin ? new Date(reserva.fechaFin) : null);
+  const fechaInicioObj = fechaInicio ? new Date(fechaInicio) : null;
   
   const handleEdit = (e) => {
     e.stopPropagation();
@@ -425,7 +447,7 @@ const ReservaCard = React.memo(({
           <div className="reserva-fechas-group">
             <div className="reserva-fecha">
               <FaCalendarAlt className="reserva-icon" />
-              <span>Inicio: {fechaInicio ? fechaInicio.toLocaleString() : 'Sin fecha'}</span>
+              <span>Inicio: {fechaInicioObj ? fechaInicioObj.toLocaleString() : 'Sin fecha'}</span>
             </div>
             <div className="reserva-fecha">
               <FaCalendarAlt className="reserva-icon" />

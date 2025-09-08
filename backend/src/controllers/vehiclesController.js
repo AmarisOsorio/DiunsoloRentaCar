@@ -40,10 +40,10 @@ vehiclesController.getVehicles = async (req, res) => {
 vehiclesController.getHomeVehicles = async (req, res) => {
   try {
     // Obtener los 3 vehículos con más reservas
-    // Se asume que el modelo Reserva tiene un campo vehicleId que referencia a Vehicle
-    const Reservas = (await import('../models/Reservas.js')).default;
+    // Se asume que el modelo Reservations tiene un campo vehicleId que referencia a Vehicle
+    const Reservations = (await import('../models/Reservations.js')).default;
     // Agrupar por vehicleId y contar reservas
-    const topVehicles = await Reservas.aggregate([
+    const topVehicles = await Reservations.aggregate([
       { $group: { _id: "$vehicleId", reservasCount: { $sum: 1 } } },
       { $sort: { reservasCount: -1 } },
       { $limit: 3 }
@@ -291,16 +291,17 @@ vehiclesController.updateVehicle = async (req, res) => {
       status
     } = req.body;
 
-    // Validar y convertir dailyPrice a número SOLO si viene en el body
+
+    // Validar y convertir dailyPrice solo si viene en el body
+    let parsedDailyPrice;
     if (typeof dailyPrice !== 'undefined') {
-      const parsedDailyPrice = parseFloat(dailyPrice);
+      parsedDailyPrice = parseFloat(dailyPrice);
       if (isNaN(parsedDailyPrice) || parsedDailyPrice <= 0) {
         return res.status(400).json({
           message: 'El precio por día debe ser un número positivo',
           field: 'dailyPrice'
         });
       }
-      dailyPrice = parsedDailyPrice;
     }
     console.log('Estado válido:', status);
 
@@ -315,21 +316,20 @@ vehiclesController.updateVehicle = async (req, res) => {
     }
 
     // Preparar datos para actualización
-    const updateData = {
-      vehicleName,
-      dailyPrice: parseFloat(dailyPrice),
-      plate: plate?.toUpperCase(),
-      brandId,
-      vehicleClass,
-      color,
-      year: parseInt(year),
-      capacity: parseInt(capacity),
-      model,
-      engineNumber,
-      chassisNumber,
-      vinNumber,
-      status
-    };
+    const updateData = {};
+    if (typeof vehicleName !== 'undefined') updateData.vehicleName = vehicleName;
+    if (typeof dailyPrice !== 'undefined') updateData.dailyPrice = parsedDailyPrice;
+    if (typeof plate !== 'undefined') updateData.plate = plate?.toUpperCase();
+    if (typeof brandId !== 'undefined') updateData.brandId = brandId;
+    if (typeof vehicleClass !== 'undefined') updateData.vehicleClass = vehicleClass;
+    if (typeof color !== 'undefined') updateData.color = color;
+    if (typeof year !== 'undefined') updateData.year = parseInt(year);
+    if (typeof capacity !== 'undefined') updateData.capacity = parseInt(capacity);
+    if (typeof model !== 'undefined') updateData.model = model;
+    if (typeof engineNumber !== 'undefined') updateData.engineNumber = engineNumber;
+    if (typeof chassisNumber !== 'undefined') updateData.chassisNumber = chassisNumber;
+    if (typeof vinNumber !== 'undefined') updateData.vinNumber = vinNumber;
+    if (typeof status !== 'undefined') updateData.status = status;
 
     // Agregar imágenes solo si están presentes
     if (galleryImages && Array.isArray(galleryImages) && galleryImages.length > 0) {

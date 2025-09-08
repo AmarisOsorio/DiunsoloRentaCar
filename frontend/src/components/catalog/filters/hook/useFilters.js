@@ -12,13 +12,13 @@ export const useTypes = (vehicles) => {
   }, [vehicles]);
 };
 
-// Hook para obtener las marcas únicas de los vehículos usando exactamente el campo del backend (brandId?.nombreMarca)
+// Hook para obtener las marcas únicas de los vehículos usando exactamente el campo del backend (brandId?.brandName)
 export const useBrands = (vehicles) => {
   return useMemo(() => {
     if (!Array.isArray(vehicles)) return [];
-    // Solo usa el campo exacto del backend: brandId?.nombreMarca
+    // Usa el campo exacto del backend: brandId?.brandName
     const brands = vehicles
-      .map(v => (typeof v.brandId?.nombreMarca === 'string' ? v.brandId.nombreMarca.trim() : ''))
+      .map(v => (typeof v.brandId?.brandName === 'string' ? v.brandId.brandName.trim() : ''))
       .filter(Boolean);
     return Array.from(new Set(brands)).sort();
   }, [vehicles]);
@@ -31,10 +31,10 @@ export const useFilteredVehicles = (vehicles, filters) => {
 
     let vehiclesFiltered = [...vehicles];
 
-    // Filtrar por marca usando el campo exacto del backend (brandId?.nombreMarca)
+    // Filtrar por marca usando el campo exacto del backend (brandId?.brandName)
     if (filters.brands && filters.brands.length > 0) {
       vehiclesFiltered = vehiclesFiltered.filter(v => {
-        const brandName = v.brandId?.nombreMarca?.trim();
+        const brandName = v.brandId?.brandName?.trim();
         if (!brandName || typeof brandName !== 'string') return false;
         return filters.brands.includes(brandName);
       });
