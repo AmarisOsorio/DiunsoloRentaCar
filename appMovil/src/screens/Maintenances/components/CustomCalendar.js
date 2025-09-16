@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -14,6 +15,7 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [maintenances, setMaintenances] = useState([]);
   const [reservations, setReservations] = useState([]); // Para futuro uso
+  const [tempStartDate, setTempStartDate] = useState(null); // Fecha temporal para primer click
 
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -116,13 +118,19 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
   const getDayStyle = (day) => {
     if (!day) return null;
     
-    // Verificar si es parte del rango de selección actual (nuevo mantenimiento)
-    const isInSelectedRange = isDateInRange(day, startDate, endDate);
-    const isStartDate = startDate && 
+    // Verificar si es la fecha temporal (primer click)
+    const isTempStartDate = tempStartDate && 
+      day === tempStartDate.getDate() && 
+      currentMonth.getMonth() === tempStartDate.getMonth() && 
+      currentMonth.getFullYear() === tempStartDate.getFullYear();
+    
+    // Solo mostrar el rango cuando ambas fechas están definidas (startDate y endDate)
+    const isInSelectedRange = startDate && endDate && isDateInRange(day, startDate, endDate);
+    const isStartDate = startDate && endDate && 
       day === startDate.getDate() && 
       currentMonth.getMonth() === startDate.getMonth() && 
       currentMonth.getFullYear() === startDate.getFullYear();
-    const isEndDate = endDate && 
+    const isEndDate = startDate && endDate && 
       day === endDate.getDate() && 
       currentMonth.getMonth() === endDate.getMonth() && 
       currentMonth.getFullYear() === endDate.getFullYear();
@@ -130,7 +138,11 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
     // Verificar si hay mantenimiento existente en esta fecha
     const maintenance = getMaintenanceForDate(day);
     
-    // Prioridad: selección actual (nuevo mantenimiento) > mantenimientos existentes
+    // Prioridad: fecha temporal > rango seleccionado > mantenimientos existentes
+    if (isTempStartDate) {
+      return styles.tempStartDay;
+    }
+    
     if (isInSelectedRange) {
       if (isStartDate && isEndDate) {
         return styles.selectedSingleDay;
@@ -172,8 +184,19 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
   const getDayTextStyle = (day) => {
     if (!day) return null;
     
-    const isInSelectedRange = isDateInRange(day, startDate, endDate);
+    // Verificar si es la fecha temporal (primer click)
+    const isTempStartDate = tempStartDate && 
+      day === tempStartDate.getDate() && 
+      currentMonth.getMonth() === tempStartDate.getMonth() && 
+      currentMonth.getFullYear() === tempStartDate.getFullYear();
+    
+    // Solo mostrar texto especial cuando ambas fechas están definidas
+    const isInSelectedRange = startDate && endDate && isDateInRange(day, startDate, endDate);
     const maintenance = getMaintenanceForDate(day);
+    
+    if (isTempStartDate) {
+      return styles.tempStartDayText;
+    }
     
     if (isInSelectedRange) {
       return styles.selectedDayText;
@@ -187,9 +210,54 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
   };
 
   const handleDayPress = (day) => {
-    // Deshabilitar la selección desde el calendario
-    // Solo mostrar información, no permitir editar
-    return;
+    if (!day) return;
+    
+    const selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    selectedDate.setHours(12, 0, 0, 0);
+    
+    // Verificar fechas pasadas
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      Alert.alert('Fecha inválida', 'No puedes seleccionar fechas pasadas.');
+      return;
+    }
+    
+    // Si ya hay un rango completo (startDate y endDate), reiniciar completamente
+    if (startDate && endDate) {
+      // Limpiar todo primero
+      onDateSelect(null, 'end');
+      onDateSelect(null, 'start');
+      // Luego establecer nueva selección temporal
+      setTimeout(() => {
+        setTempStartDate(selectedDate);
+      }, 20);
+      return;
+    }
+    
+    if (!tempStartDate) {
+      // Primera selección - guardar temporalmente, no enviar aún
+      setTempStartDate(selectedDate);
+    } else {
+      // Segunda selección - ahora enviar ambas fechas
+      let finalStartDate = tempStartDate;
+      let finalEndDate = selectedDate;
+      
+      // Si la segunda fecha es anterior, hacer swap
+      if (selectedDate < tempStartDate) {
+        finalStartDate = selectedDate;
+        finalEndDate = tempStartDate;
+      }
+      
+      // Enviar ambas fechas al componente padre
+      onDateSelect(finalStartDate, 'start');
+      setTimeout(() => {
+        onDateSelect(finalEndDate, 'end');
+      }, 10);
+      
+      // Limpiar estado temporal
+      setTempStartDate(null);
+    }
   };
 
   const days = getDaysInMonth(currentMonth);
@@ -229,16 +297,18 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       {/* Calendario */}
       <View style={styles.calendar}>
         {days.map((day, index) => (
-          <View
+          <TouchableOpacity
             key={index}
             style={[styles.day, getDayStyle(day)]}
+            onPress={() => handleDayPress(day)}
+            activeOpacity={0.7}
           >
             {day && (
               <Text style={getDayTextStyle(day)}>
                 {day}
               </Text>
             )}
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -309,11 +379,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 2,
   },
-  normalDay: {
-    backgroundColor: 'transparent',
+  // Estilos para fecha temporal (primer click)
+  tempStartDay: {
+    backgroundColor: '#E0F2FE',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#0EA5E9',
   },
   
-  // Estilos para selección actual (nuevo mantenimiento - color amarillo)
+  // Estilos para selección actual (nuevo mantenimiento - color amarillo como el original)
   selectedStartDay: {
     backgroundColor: '#F59E0B',
     borderTopLeftRadius: 20,
@@ -355,6 +429,11 @@ const styles = StyleSheet.create({
   normalDayText: {
     fontSize: 16,
     color: '#374151',
+  },
+  tempStartDayText: {
+    fontSize: 16,
+    color: '#0EA5E9',
+    fontWeight: '600',
   },
   selectedDayText: {
     fontSize: 16,

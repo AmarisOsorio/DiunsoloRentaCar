@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,18 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import StatusChangeModal from '../modals/StatusChangeModal';
+import StatusSuccessModal from '../modals/StatusSuccessModal';
 
 const MaintenanceCard = ({
   maintenance,
   getStatusText,
-  onPress
+  onPress,
+  onStatusChange
 }) => {
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [pendingNewStatus, setPendingNewStatus] = useState(null);
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('es-ES', {
@@ -59,13 +65,13 @@ const MaintenanceCard = ({
         };
       case 'Pending':
         return {
-          backgroundColor: 'rgba(251, 146, 60, 0.15)',
+          backgroundColor: 'rgba(245, 158, 11, 0.15)',
           textColor: '#F59E0B'
         };
       case 'Completed':
         return {
-          backgroundColor: 'rgba(59, 130, 246, 0.15)',
-          textColor: '#3B82F6'
+          backgroundColor: 'rgba(107, 114, 128, 0.15)',
+          textColor: '#6B7280'
         };
       default:
         return {
@@ -75,61 +81,153 @@ const MaintenanceCard = ({
     }
   };
 
+  const getStatusToggleIcon = (status) => {
+    switch (status) {
+      case 'Pending':
+        return {
+          icon: 'play-circle',
+          color: '#10B981',
+          nextStatus: 'Active',
+          message: 'Marcar como activo'
+        };
+      case 'Active':
+        return {
+          icon: 'checkmark-circle',
+          color: '#6B7280',
+          nextStatus: 'Completed',
+          message: 'Marcar como completado'
+        };
+      case 'Completed':
+        return {
+          icon: 'refresh-circle',
+          color: '#F59E0B',
+          nextStatus: 'Pending',
+          message: 'Marcar como pendiente'
+        };
+      default:
+        return {
+          icon: 'play-circle',
+          color: '#10B981',
+          nextStatus: 'Active',
+          message: 'Marcar como activo'
+        };
+    }
+  };
+
+  const handleStatusToggle = () => {
+    const toggleInfo = getStatusToggleIcon(maintenance.status);
+    setPendingNewStatus(toggleInfo.nextStatus);
+    setShowChangeModal(true);
+  };
+
+  const handleConfirmChange = async () => {
+    setShowChangeModal(false);
+    
+    if (onStatusChange && pendingNewStatus) {
+      try {
+        await onStatusChange(maintenance._id, pendingNewStatus);
+        setShowSuccessModal(true);
+      } catch (error) {
+        // El error ya se maneja en el componente padre
+      }
+    }
+  };
+
+  const handleCancelChange = () => {
+    setShowChangeModal(false);
+    setPendingNewStatus(null);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false);
+    setPendingNewStatus(null);
+  };
+
   const status = maintenance.status;
   const statusText = getStatusText(maintenance.status);
   const badgeStyle = getStatusBadgeStyle(status);
+  const toggleInfo = getStatusToggleIcon(status);
 
   return (
-    <TouchableOpacity 
-      style={styles.container}
-      onPress={() => onPress && onPress(maintenance)}
-      activeOpacity={0.7}
-    >
-      {/* Status Badge - Dinámico basado en el estado de la BD */}
-      <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
-        <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{statusText}</Text>
-      </View>
+    <>
+      <TouchableOpacity 
+        style={styles.container}
+        onPress={() => onPress && onPress(maintenance)}
+        activeOpacity={0.7}
+      >
+        {/* Header with Status Badge and Toggle Button */}
+        <View style={styles.cardHeader}>
+          <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
+            <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{statusText}</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={[styles.statusToggleButton, { borderColor: toggleInfo.color }]}
+            onPress={handleStatusToggle}
+          >
+            <Ionicons name={toggleInfo.icon} size={20} color={toggleInfo.color} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Main Content Container */}
-      <View style={styles.contentContainer}>
-        {/* Left Side - Vehicle Info and Dates */}
-        <View style={styles.leftContent}>
-          {/* Vehicle Name */}
-          <Text style={styles.vehicleName}>
-            {getVehicleName()}
-          </Text>
-          
-          {/* Maintenance Type */}
-          <Text style={styles.maintenanceType}>{maintenance.maintenanceType}</Text>
-          
-          {/* Dates with Icons */}
-          <View style={styles.datesContainer}>
-            <View style={styles.dateItem}>
-              <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-              <Text style={styles.dateText}>{formatDate(maintenance.startDate)}</Text>
+        {/* Main Content Container */}
+        <View style={styles.contentContainer}>
+          {/* Left Side - Vehicle Info and Dates */}
+          <View style={styles.leftContent}>
+            {/* Vehicle Name */}
+            <Text style={styles.vehicleName}>
+              {getVehicleName()}
+            </Text>
+            
+            {/* Maintenance Type */}
+            <Text style={styles.maintenanceType}>{maintenance.maintenanceType}</Text>
+            
+            {/* Dates with Icons */}
+            <View style={styles.datesContainer}>
+              <View style={styles.dateItem}>
+                <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
+                <Text style={styles.dateText}>{formatDate(maintenance.startDate)}</Text>
+              </View>
+              <View style={styles.dateItem}>
+                <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
+                <Text style={styles.dateText}>{formatDate(maintenance.returnDate)}</Text>
+              </View>
             </View>
-            <View style={styles.dateItem}>
-              <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-              <Text style={styles.dateText}>{formatDate(maintenance.returnDate)}</Text>
-            </View>
+          </View>
+
+          {/* Right Side - Vehicle Image */}
+          <View style={styles.rightContent}>
+            <Image
+              source={{ uri: getVehicleImage() }}
+              style={styles.vehicleImage}
+              resizeMode="cover"
+            />
           </View>
         </View>
 
-        {/* Right Side - Vehicle Image */}
-        <View style={styles.rightContent}>
-          <Image
-            source={{ uri: getVehicleImage() }}
-            style={styles.vehicleImage}
-            resizeMode="cover"
-          />
+        {/* Touch Indicator */}
+        <View style={styles.touchIndicator}>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* Touch Indicator */}
-      <View style={styles.touchIndicator}>
-        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-      </View>
-    </TouchableOpacity>
+      {/* Modales personalizados */}
+      <StatusChangeModal
+        visible={showChangeModal}
+        onCancel={handleCancelChange}
+        onConfirm={handleConfirmChange}
+        currentStatus={maintenance.status}
+        nextStatus={pendingNewStatus}
+        vehicleName={getVehicleName()}
+      />
+
+      <StatusSuccessModal
+        visible={showSuccessModal}
+        onClose={handleSuccessClose}
+        newStatus={pendingNewStatus}
+        vehicleName={getVehicleName()}
+        autoClose={true}
+      />
+    </>
   );
 };
 
@@ -147,17 +245,36 @@ const styles = StyleSheet.create({
     minHeight: 200,
     position: 'relative',
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   statusBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    marginBottom: 16,
   },
   statusText: {
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  statusToggleButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   contentContainer: {
     flexDirection: 'row',
