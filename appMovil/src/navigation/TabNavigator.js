@@ -9,11 +9,11 @@ import { useAuth } from '../Context/AuthContext';
   
 // Importar las pantallas
 import HomeScreen from '../screens/HomeScreen';
-import Marcas from '../screens/Marcas/Marcas';
+import Marcas from '../screens/Brands/Brands';
 import MaintenanceScreen from '../screens/Maintenances/Maintenance';
 import ReservationScreen from '../screens/Reservations/Reservation';
 import ProfileScreen from '../screens/ProfileScreen';
-import Usuarios from '../screens/Usuarios/Usuarios';
+import Usuarios from '../screens/Users/Users';
 import VehiclesScreen from '../screens/Vehicles/Vehicles'; // Nueva pantalla de vehículos
 
 const Tab = createBottomTabNavigator();

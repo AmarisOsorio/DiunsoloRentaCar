@@ -14,15 +14,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../Context/AuthContext'; // Importar el contexto de autenticación
-import EmployeeCard from './Empleados/components/EmployeeCard';
-import ClientCard from './Clientes/components/ClientCard';
-import AddEmployeeModal from './Empleados/modals/AddEmployeeModal';
-import AddClientModal from './Clientes/modals/AddClientModal';
-import EmployeeDetailsModal from './Empleados/modals/EmployeeDetailsModal';
-import ClientDetailsModal from './Clientes/modals/ClientDetailsModal';
+import EmployeeCard from './Employees/components/EmployeeCard';
+import ClientCard from './Clients/components/ClientCard';
+import AddEmployeeModal from './Employees/modals/AddEmployeeModal';
+import AddClientModal from './Clients/modals/AddClientModal';
+import EmployeeDetailsModal from './Employees/modals/EmployeeDetailsModal';
+import ClientDetailsModal from './Clients/modals/ClientDetailsModal';
 // Importar los hooks
-import { useFetchEmpleados } from './Empleados/hooks/useFetchEmpleados';
-import { useFetchClientes } from './Clientes/hooks/useFetchClientes';
+import { useFetchEmpleados } from './Employees/hooks/useFetchEmpleados';
+import { useFetchClientes } from './Clients/hooks/useFetchClientes';
 
 const { width, height } = Dimensions.get('window');
 

@@ -11,13 +11,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import BrandCard from '../Marcas/components/BrandCard';
-import AddBrandModal from '../Marcas/modals/AddBrandModal';
-import EditBrandModal from '../Marcas/modals/EditBrandModal';
-import DeleteBrandModal from '../Marcas/modals/DeleteBrandModal';
-import SuccessModal from '../Marcas/modals/SuccessModal';
-import ConfirmDeleteModal from '../Marcas/modals/ComfirmDeleteModal';
-import { useFetchBrands } from '../Marcas/hooks/useFetchBrands'; // Cambiado a useFetchBrands
+import BrandCard from '../Brands/components/BrandCard';
+import AddBrandModal from '../Brands/modals/AddBrandModal';
+import EditBrandModal from '../Brands/modals/EditBrandModal';
+import DeleteBrandModal from '../Brands/modals/DeleteBrandModal';
+import SuccessModal from '../Brands/modals/SuccessModal';
+import ConfirmDeleteModal from '../Brands/modals/ComfirmDeleteModal';
+import { useFetchBrands } from '../Brands/hooks/useFetchBrands'; // Cambiado a useFetchBrands
 
 const { width, height } = Dimensions.get('window');
 
