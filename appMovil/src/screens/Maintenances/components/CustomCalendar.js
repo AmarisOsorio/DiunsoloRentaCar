@@ -14,7 +14,6 @@ const API_BASE_URL = 'http://10.0.2.2:4000/api';
 const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [maintenances, setMaintenances] = useState([]);
-  const [reservations, setReservations] = useState([]); // Para futuro uso
   const [tempStartDate, setTempStartDate] = useState(null); // Fecha temporal para primer click
 
   const monthNames = [
@@ -143,6 +142,7 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       return styles.tempStartDay;
     }
     
+    // Nueva selección de mantenimiento (color más oscuro - igual que el de detalles)
     if (isInSelectedRange) {
       if (isStartDate && isEndDate) {
         return styles.selectedSingleDay;
@@ -155,7 +155,7 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       }
     }
     
-    // Si hay mantenimiento existente, mostrar en color de mantenimiento (amarillo/naranja)
+    // Si hay mantenimiento existente, mostrar en color de mantenimiento (amarillo claro)
     if (maintenance) {
       const maintenanceStart = new Date(maintenance.startDate);
       const maintenanceEnd = new Date(maintenance.returnDate);
@@ -166,7 +166,6 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
         currentMonth.getMonth() === maintenanceEnd.getMonth() && 
         currentMonth.getFullYear() === maintenanceEnd.getFullYear();
       
-      // Usar un solo color para todos los mantenimientos
       if (isMaintenanceStart && isMaintenanceEnd) {
         return styles.maintenanceSingleDay;
       } else if (isMaintenanceStart) {
@@ -220,6 +219,16 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
     today.setHours(0, 0, 0, 0);
     if (selectedDate < today) {
       Alert.alert('Fecha inválida', 'No puedes seleccionar fechas pasadas.');
+      return;
+    }
+    
+    // Verificar si hay mantenimiento existente
+    const existingMaintenance = getMaintenanceForDate(day);
+    if (existingMaintenance) {
+      Alert.alert(
+        'Fecha ocupada',
+        `Esta fecha ya está ocupada por otro mantenimiento: "${existingMaintenance.maintenanceType}". Por favor selecciona otra fecha.`
+      );
       return;
     }
     
@@ -317,9 +326,15 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
         <View style={styles.legend}>
           <Text style={styles.legendTitle}>Leyenda:</Text>
           <View style={styles.legendItems}>
+            {(startDate && endDate) && (
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: '#af6006ff' }]} />
+                <Text style={styles.legendText}>Nuevo mantenimiento</Text>
+              </View>
+            )}
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendText}>Mantenimiento</Text>
+              <Text style={styles.legendText}>Mantenimientos existentes</Text>
             </View>
           </View>
         </View>
@@ -379,6 +394,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 2,
   },
+  
   // Estilos para fecha temporal (primer click)
   tempStartDay: {
     backgroundColor: '#E0F2FE',
@@ -387,26 +403,26 @@ const styles = StyleSheet.create({
     borderColor: '#0EA5E9',
   },
   
-  // Estilos para selección actual (nuevo mantenimiento - color amarillo como el original)
+  // Estilos para selección actual (nuevo mantenimiento - color más oscuro)
   selectedStartDay: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#af6006ff',
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
   },
   selectedMiddleDay: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#af6006ff',
   },
   selectedEndDay: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#af6006ff',
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
   },
   selectedSingleDay: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#af6006ff',
     borderRadius: 20,
   },
   
-  // Estilos para mantenimiento (un solo color - amarillo/naranja)
+  // Estilos para mantenimientos existentes (amarillo claro)
   maintenanceStartDay: {
     backgroundColor: '#F59E0B',
     borderTopLeftRadius: 20,

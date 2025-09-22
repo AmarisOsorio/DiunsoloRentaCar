@@ -24,6 +24,7 @@ const CustomDetailCalendar = ({
   const [vehicleMaintenances, setVehicleMaintenances] = useState([]);
   const [selectedStartDate, setSelectedStartDate] = useState(startDate ? new Date(startDate) : null);
   const [selectedEndDate, setSelectedEndDate] = useState(endDate ? new Date(endDate) : null);
+  const [tempStartDate, setTempStartDate] = useState(null); // Para el modo interactivo
 
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -161,30 +162,59 @@ const CustomDetailCalendar = ({
       return;
     }
 
-    if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
-      setSelectedStartDate(selectedDate);
+    // Si ya hay un rango completo (startDate y endDate), reiniciar completamente
+    if (selectedStartDate && selectedEndDate) {
+      // Limpiar todo primero
+      setSelectedStartDate(null);
       setSelectedEndDate(null);
-    } else if (selectedStartDate && !selectedEndDate) {
-      if (selectedDate < selectedStartDate) {
-        setSelectedEndDate(selectedStartDate);
-        setSelectedStartDate(selectedDate);
-      } else if (selectedDate.getTime() === selectedStartDate.getTime()) {
-        const nextDay = new Date(selectedDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        setSelectedEndDate(nextDay);
-      } else {
-        setSelectedEndDate(selectedDate);
+      // Luego establecer nueva selección temporal
+      setTimeout(() => {
+        setTempStartDate(selectedDate);
+      }, 20);
+      return;
+    }
+
+    if (!tempStartDate && !selectedStartDate) {
+      // Primera selección - guardar temporalmente
+      setTempStartDate(selectedDate);
+    } else {
+      // Segunda selección - ahora establecer el rango completo
+      let finalStartDate = tempStartDate || selectedStartDate;
+      let finalEndDate = selectedDate;
+      
+      // Si la segunda fecha es anterior, hacer swap
+      if (selectedDate < finalStartDate) {
+        finalStartDate = selectedDate;
+        finalEndDate = tempStartDate || selectedStartDate;
       }
+      
+      // Establecer ambas fechas
+      setSelectedStartDate(finalStartDate);
+      setSelectedEndDate(finalEndDate);
+      
+      // Limpiar estado temporal
+      setTempStartDate(null);
     }
   };
 
   const getDayStyle = (day) => {
     if (!day) return null;
     
+    // Verificar si es la fecha temporal (primer click) - solo en modo edición
+    const isTempStartDate = isEditing && tempStartDate && 
+      day === tempStartDate.getDate() && 
+      currentMonth.getMonth() === tempStartDate.getMonth() && 
+      currentMonth.getFullYear() === tempStartDate.getFullYear();
+    
     const isCurrentMaintenance = isDateInRange(day, selectedStartDate, selectedEndDate);
     const otherMaintenance = getOtherMaintenanceForDate(day);
     
-    // Mantenimiento actual (el que se está editando) - Color más oscuro (amarillo oscuro)
+    // Prioridad: fecha temporal > mantenimiento actual > otros mantenimientos
+    if (isTempStartDate) {
+      return styles.tempStartDay;
+    }
+    
+    // Mantenimiento actual (el que se está editando) - Color más oscuro
     if (isCurrentMaintenance) {
       const isStart = selectedStartDate && 
         day === selectedStartDate.getDate() && 
@@ -206,7 +236,7 @@ const CustomDetailCalendar = ({
       }
     }
     
-    // Otros mantenimientos del mismo vehículo - Mismo color que el calendario principal (amarillo claro)
+    // Otros mantenimientos del mismo vehículo - Color claro
     if (otherMaintenance) {
       const maintenanceStart = new Date(otherMaintenance.startDate);
       const maintenanceEnd = new Date(otherMaintenance.returnDate);
@@ -234,8 +264,17 @@ const CustomDetailCalendar = ({
   const getDayTextStyle = (day) => {
     if (!day) return null;
     
+    const isTempStartDate = isEditing && tempStartDate && 
+      day === tempStartDate.getDate() && 
+      currentMonth.getMonth() === tempStartDate.getMonth() && 
+      currentMonth.getFullYear() === tempStartDate.getFullYear();
+    
     const isCurrentMaintenance = isDateInRange(day, selectedStartDate, selectedEndDate);
     const otherMaintenance = getOtherMaintenanceForDate(day);
+    
+    if (isTempStartDate) {
+      return styles.tempStartDayText;
+    }
     
     if (isCurrentMaintenance) {
       return styles.currentMaintenanceDayText;
@@ -482,20 +521,20 @@ const styles = StyleSheet.create({
   
   // Estilos para mantenimiento actual (amarillo oscuro - más prominente)
   currentMaintenanceStartDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#D97706',
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
   },
   currentMaintenanceMiddleDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#D97706',
   },
   currentMaintenanceEndDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#D97706',
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
   },
   currentMaintenanceSingleDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#D97706',
     borderRadius: 20,
   },
   
@@ -522,6 +561,11 @@ const styles = StyleSheet.create({
   normalDayText: {
     fontSize: 16,
     color: '#374151',
+  },
+  tempStartDayText: {
+    fontSize: 16,
+    color: '#0EA5E9',
+    fontWeight: '600',
   },
   currentMaintenanceDayText: {
     fontSize: 16,

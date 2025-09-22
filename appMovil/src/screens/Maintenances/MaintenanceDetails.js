@@ -15,6 +15,7 @@ import MaintenanceTypeDetail from './components/TypeDetail';
 import CustomDetailCalendar from './components/CustomDetailCalendar';
 import DateDisplay from './components/DateDisplay';
 import DeleteConfirmationModal from './modals/DeleteModal';
+import UpdateSuccessModal from './modals/UpdateSuccessModal';
 import { useFetchMaintenances } from './hooks/useFetchMaintenances';
 
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
@@ -26,6 +27,7 @@ const MaintenanceDetailsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showUpdateSuccessModal, setShowUpdateSuccessModal] = useState(false);
   const [updating, setUpdating] = useState(false);
   
   // Estado de edición - inicializamos con los datos originales
@@ -136,7 +138,10 @@ const MaintenanceDetailsScreen = ({ route, navigation }) => {
       const updated = await updateMaintenance(maintenanceId, updatedData);
       setMaintenance(updated);
       setIsEditing(false);
-      Alert.alert('Éxito', 'Mantenimiento actualizado correctamente');
+      
+      // Mostrar modal de éxito en lugar del alert
+      setShowUpdateSuccessModal(true);
+      
     } catch (error) {
       Alert.alert('Error', 'No se pudo actualizar el mantenimiento');
     } finally {
@@ -182,11 +187,32 @@ const MaintenanceDetailsScreen = ({ route, navigation }) => {
   };
 
   const handleDateChange = (startDate, endDate) => {
-    setEditedData(prev => ({
-      ...prev,
-      startDate: startDate,
-      returnDate: endDate
-    }));
+    // Si solo se proporciona startDate (string), asumir que es el primer parámetro
+    if (typeof startDate === 'string' && typeof endDate === 'string') {
+      setEditedData(prev => ({
+        ...prev,
+        startDate: startDate,
+        returnDate: endDate
+      }));
+    } else {
+      // Manejar casos donde se pasan las fechas por separado
+      if (startDate) {
+        setEditedData(prev => ({
+          ...prev,
+          startDate: typeof startDate === 'string' ? startDate : startDate.toISOString()
+        }));
+      }
+      if (endDate) {
+        setEditedData(prev => ({
+          ...prev,
+          returnDate: typeof endDate === 'string' ? endDate : endDate.toISOString()
+        }));
+      }
+    }
+  };
+
+  const handleUpdateSuccessClose = () => {
+    setShowUpdateSuccessModal(false);
   };
 
   const handleStatusChange = (status) => {
@@ -268,7 +294,7 @@ const MaintenanceDetailsScreen = ({ route, navigation }) => {
           endDate={displayData.returnDate}
           status={displayData.status}
           maintenanceId={maintenanceId}
-          vehicleId={displayData.vehicleId?._id} // Pasar el vehicleId correctamente
+          vehicleId={displayData.vehicleId?._id}
           isEditing={isEditing}
           onDateChange={handleDateChange}
           onStatusChange={handleStatusChange}
@@ -334,6 +360,13 @@ const MaintenanceDetailsScreen = ({ route, navigation }) => {
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeleteModal(false)}
         maintenanceName={maintenance.vehicleId?.vehicleName}
+      />
+
+      <UpdateSuccessModal
+        visible={showUpdateSuccessModal}
+        onClose={handleUpdateSuccessClose}
+        vehicleName={maintenance.vehicleId?.vehicleName}
+        autoClose={true}
       />
     </SafeAreaView>
   );
