@@ -72,7 +72,6 @@ app.use("/api/maintenances", maintenancesRoutes);//--
 app.use("/api/brands", brandsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-
 // Rutas utilitarias y de comunicación
 app.use("/api/sendWelcome", sendWelcomeRoutes);
 app.use("/api/contact", contactRoutes);
