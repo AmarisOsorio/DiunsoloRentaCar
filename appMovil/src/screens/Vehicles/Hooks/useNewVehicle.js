@@ -2,12 +2,9 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
+const BASE_URL = 'https://diunsolorentacar.onrender.com';
+const BRANDS_API_URL = `${BASE_URL}/api/brands`;
 
-<<<<<<< HEAD
-const BRANDS_API_URL = 'https://diunsolorentacar.onrender.com/api/brands';
-=======
-const BRANDS_API_URL = 'http://10.0.2.2:4000/api/brands';
->>>>>>> c37d093ce5cdd626f8d66ead3b494422c39876b0
 const vehicleTypes = [
   { label: 'Pick up', value: 'Pick up' },
   { label: 'SUV', value: 'SUV' },
@@ -126,7 +123,7 @@ const useNewVehicle = () => {
   // Image pickers
   const pickImage = async (setter, allowsMultiple = false) => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['image'],
       allowsMultipleSelection: allowsMultiple,
       quality: 0.7,
     });

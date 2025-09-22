@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from '../appMovil/src/Context/AuthContext';
+import { AuthProvider } from '../appMovil/src/Context/AuthContext';
 import SplashScreen from './src/screens/SplashScreen/SplashScreen';
-import LoginScreen from './src/screens/Login/LoginScreen';
 import AppNavigationContainer from './src/navigation/NavigatorContainer';
 
 // Componente interno que tiene acceso al contexto de autenticación
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
-  const { isAuthenticated } = useAuth();
 
   const handleSplashEnd = () => {
     setShowSplash(false);
@@ -18,8 +16,8 @@ const AppContent = () => {
     return <SplashScreen onAnimationEnd={handleSplashEnd} />;
   }
 
-  // Una vez terminado el splash, mostrar login o app principal según autenticación
-  return isAuthenticated ? <AppNavigationContainer /> : <LoginScreen />;
+  // Una vez terminado el splash, mostrar la navegación principal que maneja la autenticación
+  return <AppNavigationContainer />;
 };
 
 export default function App() {

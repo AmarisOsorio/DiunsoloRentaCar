@@ -18,8 +18,8 @@ import ConfirmationModal from './modals/Confirmation';
 import SuccessModal from './modals/SaveMaintenance';
 import { useFetchMaintenances } from '../Maintenances/hooks/useFetchMaintenances';
 
-// Para emulador Android usa 10.0.2.2 en lugar de localhost
-const API_BASE_URL = 'http://10.0.2.2:4000/api';
+// URL de producción para la API
+const API_BASE_URL = 'https://diunsolorentacar.onrender.com/api';
 
 const AddMaintenanceScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);

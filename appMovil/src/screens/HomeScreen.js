@@ -26,7 +26,7 @@ const HomeScreen = ({ navigation }) => {
       color: '#E74C3C',
       icon: 'construct'
     }
-  ];
+  ];  
 
   const statsCards = [
     {

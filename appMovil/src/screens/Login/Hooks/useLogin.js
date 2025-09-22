@@ -7,21 +7,9 @@ export default function useLogin() {
   const [userType, setUserType] = useState(null);
   const [user, setUser] = useState(null);
 
-  // Configuración de URLs para diferentes plataformas
+  // Configuración de URL para producción
   const getBaseUrl = () => {
-    if (Platform.OS === 'android') {
-      // Para emulador de Android
-      return 'http://10.0.2.2:4000';
-      // Para dispositivo físico Android, usa tu IP local:
-      // return 'http://192.168.1.XXX:4000'; // Reemplaza XXX con tu IP
-    } else if (Platform.OS === 'ios') {
-      // Para simulador iOS
-      return 'http://localhost:4000';
-      // Para dispositivo físico iOS, usa tu IP local:
-      // return 'http://192.168.1.XXX:4000'; // Reemplaza XXX con tu IP
-    }
-    // Fallback para web
-    return 'http://localhost:4000';
+    return 'https://diunsolorentacar.onrender.com';
   };
 
   const login = async ({ email, password }) => {

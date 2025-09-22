@@ -7,8 +7,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-// Para emulador Android usa 10.0.2.2 en lugar de localhost
-const API_BASE_URL = 'http://10.0.2.2:4000/api';
+// URL de producción para la API
+const API_BASE_URL = 'https://diunsolorentacar.onrender.com/api';
 
 const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());

@@ -1,12 +1,12 @@
 // Hook personalizado para la lógica de gestión de vehículos
 import { useState, useEffect } from 'react';
+import { Platform, Alert } from 'react-native';
 
 // URL base de la API del backend
-<<<<<<< HEAD
-const API_BASE = 'https://diunsolorentacar.onrender.com'; 
-=======
-const API_BASE = 'http://10.0.2.2:4000'; 
->>>>>>> c37d093ce5cdd626f8d66ead3b494422c39876b0
+const BASE_URL = 'https://diunsolorentacar.onrender.com';
+
+// Debug logs
+console.log('Using BASE_URL:', BASE_URL);
 
 // Hook principal que maneja el estado y lógica de la pantalla de vehículos
 export default function useVehicles() {
@@ -41,22 +41,55 @@ export default function useVehicles() {
 	// Obtener marcas desde el backend
 	const fetchBrands = async () => {
 		try {
-			const res = await fetch(`${API_BASE}/api/brands`);
+			console.log('Fetching brands from:', `${BASE_URL}/api/brands`);
+			const res = await fetch(`${BASE_URL}/api/brands`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+				},
+			});
+			if (!res.ok) {
+				throw new Error(`HTTP error! status: ${res.status}`);
+			}
 			const data = await res.json();
+			console.log('Brands fetched:', data.length);
 			setBrands(data);
 		} catch (e) {
+			console.error('Error loading brands:', e);
 			setBrands([]);
+			Alert.alert(
+				'Error',
+				'No se pudieron cargar las marcas. Por favor, intenta de nuevo.'
+			);
+			throw e;
 		}
 	};
 
 	// Obtener vehículos desde el backend
 	const fetchVehicles = async () => {
 		try {
-			const res = await fetch(`${API_BASE}/api/vehicles`);
+			console.log('Fetching vehicles from:', `${BASE_URL}/api/vehicles`);
+			const res = await fetch(`${BASE_URL}/api/vehicles`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+				},
+			});
+			if (!res.ok) {
+				throw new Error(`HTTP error! status: ${res.status}`);
+			}
 			const data = await res.json();
+			console.log('Vehicles fetched:', data.length);
 			setVehicles(data);
 		} catch (e) {
+			console.error('Error loading vehicles:', e);
 			setVehicles([]);
+			Alert.alert(
+				'Error',
+				'No se pudieron cargar los vehículos. Por favor, intenta de nuevo.'
+			);
 		}
 	};
 

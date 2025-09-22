@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Para emulador Android usa 10.0.2.2 en lugar de localhost
-const API_BASE_URL = 'http://10.0.2.2:4000/api';
+// URL de producción para la API
+const API_BASE_URL = 'https://diunsolorentacar.onrender.com/api';
 
 // Función helper para manejar timeout en fetch
 const fetchWithTimeout = (url, options = {}, timeout = 15000) => {

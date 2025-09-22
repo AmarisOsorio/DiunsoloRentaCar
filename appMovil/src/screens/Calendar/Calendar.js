@@ -11,7 +11,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // Configure calendar locale
 LocaleConfig.locales['es'] = {

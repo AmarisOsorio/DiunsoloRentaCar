@@ -11,10 +11,11 @@ import {
   Alert,
   Dimensions,
   Platform,
-  Modal
+  Modal,
+  StatusBar
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Path } from 'react-native-svg';
 import useVehicleDetails from './Hooks/useVehicleDetails';
 import ConfirmModal from './Components/ConfirmModal';
@@ -297,6 +298,13 @@ export default function VehicleDetails({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar 
+        backgroundColor="#3D83D2" 
+        barStyle="light-content" 
+        translucent={false}
+        animated={true}
+      />
+      
       {/* Header */}
       <View style={styles.headerContainer}>
         <View style={styles.headerBg}>
@@ -320,6 +328,8 @@ export default function VehicleDetails({ navigation, route }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        contentInsetAdjustmentBehavior="never"
+        style={styles.scrollView}
       >
         {/* Carrusel de imágenes del vehículo */}
         <View style={[styles.imageSection, { marginHorizontal: -18 }]}>
@@ -855,19 +865,23 @@ const styles = StyleSheet.create({
   },
   // Header styles
   headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: 'transparent',
-    marginBottom: 8,
+    zIndex: 1000,
   },
   headerBg: {
     backgroundColor: '#3D83D2',
-    height: 100,
+    height: 120,
     overflow: 'hidden',
     position: 'relative',
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 28 : 12,
+    paddingTop: Platform.OS === 'ios' ? 50 : 35,
     paddingBottom: 8,
     paddingHorizontal: 16,
   },
@@ -893,9 +907,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
+    paddingTop: 120, // Altura del header
     padding: 18,
-    paddingTop: 0,
     paddingBottom: 40,
   },
   // Image section - Carrusel de imágenes mejorado

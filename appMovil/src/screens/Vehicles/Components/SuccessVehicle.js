@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { View, Text, StyleSheet, Modal, Animated, Easing } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function SuccessVehicle({ visible, message = '¡Vehículo agregado exitosamente!' }) {
   const scaleAnim = React.useRef(new Animated.Value(0)).current;

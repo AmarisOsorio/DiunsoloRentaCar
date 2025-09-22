@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { Animated, View, Text, Image, StyleSheet } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Animated, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-export default function VehicleCard({ item, index }) {
+export default function VehicleCard({ item, index, onPress }) {
 	// Solo animar en el primer render
 	const hasAnimated = useRef(false);
 	const translateY = useRef(new Animated.Value(40)).current;
@@ -38,35 +38,37 @@ export default function VehicleCard({ item, index }) {
 		item.status === 'Mantenimiento' ? { backgroundColor: 'rgba(241,196,15,0.18)' } :
 		{};
 	return (
-		<Animated.View style={[styles.vehicleCardNew, { opacity, transform: [{ translateY }] }]}> 
-			{/* Estado en la esquina superior izquierda */}
-			<View style={[styles.statusBadgeContainer, badgeBg]}>
-				<View style={[styles.statusDotNew, styles[item.status]]} />
-				<Text style={[styles.statusBadgeText, styles[item.status+"Text"]]}>{item.status === 'Disponible' ? 'Disponible' : item.status}</Text>
-			</View>
-			{/* Imagen lateral grande y centrada (sideImage, fallback a mainViewImage) */}
-			<View style={styles.vehicleImageContainer}>
-				<Image source={{ uri: item.sideImage || item.mainViewImage }} style={styles.vehicleImageFull} resizeMode="cover" />
-			</View>
-			{/* Info principal */}
-			<View style={styles.vehicleInfoRow}>
-				<View style={{flex:1}}>
-					<Text style={styles.vehicleNameNew}>{item.vehicleName} <Text style={styles.vehicleModelNew}>({item.model})</Text></Text>
-					<Text style={styles.vehicleYearNew}>{item.year}</Text>
-					<View style={styles.vehicleDetailsRowNew}>
-						<Ionicons name="person" size={17} color="#3977ce" style={{marginRight:3}} />
-						<Text style={styles.vehicleDetailsNew}>{item.capacity} personas</Text>
-						<Ionicons name="car-sport" size={17} color="#3977ce" style={{marginLeft:12, marginRight:3}} />
-						<Text style={styles.vehicleDetailsNew}>{item.vehicleClass}</Text>
+		<TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+			<Animated.View style={[styles.vehicleCardNew, { opacity, transform: [{ translateY }] }]}> 
+				{/* Estado en la esquina superior izquierda */}
+				<View style={[styles.statusBadgeContainer, badgeBg]}>
+					<View style={[styles.statusDotNew, styles[item.status]]} />
+					<Text style={[styles.statusBadgeText, styles[item.status+"Text"]]}>{item.status === 'Disponible' ? 'Disponible' : item.status}</Text>
+				</View>
+				{/* Imagen lateral grande y centrada (sideImage, fallback a mainViewImage) */}
+				<View style={styles.vehicleImageContainer}>
+					<Image source={{ uri: item.sideImage || item.mainViewImage }} style={styles.vehicleImageFull} resizeMode="cover" />
+				</View>
+				{/* Info principal */}
+				<View style={styles.vehicleInfoRow}>
+					<View style={{flex:1}}>
+						<Text style={styles.vehicleNameNew}>{item.vehicleName} <Text style={styles.vehicleModelNew}>({item.model})</Text></Text>
+						<Text style={styles.vehicleYearNew}>{item.year}</Text>
+						<View style={styles.vehicleDetailsRowNew}>
+							<Ionicons name="person" size={17} color="#3977ce" style={{marginRight:3}} />
+							<Text style={styles.vehicleDetailsNew}>{item.capacity} personas</Text>
+							<Ionicons name="car-sport" size={17} color="#3977ce" style={{marginLeft:12, marginRight:3}} />
+							<Text style={styles.vehicleDetailsNew}>{item.vehicleClass}</Text>
+						</View>
+					</View>
+					{/* Precio destacado en burbuja */}
+					<View style={styles.priceBubble}>
+						<Text style={styles.priceLabelNew}>Precio por día</Text>
+						<Text style={styles.priceValueNew}>$ {item.dailyPrice?.toFixed(2)}</Text>
 					</View>
 				</View>
-				{/* Precio destacado en burbuja */}
-				<View style={styles.priceBubble}>
-					<Text style={styles.priceLabelNew}>Precio por día</Text>
-					<Text style={styles.priceValueNew}>$ {item.dailyPrice?.toFixed(2)}</Text>
-				</View>
-			</View>
-		</Animated.View>
+			</Animated.View>
+		</TouchableOpacity>
 	);
 }
 
