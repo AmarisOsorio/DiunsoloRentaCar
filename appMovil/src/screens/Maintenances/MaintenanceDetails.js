@@ -268,6 +268,7 @@ const MaintenanceDetailsScreen = ({ route, navigation }) => {
           endDate={displayData.returnDate}
           status={displayData.status}
           maintenanceId={maintenanceId}
+          vehicleId={displayData.vehicleId?._id} // Pasar el vehicleId correctamente
           isEditing={isEditing}
           onDateChange={handleDateChange}
           onStatusChange={handleStatusChange}

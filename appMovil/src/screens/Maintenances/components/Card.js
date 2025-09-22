@@ -28,12 +28,12 @@ const MaintenanceCard = ({
     });
   };
 
-  const getVehicleImage = () => {
+  const   getVehicleImage = () => {
     if (!maintenance.vehicleId) {
-      return 'https://via.placeholder.com/220x140/E5E7EB/9CA3AF?text=Sin+Vehiculo';
+      return 'https://via.placeholder.com/180x120/ffffff/ffffff?text=';
     }
     
-    // PRIORIDAD: Usar sideImage primero
+    // PRIORIDAD: Usar sideImage primero (mejor para vista lateral del carro)
     if (maintenance.vehicleId?.sideImage) {
       return maintenance.vehicleId.sideImage;
     }
@@ -45,8 +45,8 @@ const MaintenanceCard = ({
     if (maintenance.vehicleId?.galleryImages && maintenance.vehicleId.galleryImages.length > 0) {
       return maintenance.vehicleId.galleryImages[0];
     }
-    // Placeholder como último recurso
-    return 'https://via.placeholder.com/220x140/E5E7EB/9CA3AF?text=Auto';
+    // Placeholder transparente como último recurso
+    return 'https://via.placeholder.com/180x120/ffffff/ffffff?text=';
   };
 
   const getVehicleName = () => {
@@ -203,11 +203,6 @@ const MaintenanceCard = ({
             />
           </View>
         </View>
-
-        {/* Touch Indicator */}
-        <View style={styles.touchIndicator}>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-        </View>
       </TouchableOpacity>
 
       {/* Modales personalizados */}
@@ -234,16 +229,17 @@ const MaintenanceCard = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
     minHeight: 200,
     position: 'relative',
+    overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -277,63 +273,51 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     flex: 1,
+    position: 'relative',
   },
   leftContent: {
     flex: 1,
-    paddingRight: 20,
+    paddingRight: 150,
   },
   rightContent: {
     position: 'absolute',
     right: 0,
-    bottom: 0,
-    width: 220,
-    height: 140,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    bottom: -20,
+    width: 180,
+    height: 120,
   },
   vehicleName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#1E3A8A',
-    marginBottom: 6,
-    lineHeight: 30,
+    marginBottom: 8,
+    lineHeight: 26,
   },
   maintenanceType: {
     fontSize: 16,
     color: '#0EA5E9',
     fontWeight: '500',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   datesContainer: {
-    gap: 12,
+    gap: 10,
   },
   dateItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dateText: {
-    marginLeft: 12,
-    fontSize: 15,
+    marginLeft: 10,
+    fontSize: 14,
     color: '#9CA3AF',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   vehicleImage: {
-    width: 220,
-    height: 140,
-    borderRadius: 0,
+    width: 180,
+    height: 120,
+    resizeMode: 'contain',
     backgroundColor: 'transparent',
-  },
-  touchIndicator: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: 'rgba(156, 163, 175, 0.1)',
-    borderRadius: 12,
-    padding: 4,
   },
 });
 

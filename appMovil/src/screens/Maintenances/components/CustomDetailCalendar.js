@@ -15,12 +15,13 @@ const CustomDetailCalendar = ({
   endDate, 
   status, 
   maintenanceId, 
+  vehicleId, // Necesitamos el ID del vehículo
   isEditing, 
   onDateChange, 
   onStatusChange 
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [maintenances, setMaintenances] = useState([]);
+  const [vehicleMaintenances, setVehicleMaintenances] = useState([]);
   const [selectedStartDate, setSelectedStartDate] = useState(startDate ? new Date(startDate) : null);
   const [selectedEndDate, setSelectedEndDate] = useState(endDate ? new Date(endDate) : null);
 
@@ -40,8 +41,12 @@ const CustomDetailCalendar = ({
     if (endDate) {
       setSelectedEndDate(new Date(endDate));
     }
-    fetchMaintenances();
-  }, [startDate, endDate]);
+    
+    // Solo cargar mantenimientos si tenemos el ID del vehículo
+    if (vehicleId) {
+      fetchVehicleMaintenances();
+    }
+  }, [startDate, endDate, vehicleId]);
 
   // Solo notificar cambios cuando el usuario termine de seleccionar
   useEffect(() => {
@@ -50,8 +55,11 @@ const CustomDetailCalendar = ({
     }
   }, [selectedStartDate, selectedEndDate, isEditing]);
 
-  const fetchMaintenances = async () => {
+  const fetchVehicleMaintenances = async () => {
     try {
+      console.log('Fetching maintenances for vehicleId:', vehicleId);
+      console.log('Current maintenanceId to exclude:', maintenanceId);
+      
       const response = await fetch(`${API_BASE_URL}/maintenances`, {
         method: 'GET',
         headers: {
@@ -63,12 +71,24 @@ const CustomDetailCalendar = ({
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          const otherMaintenances = result.data.filter(m => m._id !== maintenanceId);
-          setMaintenances(otherMaintenances);
+          console.log('All maintenances:', result.data.length);
+          
+          // Filtrar solo mantenimientos del mismo vehículo, excluyendo el mantenimiento actual
+          const sameVehicleMaintenances = result.data.filter(m => {
+            const isSameVehicle = m.vehicleId && m.vehicleId._id === vehicleId;
+            const isDifferentMaintenance = m._id !== maintenanceId;
+            
+            console.log('Maintenance:', m._id, 'Vehicle:', m.vehicleId?._id, 'Same vehicle:', isSameVehicle, 'Different maintenance:', isDifferentMaintenance);
+            
+            return isSameVehicle && isDifferentMaintenance;
+          });
+          
+          console.log('Filtered same vehicle maintenances:', sameVehicleMaintenances.length);
+          setVehicleMaintenances(sameVehicleMaintenances);
         }
       }
     } catch (error) {
-      console.error('Error al cargar mantenimientos:', error);
+      console.error('Error al cargar mantenimientos del vehículo:', error);
     }
   };
 
@@ -118,7 +138,7 @@ const CustomDetailCalendar = ({
     
     const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     
-    return maintenances.find(maintenance => {
+    return vehicleMaintenances.find(maintenance => {
       const maintenanceStart = new Date(maintenance.startDate);
       const maintenanceEnd = new Date(maintenance.returnDate);
       
@@ -136,7 +156,7 @@ const CustomDetailCalendar = ({
     if (otherMaintenance) {
       Alert.alert(
         'Fecha ocupada',
-        'Esta fecha ya está ocupada por otro mantenimiento. Por favor selecciona otra fecha.'
+        `Esta fecha ya está ocupada por otro mantenimiento del mismo vehículo: "${otherMaintenance.maintenanceType}". Por favor selecciona otra fecha.`
       );
       return;
     }
@@ -164,7 +184,7 @@ const CustomDetailCalendar = ({
     const isCurrentMaintenance = isDateInRange(day, selectedStartDate, selectedEndDate);
     const otherMaintenance = getOtherMaintenanceForDate(day);
     
-    // Todos los mantenimientos se muestran igual (amarillo/naranja)
+    // Mantenimiento actual (el que se está editando) - Color más oscuro (amarillo oscuro)
     if (isCurrentMaintenance) {
       const isStart = selectedStartDate && 
         day === selectedStartDate.getDate() && 
@@ -176,16 +196,17 @@ const CustomDetailCalendar = ({
         currentMonth.getFullYear() === selectedEndDate.getFullYear();
       
       if (isStart && isEnd) {
-        return styles.maintenanceSingleDay;
+        return styles.currentMaintenanceSingleDay;
       } else if (isStart) {
-        return styles.maintenanceStartDay;
+        return styles.currentMaintenanceStartDay;
       } else if (isEnd) {
-        return styles.maintenanceEndDay;
+        return styles.currentMaintenanceEndDay;
       } else {
-        return styles.maintenanceMiddleDay;
+        return styles.currentMaintenanceMiddleDay;
       }
     }
     
+    // Otros mantenimientos del mismo vehículo - Mismo color que el calendario principal (amarillo claro)
     if (otherMaintenance) {
       const maintenanceStart = new Date(otherMaintenance.startDate);
       const maintenanceEnd = new Date(otherMaintenance.returnDate);
@@ -196,15 +217,14 @@ const CustomDetailCalendar = ({
         currentMonth.getMonth() === maintenanceEnd.getMonth() && 
         currentMonth.getFullYear() === maintenanceEnd.getFullYear();
       
-      // Mismo estilo para otros mantenimientos
       if (isMaintenanceStart && isMaintenanceEnd) {
-        return styles.maintenanceSingleDay;
+        return styles.otherMaintenanceSingleDay;
       } else if (isMaintenanceStart) {
-        return styles.maintenanceStartDay;
+        return styles.otherMaintenanceStartDay;
       } else if (isMaintenanceEnd) {
-        return styles.maintenanceEndDay;
+        return styles.otherMaintenanceEndDay;
       } else {
-        return styles.maintenanceMiddleDay;
+        return styles.otherMaintenanceMiddleDay;
       }
     }
     
@@ -217,9 +237,12 @@ const CustomDetailCalendar = ({
     const isCurrentMaintenance = isDateInRange(day, selectedStartDate, selectedEndDate);
     const otherMaintenance = getOtherMaintenanceForDate(day);
     
-    // Mismo estilo de texto para todos los mantenimientos
-    if (isCurrentMaintenance || otherMaintenance) {
-      return styles.maintenanceDayText;
+    if (isCurrentMaintenance) {
+      return styles.currentMaintenanceDayText;
+    }
+    
+    if (otherMaintenance) {
+      return styles.otherMaintenanceDayText;
     }
     
     return styles.normalDayText;
@@ -332,14 +355,20 @@ const CustomDetailCalendar = ({
         </View>
       )}
 
-      {/* Leyenda simplificada */}
+      {/* Leyenda actualizada */}
       <View style={styles.legend}>
         <Text style={styles.legendTitle}>Leyenda:</Text>
         <View style={styles.legendItems}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#F59E0B' }]} />
-            <Text style={styles.legendText}>Mantenimiento</Text>
+            <View style={[styles.legendColor, { backgroundColor: '#D97706' }]} />
+            <Text style={styles.legendText}>Mantenimiento actual</Text>
           </View>
+          {vehicleMaintenances.length > 0 && (
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#F59E0B' }]} />
+              <Text style={styles.legendText}>Otros mantenimientos</Text>
+            </View>
+          )}
         </View>
       </View>
     </View>
@@ -450,29 +479,56 @@ const styles = StyleSheet.create({
   normalDay: {
     backgroundColor: 'transparent',
   },
-  // Estilos unificados para todos los mantenimientos
-  maintenanceStartDay: {
+  
+  // Estilos para mantenimiento actual (amarillo oscuro - más prominente)
+  currentMaintenanceStartDay: {
+    backgroundColor: '#af6006ff',
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  currentMaintenanceMiddleDay: {
+    backgroundColor: '#af6006ff',
+  },
+  currentMaintenanceEndDay: {
+    backgroundColor: '#af6006ff',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  currentMaintenanceSingleDay: {
+    backgroundColor: '#af6006ff',
+    borderRadius: 20,
+  },
+  
+  // Estilos para otros mantenimientos del vehículo (amarillo claro - igual que en el calendario principal)
+  otherMaintenanceStartDay: {
     backgroundColor: '#F59E0B',
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
   },
-  maintenanceMiddleDay: {
+  otherMaintenanceMiddleDay: {
     backgroundColor: '#F59E0B',
   },
-  maintenanceEndDay: {
+  otherMaintenanceEndDay: {
     backgroundColor: '#F59E0B',
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
   },
-  maintenanceSingleDay: {
+  otherMaintenanceSingleDay: {
     backgroundColor: '#F59E0B',
     borderRadius: 20,
   },
+  
+  // Estilos de texto
   normalDayText: {
     fontSize: 16,
     color: '#374151',
   },
-  maintenanceDayText: {
+  currentMaintenanceDayText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
+  },
+  otherMaintenanceDayText: {
     fontSize: 16,
     color: 'white',
     fontWeight: '600',
