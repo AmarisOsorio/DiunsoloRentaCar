@@ -7,7 +7,8 @@ import AddMaintenanceScreen from '../screens/Maintenances/AddMaintenance';
 import NewVehicleScreen from '../screens/Vehicles/NewVehicle';
 import BrandsScreen from '../screens/Vehicles/Brands';
 import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails';
-//import AddReservationScreen from '../screens/Reservations/AddReservation';
+import AddReservationScreen from '../screens/Reservations/AddReservation';
+import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,18 +69,27 @@ const StackNavigator = () => {
         }}
       />
       
-      {/* Puedes agregar más pantallas aquí */}
-      {/*
+      {/* Pantalla para agregar reserva */}
       <Stack.Screen
         name="AddReservation"
         component={AddReservationScreen}
         options={{
           headerShown: false,
-          presentation: 'modal',
+          presentation: 'card',
           gestureEnabled: true,
         }}
       />
-      */}
+
+      {/* Pantalla detalles reserva */}
+      <Stack.Screen
+        name="ReservationDetails"
+        component={ReservationDetailsScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
     </Stack.Navigator>
   );
 };
