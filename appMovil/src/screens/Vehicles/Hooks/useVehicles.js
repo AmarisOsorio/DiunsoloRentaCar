@@ -137,6 +137,7 @@ export default function useVehicles() {
 	       setStatusFilter,
 	       loading,
 	       hasAnimated,
-	       setHasAnimated
+	       setHasAnimated,
+	       refreshVehicles: fetchVehicles // Exportar función para refrescar vehículos
        };
 }

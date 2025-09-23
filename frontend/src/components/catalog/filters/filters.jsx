@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import './filters.css';
 import { useBrands, useTypes } from './hook/usefilters.js';

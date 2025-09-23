@@ -1,4 +1,5 @@
   // Importaciones de librerías y componentes necesarios para el catálogo
+  import React from 'react';
   import { useState } from 'react';
   import './Catalog.css';
   import VehicleCard from '../../components/catalog/VehicleCard/VehicleCard.jsx';

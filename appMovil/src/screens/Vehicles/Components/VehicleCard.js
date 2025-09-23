@@ -7,6 +7,7 @@ export default function VehicleCard({ item, index, onPress }) {
 	const hasAnimated = useRef(false);
 	const translateY = useRef(new Animated.Value(40)).current;
 	const opacity = useRef(new Animated.Value(0)).current;
+	
 	useEffect(() => {
 		if (!hasAnimated.current) {
 			Animated.parallel([
@@ -31,12 +32,19 @@ export default function VehicleCard({ item, index, onPress }) {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+	
 	// Determinar color de fondo del badge según estado
 	const badgeBg =
-		item.status === 'Disponible' ? { backgroundColor: 'rgba(46,204,113,0.18)' } :
-		item.status === 'Reservado' ? { backgroundColor: 'rgba(231,76,60,0.18)' } :
-		item.status === 'Mantenimiento' ? { backgroundColor: 'rgba(241,196,15,0.18)' } :
+		item.status === 'Disponible' ? { backgroundColor: 'rgba(180, 255, 184, 1)' } :
+		item.status === 'Reservado' ? { backgroundColor: 'rgba(255, 210, 210, 1)' } :
+		item.status === 'Mantenimiento' ? { backgroundColor: 'rgba(255, 230, 195, 1)' } :
 		{};
+	
+	// Navegar a detalles del vehículo
+	const handlePress = () => {
+		navigation.navigate('VehicleDetails', { vehicleId: item._id });
+	};
+	
 	return (
 		<TouchableOpacity onPress={onPress} activeOpacity={0.7}>
 			<Animated.View style={[styles.vehicleCardNew, { opacity, transform: [{ translateY }] }]}> 
@@ -177,10 +185,10 @@ const styles = StyleSheet.create({
 		color: '#3D83D2',
 		fontWeight: 'bold',
 	},
-	Disponible: { backgroundColor: '#2ecc71' },
-	Reservado: { backgroundColor: '#e74c3c' },
-	Mantenimiento: { backgroundColor: '#f1c40f' },
-	DisponibleText: { color: '#2ecc71' },
-	ReservadoText: { color: '#e74c3c' },
-	MantenimientoText: { color: '#f1c40f' },
+	Disponible: { backgroundColor: '#4CAF50' },
+	Reservado: { backgroundColor: '#FF6B6B' },
+	Mantenimiento: { backgroundColor: '#FFB347' },
+	DisponibleText: { color: '#2E7D32' },
+	ReservadoText: { color: '#D32F2F' },
+	MantenimientoText: { color: '#F57C00' },
 });

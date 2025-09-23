@@ -11,11 +11,18 @@ import {
   Alert,
   Dimensions,
   Platform,
+<<<<<<< HEAD
   Modal,
   StatusBar
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
+=======
+  Modal
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
 import Svg, { Path } from 'react-native-svg';
 import useVehicleDetails from './Hooks/useVehicleDetails';
 import ConfirmModal from './Components/ConfirmModal';
@@ -298,6 +305,7 @@ export default function VehicleDetails({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+<<<<<<< HEAD
       <StatusBar 
         backgroundColor="#3D83D2" 
         barStyle="light-content" 
@@ -305,6 +313,8 @@ export default function VehicleDetails({ navigation, route }) {
         animated={true}
       />
       
+=======
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
       {/* Header */}
       <View style={styles.headerContainer}>
         <View style={styles.headerBg}>
@@ -328,8 +338,11 @@ export default function VehicleDetails({ navigation, route }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+<<<<<<< HEAD
         contentInsetAdjustmentBehavior="never"
         style={styles.scrollView}
+=======
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
       >
         {/* Carrusel de imágenes del vehículo */}
         <View style={[styles.imageSection, { marginHorizontal: -18 }]}>
@@ -865,6 +878,7 @@ const styles = StyleSheet.create({
   },
   // Header styles
   headerContainer: {
+<<<<<<< HEAD
     position: 'absolute',
     top: 0,
     left: 0,
@@ -875,13 +889,25 @@ const styles = StyleSheet.create({
   headerBg: {
     backgroundColor: '#3D83D2',
     height: 120,
+=======
+    backgroundColor: 'transparent',
+    marginBottom: 8,
+  },
+  headerBg: {
+    backgroundColor: '#3D83D2',
+    height: 100,
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
     overflow: 'hidden',
     position: 'relative',
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+<<<<<<< HEAD
     paddingTop: Platform.OS === 'ios' ? 50 : 35,
+=======
+    paddingTop: Platform.OS === 'ios' ? 28 : 12,
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
     paddingBottom: 8,
     paddingHorizontal: 16,
   },
@@ -907,12 +933,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 1,
   },
+<<<<<<< HEAD
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingTop: 120, // Altura del header
     padding: 18,
+=======
+  scrollContent: {
+    padding: 18,
+    paddingTop: 0,
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
     paddingBottom: 40,
   },
   // Image section - Carrusel de imágenes mejorado
@@ -1510,4 +1542,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2c3e50',
   },
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 2c830f7d0232ead70791aff6968a0e95ce850767
