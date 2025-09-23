@@ -21,9 +21,9 @@ import { useFetchReservations } from './hooks/useFetchReservations';
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
 
 const ReservationDetailsScreen = ({ route, navigation }) => {
-  const { reservationId } = route.params;
+  const { reservationId, reservation: initialReservation } = route.params;
   
-  const [reservation, setReservation] = useState(null);
+  const [reservation, setReservation] = useState(initialReservation || null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -43,7 +43,9 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   const { updateReservation, deleteReservation } = useFetchReservations();
 
   useEffect(() => {
-    fetchReservationDetails();
+    if (reservationId) {
+      fetchReservationDetails();
+    }
   }, [reservationId]);
 
   const fetchReservationDetails = async () => {
@@ -102,7 +104,7 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   };
 
   const handleEdit = () => {
-    setIsEditing(true);
+    navigation.navigate('EditReservation', { reservationId: reservationId });
   };
 
   const calculateTotalDays = (startDate, endDate) => {
@@ -195,6 +197,62 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  // Función para aceptar reserva
+  const handleAcceptReservation = async () => {
+    Alert.alert(
+      'Aceptar Reserva',
+      '¿Estás seguro de que deseas aceptar esta reserva? Esto cambiará su estado a "Activa".',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Aceptar',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setUpdating(true);
+              const updated = await updateReservation(reservationId, { status: 'Active' });
+              setReservation(updated);
+              setEditedData(prev => ({ ...prev, status: 'Active' }));
+              Alert.alert('Éxito', 'Reserva aceptada correctamente');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo aceptar la reserva');
+            } finally {
+              setUpdating(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Función para rechazar reserva
+  const handleRejectReservation = async () => {
+    Alert.alert(
+      'Rechazar Reserva',
+      '¿Estás seguro de que deseas rechazar esta reserva? Esto cambiará su estado a "Completado" (liberando el vehículo).',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Rechazar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setUpdating(true);
+              const updated = await updateReservation(reservationId, { status: 'Completed' });
+              setReservation(updated);
+              setEditedData(prev => ({ ...prev, status: 'Completed' }));
+              Alert.alert('Éxito', 'Reserva rechazada correctamente');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo rechazar la reserva');
+            } finally {
+              setUpdating(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   // Funciones para actualizar los datos editados
   const handleVehicleChange = (vehicle) => {
     setEditedData(prev => ({ ...prev, vehicleId: vehicle }));
@@ -221,10 +279,10 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   };
 
   const getClientName = () => {
-    if (reservation.client && reservation.client.length > 0) {
+    if (reservation && reservation.client && reservation.client.length > 0) {
       return reservation.client[0].name;
     }
-    if (reservation.clientId) {
+    if (reservation && reservation.clientId) {
       return `${reservation.clientId.name || ''} ${reservation.clientId.lastName || ''}`.trim();
     }
     return 'Cliente';
@@ -288,47 +346,42 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <VehicleDetailCard 
-          vehicle={displayData.vehicleId} 
-          isEditing={isEditing}
-          onVehicleChange={handleVehicleChange}
-        />
+        {/* Estado de la reserva - Solo visible cuando no esté editando */}
+        {!isEditing && reservation.status === 'Pending' && (
+          <View style={styles.statusActionsContainer}>
+            <Text style={styles.statusActionsTitle}>Acciones de reserva</Text>
+            <View style={styles.statusActions}>
+              <TouchableOpacity 
+                style={styles.acceptButton}
+                onPress={handleAcceptReservation}
+                disabled={updating}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="white" />
+                <Text style={styles.acceptButtonText}>Aceptar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.rejectButton}
+                onPress={handleRejectReservation}
+                disabled={updating}
+              >
+                <Ionicons name="close-circle" size={20} color="white" />
+                <Text style={styles.rejectButtonText}>Rechazar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
-        <ClientDetailCard 
-          client={displayData.clientId}
-          clientData={displayData.client}
-          isEditing={isEditing}
-          onClientChange={handleClientChange}
-        />
-
-        <CustomDetailCalendar 
-          startDate={displayData.startDate}
-          endDate={displayData.returnDate}
-          status={displayData.status}
-          reservationId={reservationId}
-          vehicleId={displayData.vehicleId?._id}
-          isEditing={isEditing}
-          onDateChange={handleDateChange}
-          onStatusChange={handleStatusChange}
-        />
-
-        <View style={styles.datesSection}>
-          <DateDisplay 
-            label="Fecha de inicio"
-            date={displayData.startDate}
-          />
-          <DateDisplay 
-            label="Fecha de devolución"
-            date={displayData.returnDate}
-          />
+        {/* Información básica - Temporalmente simplificada */}
+        <View style={styles.basicInfoContainer}>
+          <Text style={styles.sectionTitle}>Información básica</Text>
+          <Text style={styles.infoText}>Vehículo: {displayData.vehicleId?.vehicleName || 'No asignado'}</Text>
+          <Text style={styles.infoText}>Cliente: {getClientName()}</Text>
+          <Text style={styles.infoText}>Estado: {displayData.status}</Text>
+          <Text style={styles.infoText}>Precio por día: Q{displayData.pricePerDay}</Text>
+          <Text style={styles.infoText}>Días: {calculateTotalDays(displayData.startDate, displayData.returnDate)}</Text>
+          <Text style={styles.infoText}>Total: Q{(parseFloat(displayData.pricePerDay) * calculateTotalDays(displayData.startDate, displayData.returnDate)).toFixed(2)}</Text>
         </View>
-
-        <PriceDetail 
-          pricePerDay={displayData.pricePerDay}
-          totalDays={calculateTotalDays(displayData.startDate, displayData.returnDate)}
-          isEditing={isEditing}
-          onPriceChange={handlePriceChange}
-        />
 
         {/* Mostrar diferentes botones según el modo */}
         {isEditing ? (
@@ -439,8 +492,94 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
-  datesSection: {
+  statusActionsContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  statusActionsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  statusActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  acceptButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  rejectButton: {
+    flex: 1,
+    backgroundColor: '#DC2626',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  rejectButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  basicInfoContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 16,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 8,
+    lineHeight: 24,
   },
   actionButtons: {
     flexDirection: 'row',

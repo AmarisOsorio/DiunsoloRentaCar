@@ -78,6 +78,13 @@ const ReservationScreen = ({ navigation }) => {
     navigation.navigate('AddReservation');
   };
 
+  const handleCardPress = (reservation) => {
+    navigation.navigate('ReservationDetails', { 
+      reservationId: reservation._id,
+      reservation: reservation // Pasar también el objeto completo como backup
+    });
+  };
+
   const handleDeleteReservation = async (id) => {
     Alert.alert(
       'Confirmar eliminación',
@@ -195,6 +202,8 @@ const ReservationScreen = ({ navigation }) => {
               key={reservation._id}
               reservation={reservation}
               getStatusText={getStatusText}
+              onPress={() => handleCardPress(reservation)}
+              navigation={navigation}
             />
           ))
         )}

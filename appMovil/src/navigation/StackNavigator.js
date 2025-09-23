@@ -9,6 +9,7 @@ import BrandsScreen from '../screens/Vehicles/Brands';
 import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails';
 import AddReservationScreen from '../screens/Reservations/AddReservation';
 import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails';
+import EditReservationScreen from '../screens/Reservations/EditReservationScreen'; // Nueva importación
 
 const Stack = createNativeStackNavigator();
 
@@ -84,6 +85,17 @@ const StackNavigator = () => {
       <Stack.Screen
         name="ReservationDetails"
         component={ReservationDetailsScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
+
+      {/* Pantalla para editar reserva */}
+      <Stack.Screen
+        name="EditReservation"
+        component={EditReservationScreen}
         options={{
           headerShown: false,
           presentation: 'card',

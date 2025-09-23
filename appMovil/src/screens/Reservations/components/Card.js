@@ -10,7 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 const ReservationCard = ({
   reservation,
-  getStatusText
+  getStatusText,
+  onPress, // Nueva prop para manejar el click
+  navigation // Nueva prop para navegación
 }) => {
 
   const formatDate = (date) => {
@@ -101,12 +103,25 @@ const ReservationCard = ({
     }
   };
 
+  // Manejar click en la card
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else if (navigation) {
+      navigation.navigate('ReservationDetails', { reservationId: reservation._id });
+    }
+  };
+
   const status = reservation.status;
   const statusText = getStatusText(reservation.status);
   const badgeStyle = getStatusBadgeStyle(status);
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       {/* Status Badge - Dinámico basado en el estado de la BD */}
       <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
         <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{statusText}</Text>
@@ -150,9 +165,14 @@ const ReservationCard = ({
             style={styles.vehicleImage}
             resizeMode="cover"
           />
+          
+          {/* Indicador visual de que es clickeable */}
+          <View style={styles.clickIndicator}>
+            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -231,6 +251,19 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 0,
     backgroundColor: 'transparent',
+  },
+  clickIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
 });
 

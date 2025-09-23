@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const DeleteReservationModal = ({ visible, onConfirm, onCancel, reservationName }) => {
+const DeleteConfirmationModal = ({ visible, onConfirm, onCancel, reservationName }) => {
   return (
     <Modal
       visible={visible}
@@ -125,4 +125,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DeleteReservationModal;
+export default DeleteConfirmationModal;
