@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity, TextInput, Animated, ActivityIndicator, Dimensions } from 'react-native';
 import { useAuth } from '../../Context/AuthContext';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import useLogin from './Hooks/useLogin';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function LoginScreen({ onLogin }) {
+    const navigation = useNavigation();
+    
     const tireTopSlide = useRef(new Animated.Value(-200)).current;
     const tireBottomSlide = useRef(new Animated.Value(-200)).current;
     const bottomElementsFade = useRef(new Animated.Value(0)).current;
@@ -20,31 +23,76 @@ export default function LoginScreen({ onLogin }) {
     const { login: authLogin } = useAuth();
 
     useEffect(() => {
-        setTimeout(() => {
-            Animated.parallel([
-                Animated.timing(tireTopSlide, {
-                    toValue: 0,
-                    duration: 800,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(tireBottomSlide, {
-                    toValue: 0,
-                    duration: 900,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(bottomElementsFade, {
-                    toValue: 1,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(bottomElementsSlide, {
-                    toValue: 0,
-                    duration: 1200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        }, 100);
+        // Reset animations when component mounts or refocuses
+        const resetAnimations = () => {
+            tireTopSlide.setValue(-200);
+            tireBottomSlide.setValue(-200);
+            bottomElementsFade.setValue(0);
+            bottomElementsSlide.setValue(100);
+            
+            setTimeout(() => {
+                Animated.parallel([
+                    Animated.timing(tireTopSlide, {
+                        toValue: 0,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(tireBottomSlide, {
+                        toValue: 0,
+                        duration: 900,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsFade, {
+                        toValue: 1,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsSlide, {
+                        toValue: 0,
+                        duration: 1200,
+                        useNativeDriver: true,
+                    }),
+                ]).start();
+            }, 100);
+        };
+
+        resetAnimations();
     }, [tireTopSlide, tireBottomSlide, bottomElementsFade, bottomElementsSlide]);
+
+    // Reset animations when screen comes back into focus
+    useFocusEffect(
+        React.useCallback(() => {
+            tireTopSlide.setValue(-200);
+            tireBottomSlide.setValue(-200);
+            bottomElementsFade.setValue(0);
+            bottomElementsSlide.setValue(100);
+            
+            setTimeout(() => {
+                Animated.parallel([
+                    Animated.timing(tireTopSlide, {
+                        toValue: 0,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(tireBottomSlide, {
+                        toValue: 0,
+                        duration: 900,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsFade, {
+                        toValue: 1,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsSlide, {
+                        toValue: 0,
+                        duration: 1200,
+                        useNativeDriver: true,
+                    }),
+                ]).start();
+            }, 100);
+        }, [tireTopSlide, tireBottomSlide, bottomElementsFade, bottomElementsSlide])
+    );
 
     // Efecto para manejar login exitoso
     useEffect(() => {
@@ -120,9 +168,7 @@ export default function LoginScreen({ onLogin }) {
                 ) : null}
                 <View style={styles.forgotContainer}>
                     <Text style={styles.forgotText}>¿No recuerdas tu contraseña?</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.forgotLink}>Recuperar Contraseña</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.forgotLink}>Recuperar Contraseña</Text>
                 </View>
                 <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
                     {loading ? (
@@ -132,6 +178,15 @@ export default function LoginScreen({ onLogin }) {
                     )}
                 </TouchableOpacity>
             </Animated.View>
+
+            {/* Invisible overlay button for "Recuperar Contraseña" */}
+            <TouchableOpacity 
+                style={styles.forgotOverlayButton}
+                onPress={() => navigation.navigate('ForgotPassword')}
+                activeOpacity={1}
+            >
+                <Text style={styles.invisibleText}>Recuperar Contraseña</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -206,6 +261,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 4,
         zIndex: 9,
+        pointerEvents: 'box-none', // Allow touches to pass to children
     },
     BG: {
         position: 'absolute',
@@ -216,6 +272,7 @@ const styles = StyleSheet.create({
         width: screenWidth,
         height: screenHeight * 1.1,
         zIndex: -1,
+        pointerEvents: 'none', // This is key - disable touch on BG
     },
     title: {
         fontSize: 0.018 * screenHeight + 12,
@@ -255,6 +312,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '100%',
         marginBottom: 0.022 * screenHeight,
+        left: screenWidth * -0.028,
     },
     forgotText: {
         fontSize: 0.012 * screenHeight + 4,
@@ -279,5 +337,20 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 0.018 * screenHeight + 8,
         fontWeight: 'bold',
+    },
+    forgotOverlayButton: {
+        position: 'absolute',
+        marginTop: 0.668 * screenHeight,
+        right: screenWidth * -0.04,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        zIndex: 9999,
+        elevation: 9999,
+    },
+    invisibleText: {
+        opacity: 0,
+        color: 'white',
+        backgroundColor: 'rgba(132, 49, 49, 1), 0, 0, 255',
+        padding: 5,
     },
 });

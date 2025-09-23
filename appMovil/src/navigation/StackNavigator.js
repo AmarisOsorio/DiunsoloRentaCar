@@ -1,8 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import TabNavigator from './TabNavigator'; // Importa el nuevo TabNavigator mejorado
+import TabNavigator from './TabNavigator';
 
-// Importar las pantallas modales/stack
+// Import modal/stack screens
 import AddMaintenanceScreen from '../screens/Maintenances/AddMaintenance';
 import NewVehicleScreen from '../screens/Vehicles/NewVehicle';
 import BrandsScreen from '../screens/Vehicles/Brands';
@@ -17,13 +17,13 @@ const StackNavigator = () => {
         headerShown: false,
       }}
     >
-      {/* TabNavigator como pantalla principal */}
+      {/* Main tabs */}
       <Stack.Screen
         name="MainTabs"
         component={TabNavigator}
       />
       
-      {/* Pantalla para agregar mantenimiento */}
+      {/* Add maintenance screen */}
       <Stack.Screen
         name="AddMaintenance"
         component={AddMaintenanceScreen}
@@ -34,7 +34,7 @@ const StackNavigator = () => {
         }}
       />
 
-      {/* Pantalla para agregar vehículo */}
+      {/* New vehicle screen */}
       <Stack.Screen
         name="NewVehicle"
         component={NewVehicleScreen}
@@ -45,7 +45,7 @@ const StackNavigator = () => {
         }}
       />
 
-      {/* Pantalla de marcas */}
+      {/* Brands screen */}
       <Stack.Screen
         name="Brands"
         component={BrandsScreen}
@@ -55,8 +55,6 @@ const StackNavigator = () => {
           gestureEnabled: true,
         }}
       />
-      
-      {/* Puedes agregar más pantallas aquí */}
       {/*
       <Stack.Screen
         name="AddReservation"
