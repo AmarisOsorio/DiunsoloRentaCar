@@ -103,17 +103,40 @@ const VehicleModal = ({
     }
   };
 
-  // Manejar click del botón principal
+  // Manejar click del botón principal - CORREGIDO
   const handleMainButtonClick = () => {
     if (isEditingMode) {
       // En modo edición, cerrar este modal y redirigir al perfil con parámetros para abrir modal de edición
       onClose();
       
+      // CORRECCIÓN: Incluir información completa del vehículo
+      const vehicleInfo = {
+        vehicleId: vehicle._id,
+        vehicleName: vehicle.vehicleName || vehicle.brand || 'Vehículo',
+        brand: vehicle.brandId?.brandName || vehicle.brand || '',
+        model: vehicle.model || '',
+        year: vehicle.year || '',
+        color: vehicle.color || '',
+        capacity: vehicle.capacity || '',
+        dailyPrice: vehicle.dailyPrice || 25000,
+        mainViewImage: vehicle.mainViewImage || '',
+        sideImage: vehicle.sideImage || '',
+        // Incluir todas las propiedades que el componente pueda necesitar
+        ...vehicle
+      };
+      
       const params = new URLSearchParams({
         openEditModal: 'true',
         reservationId: editingReservationData.reservationId,
-        selectedVehicleId: vehicle._id,
-        selectedVehicleName: vehicle.vehicleName || vehicle.brand || 'Vehículo',
+        selectedVehicleId: vehicleInfo.vehicleId,
+        selectedVehicleName: vehicleInfo.vehicleName,
+        selectedVehicleBrand: vehicleInfo.brand,
+        selectedVehicleModel: vehicleInfo.model,
+        selectedVehicleYear: vehicleInfo.year,
+        selectedVehicleColor: vehicleInfo.color,
+        selectedVehicleCapacity: vehicleInfo.capacity,
+        selectedVehiclePrice: vehicleInfo.dailyPrice,
+        selectedVehicleMainImage: vehicleInfo.mainViewImage || vehicleInfo.sideImage || '',
         startDate: editingReservationData.startDate,
         returnDate: editingReservationData.returnDate,
         clientName: editingReservationData.clientName
@@ -254,6 +277,13 @@ const VehicleModal = ({
                     <span className="detail-label">Capacidad:</span>
                     <span className="detail-value">{vehicle.capacity} personas</span>
                   </div>
+                  {/* Precio por día */}
+                  {vehicle.dailyPrice && (
+                    <div className="detail-item">
+                      <span className="detail-label">Precio por día:</span>
+                      <span className="detail-value">₡{vehicle.dailyPrice.toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

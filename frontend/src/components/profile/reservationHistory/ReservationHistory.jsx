@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { FaCalendarAlt, FaEdit, FaTrash, FaTimes, FaDollarSign, FaExclamationTriangle, FaCar } from 'react-icons/fa';
 import { FaCircle } from 'react-icons/fa';
 import { useReservas } from './hooks/useReservationHistory';
+import { useAuth } from '../../../hooks/useAuth'; // Importar useAuth
 import './ReservationHistory.css';
 
 /**
@@ -14,6 +15,7 @@ const EditReservationModal = ({
   onSave, 
   onCancel 
 }) => {
+  const { userInfo } = useAuth(); // Obtener información del usuario
   const [formData, setFormData] = useState({
     // Solo fechas - campos editables
     startDate: '',
@@ -24,17 +26,47 @@ const EditReservationModal = ({
   // Cargar datos de la reserva cuando se abre el modal
   useEffect(() => {
     if (reservation && show) {
-      // Fechas
+      console.log('📅 Cargando datos de reserva en modal:', reservation);
+      
+      // Fechas - CORRECCIÓN: usar las fechas reales de la reserva
       const startDateRaw = reservation.startDate || reservation.fechaInicio || '';
       const returnDateRaw = reservation.returnDate || reservation.fechaDevolucion || '';
-      const startDate = startDateRaw ? new Date(startDateRaw).toISOString().slice(0, 16) : '';
-      const returnDate = returnDateRaw ? new Date(returnDateRaw).toISOString().slice(0, 16) : '';
+      
+      console.log('📅 Fechas raw:', { startDateRaw, returnDateRaw });
+      
+      // Formatear fechas para datetime-local (YYYY-MM-DDTHH:MM)
+      let startDate = '';
+      let returnDate = '';
+      
+      if (startDateRaw) {
+        try {
+          const startDateObj = new Date(startDateRaw);
+          // Convertir a formato datetime-local
+          startDate = startDateObj.toISOString().slice(0, 16);
+          console.log('📅 Fecha inicio formateada:', startDate);
+        } catch (error) {
+          console.error('Error formateando fecha inicio:', error);
+        }
+      }
+      
+      if (returnDateRaw) {
+        try {
+          const returnDateObj = new Date(returnDateRaw);
+          // Convertir a formato datetime-local
+          returnDate = returnDateObj.toISOString().slice(0, 16);
+          console.log('📅 Fecha devolución formateada:', returnDate);
+        } catch (error) {
+          console.error('Error formateando fecha devolución:', error);
+        }
+      }
 
       setFormData({
-        startDate,
-        returnDate
+        startDate: startDate,
+        returnDate: returnDate
       });
       setErrors({});
+      
+      console.log('📅 Datos cargados en formData:', { startDate, returnDate });
     }
   }, [reservation, show]);
 
@@ -60,18 +92,34 @@ const EditReservationModal = ({
     const startDate = new Date(formData.startDate);
     const returnDate = new Date(formData.returnDate);
 
-    // Validaciones de fechas
+    // Validaciones de fechas - CORREGIDAS para permitir edición
     if (!formData.startDate) {
       newErrors.startDate = 'La fecha de inicio es requerida';
-    } else if (startDate < now) {
-      newErrors.startDate = 'La fecha de inicio no puede ser en el pasado';
     }
+    // REMOVED: Validación que impedía fechas en el pasado para reservas existentes
+    // Para reservas existentes, permitir cualquier fecha válida
 
     if (!formData.returnDate) {
       newErrors.returnDate = 'La fecha de devolución es requerida';
     } else if (returnDate <= startDate) {
       newErrors.returnDate = 'La fecha de devolución debe ser posterior a la fecha de inicio';
     }
+
+    // Validación adicional: fechas deben ser válidas
+    if (formData.startDate && isNaN(startDate.getTime())) {
+      newErrors.startDate = 'Fecha de inicio no válida';
+    }
+    
+    if (formData.returnDate && isNaN(returnDate.getTime())) {
+      newErrors.returnDate = 'Fecha de devolución no válida';
+    }
+
+    console.log('📅 Validación de formulario:', { 
+      formData, 
+      errors: newErrors,
+      startDate: startDate.toISOString(),
+      returnDate: returnDate.toISOString()
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -84,16 +132,67 @@ const EditReservationModal = ({
       return;
     }
 
-    // Preparar datos para enviar al backend (solo fechas, mantener todo lo demás)
+    // CORRECCIÓN: Asegurar que clientId esté disponible
+    let clientId = null;
+    
+    // Prioridad 1: Del reservation.clientId
+    if (reservation.clientId) {
+      clientId = typeof reservation.clientId === 'object' ? reservation.clientId._id : reservation.clientId;
+    }
+    // Prioridad 2: Del usuario autenticado
+    else if (userInfo) {
+      clientId = userInfo._id || userInfo.id;
+    }
+
+    // Determinar vehicleId
+    let vehicleId = null;
+    
+    // Si hay un vehículo temporal (nuevo seleccionado), usarlo
+    if (reservation.tempVehicle) {
+      vehicleId = reservation.tempVehicle._id;
+    }
+    // Si no, usar el original
+    else if (reservation.vehicleId) {
+      vehicleId = typeof reservation.vehicleId === 'object' ? reservation.vehicleId._id : reservation.vehicleId;
+    }
+    else if (reservation.vehiculoID) {
+      vehicleId = typeof reservation.vehiculoID === 'object' ? reservation.vehiculoID._id : reservation.vehiculoID;
+    }
+
+    // Determinar precio por día - CORREGIDO
+    let pricePerDay = 0;
+    
+    // Si hay vehículo temporal, usar su precio
+    if (reservation.tempVehicle && reservation.tempVehicle.dailyPrice) {
+      pricePerDay = reservation.tempVehicle.dailyPrice;
+    }
+    // Si no, usar el precio de la reserva original
+    else if (reservation.pricePerDay && reservation.pricePerDay > 0) {
+      pricePerDay = reservation.pricePerDay;
+    }
+    else if (reservation.precioPorDia && reservation.precioPorDia > 0) {
+      pricePerDay = reservation.precioPorDia;
+    }
+    // Si el vehículo original tiene precio, usarlo
+    else if (currentVehicle.dailyPrice && currentVehicle.dailyPrice > 0) {
+      pricePerDay = currentVehicle.dailyPrice;
+    }
+    // Precio mínimo por defecto
+    else {
+      pricePerDay = 25000; // Precio mínimo por defecto
+    }
+
+    // Preparar datos para enviar al backend
     const updatedData = {
-      clientId: reservation.clientId?._id || reservation.clientId,
-      vehicleId: reservation.vehicleId?._id || reservation.vehiculoID?._id,
+      clientId: clientId,
+      vehicleId: vehicleId,
       startDate: formData.startDate,
       returnDate: formData.returnDate,
-      status: reservation.status || reservation.estado,
-      pricePerDay: reservation.pricePerDay || reservation.precioPorDia
+      status: reservation.status || reservation.estado || 'Pending',
+      pricePerDay: pricePerDay
     };
 
+    console.log('📤 Datos preparados para actualización:', updatedData);
     onSave(updatedData);
   };
 
@@ -117,19 +216,53 @@ const EditReservationModal = ({
 
   if (!show) return null;
 
-  // Información del vehículo - usar vehículo temporal si existe
+  // Información del vehículo - usar vehículo temporal si existe - CORREGIDO
   const currentVehicle = reservation?.tempVehicle || reservation?.vehicleId || reservation?.vehiculoID || {};
   const isUsingTempVehicle = !!reservation?.tempVehicle;
   
-  const nombreVehiculo = currentVehicle.vehicleName || currentVehicle.nombreVehiculo || currentVehicle.brand || 'Vehículo';
-  const modelo = currentVehicle.model || currentVehicle.modelo || '';
+  // Mapeo más robusto de campos del vehículo
+  const nombreVehiculo = currentVehicle.vehicleName || 
+                         currentVehicle.nombreVehiculo || 
+                         currentVehicle.brand || 
+                         currentVehicle.marca || 
+                         'Vehículo';
+  
+  const modelo = currentVehicle.model || 
+                 currentVehicle.modelo || 
+                 currentVehicle.year || 
+                 currentVehicle.anio || 
+                 '';
+  
+  const marca = currentVehicle.brandId?.brandName || 
+                currentVehicle.brand || 
+                currentVehicle.marca || 
+                '';
+                
   const color = currentVehicle.color || '';
   const anio = currentVehicle.year || currentVehicle.anio || '';
-  const imagenVehiculo = currentVehicle.sideImage || currentVehicle.imagenLateral || currentVehicle.mainViewImage || '';
+  const capacidad = currentVehicle.capacity || currentVehicle.capacidad || '';
+  const imagenVehiculo = currentVehicle.mainViewImage || 
+                        currentVehicle.sideImage || 
+                        currentVehicle.imagenLateral || 
+                        currentVehicle.imagenVista3_4 || 
+                        '';
 
-  // Información del cliente
-  const cliente = reservation?.clientId || {};
-  const nombreCliente = cliente.name || cliente.nombres || cliente.nombre || 'Cliente';
+  // Información del cliente - CORREGIDA
+  let nombreCliente = 'Cliente';
+  
+  if (reservation?.clientId) {
+    const cliente = reservation.clientId;
+    nombreCliente = cliente.name || cliente.nombres || cliente.nombre || 'Cliente';
+  } else if (userInfo) {
+    // Usar información del usuario autenticado si no hay cliente en la reserva
+    if (userInfo.nombres && userInfo.apellidos) {
+      nombreCliente = `${userInfo.nombres} ${userInfo.apellidos}`;
+    } else if (userInfo.name && userInfo.lastName) {
+      nombreCliente = `${userInfo.name} ${userInfo.lastName}`;
+    } else {
+      nombreCliente = userInfo.name || userInfo.nombres || 'Cliente';
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -162,13 +295,22 @@ const EditReservationModal = ({
                 </span>
               )}
             </h4>
-            {modelo && <p>Modelo: {modelo}</p>}
-            {color && <p>Color: {color}</p>}
-            {anio && <p>Año: {anio}</p>}
-            <p>Cliente: {nombreCliente}</p>
+            {marca && <p><strong>Marca:</strong> {marca}</p>}
+            {modelo && <p><strong>Modelo:</strong> {modelo}</p>}
+            {color && <p><strong>Color:</strong> {color}</p>}
+            {anio && <p><strong>Año:</strong> {anio}</p>}
+            {capacidad && <p><strong>Capacidad:</strong> {capacidad} personas</p>}
+            <p><strong>Cliente:</strong> {nombreCliente}</p>
             {imagenVehiculo && (
               <div style={{marginTop: 8}}>
-                <img src={imagenVehiculo} alt={nombreVehiculo} style={{maxWidth: 180, borderRadius: 8}} />
+                <img 
+                  src={imagenVehiculo} 
+                  alt={nombreVehiculo} 
+                  style={{maxWidth: 180, borderRadius: 8, border: '1px solid #ddd'}}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
               </div>
             )}
             
@@ -217,6 +359,11 @@ const EditReservationModal = ({
                 value={formData.startDate}
                 onChange={handleInputChange}
                 className={errors.startDate ? 'error' : ''}
+                style={{ 
+                  cursor: 'text',
+                  backgroundColor: '#fff',
+                  opacity: 1
+                }}
               />
               {errors.startDate && <span className="error-text">{errors.startDate}</span>}
             </div>
@@ -233,6 +380,11 @@ const EditReservationModal = ({
                 value={formData.returnDate}
                 onChange={handleInputChange}
                 className={errors.returnDate ? 'error' : ''}
+                style={{ 
+                  cursor: 'text',
+                  backgroundColor: '#fff',
+                  opacity: 1
+                }}
               />
               {errors.returnDate && <span className="error-text">{errors.returnDate}</span>}
             </div>
@@ -324,6 +476,8 @@ const ReservaCard = React.memo(({
   onEdit, 
   onDelete 
 }) => {
+  const { userInfo } = useAuth(); // Obtener información del usuario
+  
   const statusMap = {
     pending: { label: 'Pendiente', className: 'reserva-status-pendiente' },
     active: { label: 'Activa', className: 'reserva-status-activa' },
@@ -334,28 +488,62 @@ const ReservaCard = React.memo(({
   const status = statusMap[currentStatus] || { label: reserva.status || reserva.estado, className: '' };
   const isPendiente = currentStatus === 'pending';
   
-  // Información del vehículo
+  // Información del vehículo - DATOS REALES DE LA BASE DE DATOS
   const vehiculo = reserva.vehicleId || reserva.vehiculoID || {};
-  const marca = vehiculo.brand || vehiculo.marca || '';
+  const marca = vehiculo.brandId?.brandName || vehiculo.brand || vehiculo.marca || '';
   const nombreVehiculo = vehiculo.vehicleName || vehiculo.nombreVehiculo || '';
   const modelo = vehiculo.model || vehiculo.modelo || '';
   const color = vehiculo.color || '';
   const anio = vehiculo.year || vehiculo.anio || '';
   const capacidad = vehiculo.capacity || vehiculo.capacidad || '';
   const placa = vehiculo.plate || vehiculo.placa || '';
-  const imagenVehiculo = vehiculo.sideImage || vehiculo.imagenLateral || reserva.imagenVehiculo || vehiculo.mainViewImage || '';
+  const imagenVehiculo = vehiculo.mainViewImage || vehiculo.sideImage || vehiculo.imagenLateral || reserva.imagenVehiculo || '';
 
-  // Información del cliente (ahora desde clientId populate)
-  const cliente = reserva.clientId || {};
-  const nombreCliente = cliente.name || cliente.nombres || cliente.nombre || '';
-  const emailCliente = cliente.email || cliente.correo || '';
-  const telefonoCliente = cliente.phone || cliente.telefono || '';
+  // Información del cliente - DATOS REALES
+  let nombreCliente = 'Cliente';
+  let emailCliente = '';
+  let telefonoCliente = '';
+  
+  if (reserva.clientId && typeof reserva.clientId === 'object') {
+    const cliente = reserva.clientId;
+    nombreCliente = cliente.name || cliente.nombres || cliente.nombre || 'Cliente';
+    emailCliente = cliente.email || cliente.correo || '';
+    telefonoCliente = cliente.phone || cliente.telefono || '';
+  } else if (userInfo) {
+    // Usar información del usuario autenticado si no hay cliente en la reserva
+    if (userInfo.nombres && userInfo.apellidos) {
+      nombreCliente = `${userInfo.nombres} ${userInfo.apellidos}`;
+    } else if (userInfo.name && userInfo.lastName) {
+      nombreCliente = `${userInfo.name} ${userInfo.lastName}`;
+    } else {
+      nombreCliente = userInfo.name || userInfo.nombres || 'Cliente';
+    }
+    emailCliente = userInfo.email || userInfo.correo || '';
+    telefonoCliente = userInfo.phone || userInfo.telefono || '';
+  }
 
-  // Fechas
+  // Fechas - DATOS REALES DE LA BASE DE DATOS
   const fechaInicio = reserva.startDate || reserva.fechaInicio || null;
   const fechaDevolucion = reserva.returnDate || reserva.fechaDevolucion || null;
-  const fechaFin = fechaDevolucion ? new Date(fechaDevolucion) : null;
-  const fechaInicioObj = fechaInicio ? new Date(fechaInicio) : null;
+  
+  // Formatear fechas correctamente
+  const formatFecha = (fecha) => {
+    if (!fecha) return 'Sin fecha';
+    try {
+      const fechaObj = new Date(fecha);
+      return fechaObj.toLocaleString('es-CR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      console.error('Error formateando fecha:', error);
+      return 'Fecha inválida';
+    }
+  };
   
   const handleEdit = (e) => {
     e.stopPropagation();
@@ -418,17 +606,24 @@ const ReservaCard = React.memo(({
           <div className="reserva-fechas-group">
             <div className="reserva-fecha">
               <FaCalendarAlt className="reserva-icon" />
-              <span>Inicio: {fechaInicioObj ? fechaInicioObj.toLocaleString() : 'Sin fecha'}</span>
+              <span>Inicio: {formatFecha(fechaInicio)}</span>
             </div>
             <div className="reserva-fecha">
               <FaCalendarAlt className="reserva-icon" />
-              <span>Devolución: {fechaFin ? fechaFin.toLocaleString() : 'Sin fecha'}</span>
+              <span>Devolución: {formatFecha(fechaDevolucion)}</span>
             </div>
           </div>
         </div>
         {imagenVehiculo && (
           <div className="reserva-vehiculo-img-side">
-            <img className="reserva-vehiculo-img ajustada" src={imagenVehiculo} alt={nombreVehiculo || 'Vehículo'} />
+            <img 
+              className="reserva-vehiculo-img ajustada" 
+              src={imagenVehiculo} 
+              alt={nombreVehiculo || 'Vehículo'} 
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
           </div>
         )}
       </div>
@@ -458,12 +653,16 @@ const Reservas = ({ shouldFetch = false }) => {
     handleDeleteReservation,
     handleConfirmDelete,
     handleCancelDelete,
-    setError
+    setError,
+    // NUEVO: Estados para mensaje de éxito
+    updateSuccess,
+    updateMessage
   } = useReservas(shouldFetch);
   
   // Estado para el vehículo temporalmente seleccionado
   const [tempSelectedVehicle, setTempSelectedVehicle] = useState(null);
   const location = useLocation();
+  const { userInfo } = useAuth(); // Obtener información del usuario autenticado
 
   // Detectar si regresa del catálogo con un vehículo seleccionado para abrir modal de edición
   useEffect(() => {
@@ -476,31 +675,64 @@ const Reservas = ({ shouldFetch = false }) => {
     const returnDate = urlParams.get('returnDate');
     const clientName = urlParams.get('clientName');
 
+    // CORRECCIÓN: Obtener información completa del vehículo de los parámetros URL
+    const selectedVehicleBrand = urlParams.get('selectedVehicleBrand');
+    const selectedVehicleModel = urlParams.get('selectedVehicleModel');
+    const selectedVehicleYear = urlParams.get('selectedVehicleYear');
+    const selectedVehicleColor = urlParams.get('selectedVehicleColor');
+    const selectedVehicleCapacity = urlParams.get('selectedVehicleCapacity');
+    const selectedVehiclePrice = urlParams.get('selectedVehiclePrice');
+    const selectedVehicleMainImage = urlParams.get('selectedVehicleMainImage');
+
     if (openEditModal && selectedVehicleId && reservationId) {
-      // Crear objeto de vehículo temporal con la información disponible
+      // Crear objeto de vehículo temporal con la información completa disponible
       const tempVehicle = {
         _id: selectedVehicleId,
-        vehicleName: selectedVehicleName
+        vehicleName: selectedVehicleName,
+        brand: selectedVehicleBrand,
+        model: selectedVehicleModel,
+        year: selectedVehicleYear,
+        color: selectedVehicleColor,
+        capacity: selectedVehicleCapacity,
+        dailyPrice: selectedVehiclePrice ? parseInt(selectedVehiclePrice) : 25000,
+        mainViewImage: selectedVehicleMainImage,
+        sideImage: selectedVehicleMainImage,
+        // Mapeo adicional para compatibilidad
+        brandId: { brandName: selectedVehicleBrand },
+        anio: selectedVehicleYear,
+        capacidad: selectedVehicleCapacity,
+        imagenLateral: selectedVehicleMainImage,
+        imagenVista3_4: selectedVehicleMainImage
       };
       
-      // Crear reserva temporal para el modal de edición
+      // CORRECCIÓN: Crear reserva temporal con toda la información necesaria incluyendo cliente
       const tempReservation = {
         _id: reservationId,
         startDate: startDate,
         returnDate: returnDate,
-        clientId: { name: clientName },
+        // Asegurar que clientId esté disponible
+        clientId: userInfo ? {
+          _id: userInfo._id || userInfo.id,
+          name: clientName || (userInfo.nombres && userInfo.apellidos ? `${userInfo.nombres} ${userInfo.apellidos}` : userInfo.name || 'Cliente'),
+          email: userInfo.email || userInfo.correo || '',
+          phone: userInfo.phone || userInfo.telefono || ''
+        } : {
+          _id: 'temp-client-id',
+          name: clientName || 'Cliente'
+        },
         tempVehicle: tempVehicle,
-        status: 'Pending'
+        status: 'Pending',
+        pricePerDay: tempVehicle.dailyPrice
       };
       
       setTempSelectedVehicle(tempVehicle);
       // Abrir el modal de edición directamente con el nuevo vehículo
       handleEditReservation(tempReservation);
       
-      // Limpiar la URL
+      // Limpiar la URL inmediatamente para evitar loops
       window.history.replaceState({}, '', '/perfil');
     }
-  }, [location.search, handleEditReservation]);
+  }, [location.search, userInfo, handleEditReservation]);
   
   // Solo log cuando cambien los valores importantes
   useEffect(() => {
@@ -541,6 +773,14 @@ const Reservas = ({ shouldFetch = false }) => {
         {error && (
           <div className={`perfil-error ${error.includes('demostración') ? 'perfil-warning' : ''}`}>
             {error}
+          </div>
+        )}
+        
+        {/* NUEVO: Mensaje de éxito cuando se actualiza una reserva */}
+        {updateSuccess && updateMessage && (
+          <div className="perfil-success">
+            <span className="success-icon">✅</span>
+            {updateMessage}
           </div>
         )}
         

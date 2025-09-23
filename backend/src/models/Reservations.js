@@ -41,6 +41,11 @@ const reservationsSchema = new Schema({
         type: Number,
         required: true
     },
+    total: {
+        type: Number,
+        required: true
+    },
+
     creationDate: {  
         type: Date,
         default: Date.now

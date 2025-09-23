@@ -20,6 +20,24 @@ const isValidDate = (date) => {
 const isValidDateRange = (startDate, returnDate) => {
     return new Date(startDate) < new Date(returnDate);
 };
+
+// Función para calcular días entre fechas (solo considera fechas, no horas)
+const calculateDays = (startDate, returnDate) => {
+    // Crear fechas sin tiempo (medianoche) para evitar problemas con horas
+    const start = new Date(startDate);
+    const end = new Date(returnDate);
+    
+    // Resetear a medianoche para ignorar horas
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    // Calcular diferencia en milisegundos y convertir a días
+    const diffTime = end - start;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Si es el mismo día, cuenta como 1 día mínimo
+    return diffDays === 0 ? 1 : diffDays;
+};
  
 //Select - Obtener todas las reservas
 reservationsController.getReservations = async (req, res) => {
@@ -247,7 +265,7 @@ reservationsController.createReservation = async (req, res) => {
             startDate,
             returnDate,
             status,
-            pricePerDay
+            pricePerDay // Opcional - si se envía se usa, si no se obtiene del vehículo
         } = req.body;
  
         // Validaciones básicas de campos requeridos
@@ -279,13 +297,6 @@ reservationsController.createReservation = async (req, res) => {
             });
         }
  
-        if (!pricePerDay || pricePerDay <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: "El precio por día es requerido y debe ser mayor a 0"
-            });
-        }
- 
         // Validar que los IDs sean ObjectIds válidos
         if (!isValidObjectId(clientId)) {
             return res.status(400).json({
@@ -298,6 +309,24 @@ reservationsController.createReservation = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "ID de vehículo no válido"
+            });
+        }
+
+        // Verificar que el cliente existe
+        const clientExists = await clientesModel.findById(clientId);
+        if (!clientExists) {
+            return res.status(404).json({
+                success: false,
+                message: "Cliente no encontrado"
+            });
+        }
+
+        // Obtener datos del vehículo
+        const vehicle = await vehiculosModel.findById(vehicleId);
+        if (!vehicle) {
+            return res.status(404).json({
+                success: false,
+                message: "Vehículo no encontrado"
             });
         }
  
@@ -333,6 +362,21 @@ reservationsController.createReservation = async (req, res) => {
                 message: "Estado no válido. Debe ser: Pending, Active o Completed"
             });
         }
+
+        // Determinar precio por día: usar el enviado o el del vehículo
+        const finalPricePerDay = pricePerDay || vehicle.dailyPrice;
+        
+        // Validar que el precio sea válido
+        if (!finalPricePerDay || finalPricePerDay <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "El precio por día debe ser mayor a 0"
+            });
+        }
+
+        // Calcular días y total
+        const days = calculateDays(startDate, returnDate);
+        const total = days * finalPricePerDay;
  
         // Crear nueva reserva
         const newReservation = new reservationsModel({
@@ -341,19 +385,17 @@ reservationsController.createReservation = async (req, res) => {
             startDate: parsedStartDate,
             returnDate: parsedReturnDate,
             status: status || 'Pending',
-            pricePerDay
+            pricePerDay: finalPricePerDay,
+            total: total
         });
  
         const savedReservation = await newReservation.save();
        
         // Generar contrato automáticamente
         try {
-            const vehiculo = await vehiculosModel.findById(vehicleId);
-            const cliente = await clientesModel.findById(clientId);
+            const cliente = clientExists;
            
-            if (vehiculo && cliente) {
-                const dias = Math.ceil((new Date(returnDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
-               
+            if (vehicle && cliente) {
                 const nuevoContrato = new Contratos({
                     reservationId: savedReservation._id.toString(),
                     datosArrendamiento: {
@@ -362,19 +404,19 @@ reservationsController.createReservation = async (req, res) => {
                         numeroPasaporte: cliente.numeroPasaporte || '',
                         numeroLicencia: cliente.numeroLicencia || '',
                         fechaEntrega: startDate,
-                        precioDiario: pricePerDay,
-                        montoTotal: dias * pricePerDay,
-                        diasAlquiler: dias,
-                        montoDeposito: Math.round(pricePerDay * 2),
+                        precioDiario: finalPricePerDay,
+                        montoTotal: total,
+                        diasAlquiler: days,
+                        montoDeposito: Math.round(finalPricePerDay * 2),
                         ciudadFirma: 'Ciudad de Guatemala',
                         fechaFirma: new Date()
                     },
                     datosHojaEstado: {
                         fechaEntrega: startDate,
                         fechaDevolucion: returnDate,
-                        numeroUnidad: vehiculo.numeroVinChasis,
-                        marcaModelo: `${vehiculo.vehicleName || vehiculo.nombreVehiculo} ${vehiculo.model || vehiculo.modelo}`,
-                        placa: vehiculo.plate || vehiculo.placa,
+                        numeroUnidad: vehicle.vinNumber || vehicle.chassisNumber,
+                        marcaModelo: `${vehicle.vehicleName} ${vehicle.model}`,
+                        placa: vehicle.plate,
                         nombreCliente: `${cliente.name || cliente.nombre} ${cliente.lastName || cliente.apellido || ''}`.trim()
                     }
                 });
@@ -459,6 +501,15 @@ reservationsController.updateReservation = async (req, res) => {
                     message: "ID de cliente no válido"
                 });
             }
+            
+            // Verificar que el cliente existe
+            const clientExists = await clientesModel.findById(clientId);
+            if (!clientExists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Cliente no encontrado"
+                });
+            }
             updateFields.clientId = clientId;
         }
  
@@ -467,6 +518,15 @@ reservationsController.updateReservation = async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     message: "ID de vehículo no válido"
+                });
+            }
+            
+            // Verificar que el vehículo existe
+            const vehicleExists = await vehiculosModel.findById(vehicleId);
+            if (!vehicleExists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Vehículo no encontrado"
                 });
             }
             updateFields.vehicleId = vehicleId;
@@ -523,6 +583,13 @@ reservationsController.updateReservation = async (req, res) => {
             }
             updateFields.pricePerDay = pricePerDay;
         }
+
+        // Recalcular total si cambiaron fechas o precio
+        if (updateFields.startDate || updateFields.returnDate || updateFields.pricePerDay) {
+            const finalPricePerDay = updateFields.pricePerDay || existingReservation.pricePerDay;
+            const days = calculateDays(finalStartDate, finalReturnDate);
+            updateFields.total = days * finalPricePerDay;
+        }
  
         if (Object.keys(updateFields).length === 0) {
             return res.status(400).json({
@@ -544,11 +611,12 @@ reservationsController.updateReservation = async (req, res) => {
         });
  
         // Cambiar estado del vehículo según el estado de la reserva
-        if (updatedReservation && vehicleId) {
+        if (updatedReservation && (vehicleId || status)) {
+            const targetVehicleId = vehicleId || existingReservation.vehicleId;
             if (status === "Active") {
-                await vehiculosModel.findByIdAndUpdate(vehicleId, { estado: "Reservado" });
+                await vehiculosModel.findByIdAndUpdate(targetVehicleId, { status: "Reservado" });
             } else if (status === "Completed") {
-                await vehiculosModel.findByIdAndUpdate(vehicleId, { estado: "Disponible" });
+                await vehiculosModel.findByIdAndUpdate(targetVehicleId, { status: "Disponible" });
             }
         }
  
@@ -718,7 +786,7 @@ reservationsController.getMostRentedVehiclesByModel = async (req, res) => {
                 $group: {
                     _id: "$vehiculo.modelo",
                     totalReservations: { $sum: 1 },
-                    totalIncome: { $sum: "$pricePerDay" },
+                    totalIncome: { $sum: "$total" }, // Ahora usa el campo total de la reserva
                     rentedVehicles: { $addToSet: "$vehiculo.nombreVehiculo" }
                 }
             },
