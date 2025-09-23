@@ -10,7 +10,7 @@ import HomeScreen from '../screens/HomeScreen';
 import VehiclesScreen from '../screens/Vehicles/Vehicles';
 import ReservationScreen from '../screens/Reservations/Reservation';
 import Contracts from '../screens/Contracts/Contracts';
-import Usuarios from '../screens/Usuarios/Usuarios';
+import Usuarios from '../screens/Users/Users';
 
 const Tab = createBottomTabNavigator();
 

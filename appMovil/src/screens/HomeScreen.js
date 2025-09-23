@@ -1,16 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   StatusBar,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../Context/AuthContext';
+
+const { width } = Dimensions.get('window');
+const API_BASE_URL = 'https://diunsolorentacar.onrender.com/api';
+const TIMEOUT_DURATION = 30000; // 30 seconds to account for cold starts
+
+
 
 const HomeScreen = ({ navigation }) => {
+  const { userType, user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    marcasCount: 0,
+    vehiculosCount: 0,
+    clientesCount: 0,
+    empleadosCount: 0,
+    mantenimientosActivos: 0,
+    reservasActivas: 0,
+    reservasPendientes: 0,
+    reservasCompletadas: 0,
+    recentActivities: [],
+    vehiculosDisponibles: 0,
+    vehiculosReservados: 0,
+    vehiculosEnMantenimiento: 0
+  });
+
   const quickActions = [
     {
       title: 'Agregar Marca',
@@ -26,134 +57,199 @@ const HomeScreen = ({ navigation }) => {
       color: '#E74C3C',
       icon: 'construct'
     }
-  ];  
-
-  const statsCards = [
-    {
-      title: 'Marcas Registradas',
-      value: '12',
-      icon: 'car-sport',
-      color: '#4A90E2'
-    },
-    {
-      title: 'Mantenimientos Activos',
-      value: '5',
-      icon: 'construct',
-      color: '#E74C3C'
-    },
-    {
-      title: 'Pendientes',
-      value: '3',
-      icon: 'time',
-      color: '#FF9800'
-    },
-    {
-      title: 'Completados',
-      value: '24',
-      icon: 'checkmark-circle',
-      color: '#4CAF50'
-    }
   ];
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <Text style={styles.headerSubtitle}>Bienvenido de vuelta</Text>
-        <Text style={styles.headerTitle}>Panel de Control</Text>
-      </View>
-      <TouchableOpacity style={styles.notificationButton}>
-        <Ionicons name="notifications" size={24} color="#FFFFFF" />
-        <View style={styles.notificationBadge}>
-          <Text style={styles.badgeText}>2</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const renderStatsCard = (card, index) => (
-    <View key={index} style={[styles.statsCard, { borderLeftColor: card.color }]}>
-      <View style={styles.statsContent}>
-        <View style={[styles.statsIcon, { backgroundColor: `${card.color}20` }]}>
-          <Ionicons name={card.icon} size={24} color={card.color} />
-        </View>
-        <View style={styles.statsText}>
-          <Text style={styles.statsValue}>{card.value}</Text>
-          <Text style={styles.statsTitle}>{card.title}</Text>
-        </View>
-      </View>
-    </View>
-  );
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        fetchCounts(),
+        fetchRecentActivities()
+      ]);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      const errorMessage = error.message === 'La solicitud tardó demasiado tiempo'
+        ? 'El servidor está tardando en responder. Por favor, inténtelo de nuevo.'
+        : 'No se pudieron cargar los datos del panel. Verifique su conexión a internet.';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const renderQuickAction = (action, index) => (
-    <TouchableOpacity
-      key={index}
-      style={[styles.quickActionButton, { backgroundColor: action.color }]}
-      onPress={action.action}
-      activeOpacity={0.8}
-    >
-      <Ionicons name={action.icon} size={24} color="#FFFFFF" />
-      <Text style={styles.quickActionTitle}>{action.title}</Text>
-      <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
-    </TouchableOpacity>
-  );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  };
+
+  const fetchCounts = async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_DURATION);
+      
+      const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.error) {
+        const stats = result.data || {};
+        setDashboardData(prev => ({
+          ...prev,
+          vehiculosCount: stats.vehiculosCount || 0,
+          clientesCount: stats.clientesCount || 0,
+          empleadosCount: stats.empleadosCount || 0,
+          mantenimientosActivos: stats.mantenimientosActivos || 0,
+          reservasActivas: stats.reservasActivas || 0,
+          reservasPendientes: stats.reservasPendientes || 0,
+          reservasCompletadas: stats.reservasCompletadas || 0,
+        }));
+      } else {
+        throw new Error(result.message || 'Error al obtener datos');
+      }
+    } catch (error) {
+      console.error('Error fetching counts:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('La solicitud tardó demasiado tiempo');
+      }
+      throw error;
+    }
+  };
+
+  const fetchRecentActivities = async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_DURATION);
+      
+      const response = await fetch(`${API_BASE_URL}/dashboard/activities`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.error) {
+        const activities = (result.data || []).map(activity => ({
+          description: activity.description || activity.title,
+          timestamp: activity.time || activity.createdAt,
+        }));
+        
+        setDashboardData(prev => ({
+          ...prev,
+          recentActivities: activities
+        }));
+      } else {
+        throw new Error(result.message || 'Error al obtener actividades recientes');
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('La solicitud tardó demasiado tiempo');
+      }
+      throw error;
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#4A90E2" />
-      
-      {renderHeader()}
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        style={styles.scrollView}
+      >
+        <View style={styles.header}>
+          <Text style={styles.welcomeText}>
+            Bienvenido, {user?.name || 'Usuario'}
+          </Text>
+          <Text style={styles.roleText}>{userType}</Text>
+        </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Estadísticas */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resumen</Text>
+        <View style={styles.quickActionsContainer}>
+          {quickActions.map((action, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.quickActionButton}
+              onPress={action.action}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: action.color }]}>
+                <Ionicons name={action.icon} size={24} color="#fff" />
+              </View>
+              <Text style={styles.actionTitle}>{action.title}</Text>
+              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.statsContainer}>
+          <Text style={styles.sectionTitle}>Estadísticas Generales</Text>
           <View style={styles.statsGrid}>
-            {statsCards.map((card, index) => renderStatsCard(card, index))}
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{dashboardData.vehiculosCount}</Text>
+              <Text style={styles.statLabel}>Vehículos</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{dashboardData.clientesCount}</Text>
+              <Text style={styles.statLabel}>Clientes</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{dashboardData.reservasActivas}</Text>
+              <Text style={styles.statLabel}>Reservas Activas</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{dashboardData.mantenimientosActivos}</Text>
+              <Text style={styles.statLabel}>Mantenimientos</Text>
+            </View>
           </View>
         </View>
 
-        {/* Acciones Rápidas */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-          <View style={styles.quickActionsContainer}>
-            {quickActions.map((action, index) => renderQuickAction(action, index))}
-          </View>
-        </View>
-
-        {/* Actividad Reciente */}
-        <View style={styles.section}>
+        <View style={styles.recentActivityContainer}>
           <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-          <View style={styles.activityContainer}>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="add-circle" size={16} color="#4CAF50" />
-              </View>
-              <View style={styles.activityText}>
-                <Text style={styles.activityTitle}>Nueva marca agregada</Text>
-                <Text style={styles.activityTime}>Hace 2 horas</Text>
+          {dashboardData.recentActivities.map((activity, index) => (
+            <View key={index} style={styles.activityItem}>
+              <Ionicons name="time-outline" size={20} color="#666" />
+              <View style={styles.activityContent}>
+                <Text style={styles.activityText}>{activity.description}</Text>
+                <Text style={styles.activityTime}>{activity.timestamp}</Text>
               </View>
             </View>
-            
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="construct" size={16} color="#E74C3C" />
-              </View>
-              <View style={styles.activityText}>
-                <Text style={styles.activityTitle}>Mantenimiento completado</Text>
-                <Text style={styles.activityTime}>Ayer</Text>
-              </View>
-            </View>
-            
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-              </View>
-              <View style={styles.activityText}>
-                <Text style={styles.activityTitle}>Revisión finalizada</Text>
-                <Text style={styles.activityTime}>Hace 3 días</Text>
-              </View>
-            </View>
-          </View>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -163,175 +259,126 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#fff',
   },
-  header: {
-    backgroundColor: '#4A90E2',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    justifyContent: 'space-between',
-  },
-  headerContent: {
+  loadingContainer: {
     flex: 1,
-  },
-  headerSubtitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    opacity: 0.8,
-    marginBottom: 5,
-  },
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  notificationButton: {
-    position: 'relative',
-    padding: 8,
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: '#E74C3C',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  welcomeText: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#333',
   },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+  roleText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 4,
   },
-  section: {
-    marginBottom: 25,
+  quickActionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 8,
+    justifyContent: 'space-between',
+  },
+  quickActionButton: {
+    width: (width - 32) / 2,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    margin: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: '#666',
+  },
+  statsContainer: {
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginBottom: 15,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  statsCard: {
-    backgroundColor: '#FFFFFF',
+  statCard: {
+    width: (width - 48) / 2,
+    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 15,
-    width: '48%',
-    marginBottom: 10,
-    borderLeftWidth: 4,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
     elevation: 3,
-  },
-  statsContent: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
-  statsIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  statsText: {
-    flex: 1,
-  },
-  statsValue: {
-    fontSize: 20,
+  statNumber: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#2C3E50',
+    color: '#4A90E2',
+    marginBottom: 4,
   },
-  statsTitle: {
-    fontSize: 12,
-    color: '#8E8E93',
-    marginTop: 2,
+  statLabel: {
+    fontSize: 14,
+    color: '#666',
   },
-  quickActionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickActionButton: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 3,
-  },
-  quickActionTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  quickActionSubtitle: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    opacity: 0.8,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  activityContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 3,
+  recentActivityContainer: {
+    padding: 16,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#eee',
   },
-  activityIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F8F9FA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  activityText: {
+  activityContent: {
+    marginLeft: 12,
     flex: 1,
   },
-  activityTitle: {
+  activityText: {
     fontSize: 14,
-    color: '#2C3E50',
-    fontWeight: '500',
+    color: '#333',
   },
   activityTime: {
     fontSize: 12,
-    color: '#8E8E93',
-    marginTop: 2,
+    color: '#666',
+    marginTop: 4,
   },
 });
 

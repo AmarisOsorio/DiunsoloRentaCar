@@ -10,7 +10,7 @@
     "@react-navigation/native-stack": "^7.3.25",
     "@react-navigation/stack": "^7.4.8",
     "@sparticuz/chromium": "^138.0.2",
-    "expo": "^54.0.8",
+    "expo": "~54.0.10",
     "expo-constants": "^18.0.8",
     "expo-image-picker": "~17.0.8",
     "expo-linking": "^8.0.8",
