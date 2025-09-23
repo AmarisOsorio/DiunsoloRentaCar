@@ -27,15 +27,14 @@ reservationsController.getReservations = async (req, res) => {
         const reservations = await reservationsModel.find()
             .populate({
                 path: 'clientId',
-                select: 'name lastName phone email' // Cambiado de 'nombre apellido' a 'name lastName'
+                select: 'name lastName phone email'
             })
             .populate({
                 path: 'vehicleId',
-                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice' // Agregados todos los campos necesarios
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice'
             })
-            .sort({ creationDate: -1 }); // Mostrar las más recientes primero
+            .sort({ creationDate: -1 });
        
-        // Verificar si existen reservas
         if (!reservations || reservations.length === 0) {
             return res.status(200).json({
                 success: true,
@@ -46,7 +45,7 @@ reservationsController.getReservations = async (req, res) => {
         }
  
         console.log('Reservas encontradas:', reservations.length);
-        console.log('Muestra de datos:', JSON.stringify(reservations[0], null, 2)); // Para debug
+        console.log('Muestra de datos:', JSON.stringify(reservations[0], null, 2));
  
         res.status(200).json({
             success: true,
@@ -68,7 +67,6 @@ reservationsController.getReservationById = async (req, res) => {
     try {
         const { id } = req.params;
  
-        // Validar que el ID sea válido
         if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
@@ -76,7 +74,6 @@ reservationsController.getReservationById = async (req, res) => {
             });
         }
  
-        // Buscar reserva por ID con populate completo
         const reservation = await reservationsModel.findById(id)
             .populate({
                 path: 'clientId',
@@ -119,7 +116,6 @@ reservationsController.getUserReservations = async (req, res) => {
             });
         }
        
-        // Validar que el userId sea válido
         if (!isValidObjectId(userId)) {
             return res.status(400).json({
                 success: false,
@@ -171,7 +167,6 @@ reservationsController.getReservationsByVehicleId = async (req, res) => {
     try {
         const { vehicleId } = req.params;
  
-        // Validar que el vehicleId sea válido
         if (!isValidObjectId(vehicleId)) {
             return res.status(400).json({
                 success: false,
@@ -179,7 +174,6 @@ reservationsController.getReservationsByVehicleId = async (req, res) => {
             });
         }
  
-        // Buscar reservas por vehicleId
         const reservations = await reservationsModel.find({ vehicleId })
             .populate({
                 path: 'clientId',
@@ -211,7 +205,6 @@ reservationsController.getReservationsByStatus = async (req, res) => {
     try {
         const { status } = req.params;
  
-        // Validar que el estado sea válido
         if (!['Pending', 'Active', 'Completed'].includes(status)) {
             return res.status(400).json({
                 success: false,
@@ -219,7 +212,6 @@ reservationsController.getReservationsByStatus = async (req, res) => {
             });
         }
  
-        // Buscar reservas por estado
         const reservations = await reservationsModel.find({ status })
             .populate({
                 path: 'clientId',
@@ -327,7 +319,6 @@ reservationsController.createReservation = async (req, res) => {
             });
         }
  
-        // Validar que la fecha de inicio sea anterior a la fecha de devolución
         if (!isValidDateRange(startDate, returnDate)) {
             return res.status(400).json({
                 success: false,
@@ -343,41 +334,9 @@ reservationsController.createReservation = async (req, res) => {
             });
         }
  
-        // Usar los datos del cliente que vienen del frontend (cliente beneficiario)
-        // Si no vienen datos del cliente, usar los del usuario autenticado como fallback
-        let clientData = req.body.client || null;
- 
-        if (!clientData || !Array.isArray(clientData) || clientData.length === 0) {
-            // Fallback: usar datos del usuario autenticado si no se proporcionaron datos del cliente
-            try {
-                const usuarioAutenticado = await clientesModel.findById(clientId);
-                if (!usuarioAutenticado) {
-                    return res.status(404).json({
-                        success: false,
-                        message: "Usuario autenticado no encontrado"
-                    });
-                }
-                clientData = [{
-                    name: usuarioAutenticado.nombre + (usuarioAutenticado.apellido ? (" " + usuarioAutenticado.apellido) : ""),
-                    phone: usuarioAutenticado.telefono,
-                    email: usuarioAutenticado.correo
-                }];
-                console.log('Usando datos del usuario autenticado como fallback:', clientData);
-            } catch (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: "Error buscando usuario autenticado",
-                    error: err.message
-                });
-            }
-        } else {
-            console.log('Usando datos del cliente del formulario:', clientData);
-        }
- 
         // Crear nueva reserva
         const newReservation = new reservationsModel({
             clientId,
-            client: clientData, // Ya es un array
             vehicleId,
             startDate: parsedStartDate,
             returnDate: parsedReturnDate,
@@ -389,24 +348,16 @@ reservationsController.createReservation = async (req, res) => {
        
         // Generar contrato automáticamente
         try {
-            // Obtener datos completos del vehículo para el contrato
             const vehiculo = await vehiculosModel.findById(vehicleId);
             const cliente = await clientesModel.findById(clientId);
            
             if (vehiculo && cliente) {
-                // Calcular días de alquiler
                 const dias = Math.ceil((new Date(returnDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
                
-                // Usar datos del cliente beneficiario para el contrato
-                const clienteContrato = clientData[0]; // Primer elemento del array client
-                const nombreParaContrato = clienteContrato.name;
-                const correoParaContrato = clienteContrato.email;
-               
-                // Crear el contrato básico
                 const nuevoContrato = new Contratos({
                     reservationId: savedReservation._id.toString(),
                     datosArrendamiento: {
-                        nombreArrendatario: nombreParaContrato,
+                        nombreArrendatario: `${cliente.name || cliente.nombre} ${cliente.lastName || cliente.apellido || ''}`.trim(),
                         direccionArrendatario: cliente.direccion || '',
                         numeroPasaporte: cliente.numeroPasaporte || '',
                         numeroLicencia: cliente.numeroLicencia || '',
@@ -414,7 +365,7 @@ reservationsController.createReservation = async (req, res) => {
                         precioDiario: pricePerDay,
                         montoTotal: dias * pricePerDay,
                         diasAlquiler: dias,
-                        montoDeposito: Math.round(pricePerDay * 2), // 2 días como depósito
+                        montoDeposito: Math.round(pricePerDay * 2),
                         ciudadFirma: 'Ciudad de Guatemala',
                         fechaFirma: new Date()
                     },
@@ -422,9 +373,9 @@ reservationsController.createReservation = async (req, res) => {
                         fechaEntrega: startDate,
                         fechaDevolucion: returnDate,
                         numeroUnidad: vehiculo.numeroVinChasis,
-                        marcaModelo: `${vehiculo.nombreVehiculo} ${vehiculo.modelo}`,
-                        placa: vehiculo.placa,
-                        nombreCliente: nombreParaContrato
+                        marcaModelo: `${vehiculo.vehicleName || vehiculo.nombreVehiculo} ${vehiculo.model || vehiculo.modelo}`,
+                        placa: vehiculo.plate || vehiculo.placa,
+                        nombreCliente: `${cliente.name || cliente.nombre} ${cliente.lastName || cliente.apellido || ''}`.trim()
                     }
                 });
                
@@ -434,18 +385,17 @@ reservationsController.createReservation = async (req, res) => {
            
         } catch (contractError) {
             console.error('Error generando contrato automático:', contractError);
-            // No fallar la reserva si hay error en el contrato
         }
        
         // Poblar la reserva guardada antes de enviarla
         const populatedReservation = await reservationsModel.findById(savedReservation._id)
             .populate({
                 path: 'clientId',
-                select: 'nombre apellido telefono correo'
+                select: 'name lastName phone email nombre apellido telefono correo'
             })
             .populate({
                 path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice nombreVehiculo imagenLateral placa modelo anio capacidad'
             });
        
         res.status(201).json({
@@ -456,7 +406,6 @@ reservationsController.createReservation = async (req, res) => {
     } catch (error) {
         console.error('Error al crear reserva:', error);
        
-        // Manejar errores de validación de Mongoose
         if (error.name === 'ValidationError') {
             return res.status(400).json({
                 success: false,
@@ -479,7 +428,6 @@ reservationsController.updateReservation = async (req, res) => {
         const { id } = req.params;
         const {
             clientId,
-            client,
             vehicleId,
             startDate,
             returnDate,
@@ -487,7 +435,6 @@ reservationsController.updateReservation = async (req, res) => {
             pricePerDay
         } = req.body;
  
-        // Validar que el ID sea válido
         if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
@@ -495,7 +442,6 @@ reservationsController.updateReservation = async (req, res) => {
             });
         }
  
-        // Verificar que la reserva existe
         const existingReservation = await reservationsModel.findById(id);
         if (!existingReservation) {
             return res.status(404).json({
@@ -504,10 +450,8 @@ reservationsController.updateReservation = async (req, res) => {
             });
         }
  
-        // Objeto para almacenar los campos a actualizar
         const updateFields = {};
  
-        // Validar y agregar clientId si se proporciona
         if (clientId !== undefined) {
             if (!isValidObjectId(clientId)) {
                 return res.status(400).json({
@@ -518,7 +462,6 @@ reservationsController.updateReservation = async (req, res) => {
             updateFields.clientId = clientId;
         }
  
-        // Validar y agregar vehicleId si se proporciona
         if (vehicleId !== undefined) {
             if (!isValidObjectId(vehicleId)) {
                 return res.status(400).json({
@@ -529,12 +472,6 @@ reservationsController.updateReservation = async (req, res) => {
             updateFields.vehicleId = vehicleId;
         }
  
-        // Agregar client si se proporciona
-        if (client !== undefined) {
-            updateFields.client = client;
-        }
- 
-        // Validar y agregar fechas si se proporcionan
         if (startDate !== undefined) {
             const parsedStartDate = new Date(startDate);
             if (!isValidDate(parsedStartDate)) {
@@ -557,7 +494,6 @@ reservationsController.updateReservation = async (req, res) => {
             updateFields.returnDate = parsedReturnDate;
         }
  
-        // Validar rango de fechas si ambas fechas están siendo actualizadas
         const finalStartDate = updateFields.startDate || existingReservation.startDate;
         const finalReturnDate = updateFields.returnDate || existingReservation.returnDate;
        
@@ -568,7 +504,6 @@ reservationsController.updateReservation = async (req, res) => {
             });
         }
  
-        // Validar y agregar status si se proporciona
         if (status !== undefined) {
             if (!['Pending', 'Active', 'Completed'].includes(status)) {
                 return res.status(400).json({
@@ -579,7 +514,6 @@ reservationsController.updateReservation = async (req, res) => {
             updateFields.status = status;
         }
  
-        // Validar y agregar pricePerDay si se proporciona
         if (pricePerDay !== undefined) {
             if (!pricePerDay || pricePerDay <= 0) {
                 return res.status(400).json({
@@ -590,7 +524,6 @@ reservationsController.updateReservation = async (req, res) => {
             updateFields.pricePerDay = pricePerDay;
         }
  
-        // Verificar que al menos un campo esté siendo actualizado
         if (Object.keys(updateFields).length === 0) {
             return res.status(400).json({
                 success: false,
@@ -598,17 +531,16 @@ reservationsController.updateReservation = async (req, res) => {
             });
         }
  
-        // Actualizar reserva
         const updatedReservation = await reservationsModel.findByIdAndUpdate(
             id,
             updateFields,
             { new: true, runValidators: true }
         ).populate({
             path: 'clientId',
-            select: 'nombre apellido telefono correo'
+            select: 'name lastName phone email nombre apellido telefono correo'
         }).populate({
             path: 'vehicleId',
-            select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
+            select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice nombreVehiculo imagenLateral placa modelo anio capacidad'
         });
  
         // Cambiar estado del vehículo según el estado de la reserva
@@ -628,7 +560,6 @@ reservationsController.updateReservation = async (req, res) => {
     } catch (error) {
         console.error('Error al actualizar reserva:', error);
        
-        // Manejar errores de validación de Mongoose
         if (error.name === 'ValidationError') {
             return res.status(400).json({
                 success: false,
@@ -650,7 +581,6 @@ reservationsController.deleteReservation = async (req, res) => {
     try {
         const { id } = req.params;
  
-        // Validar que el ID sea válido
         if (!isValidObjectId(id)) {
             return res.status(400).json({
                 success: false,
@@ -658,15 +588,14 @@ reservationsController.deleteReservation = async (req, res) => {
             });
         }
  
-        // Verificar que la reserva existe antes de eliminarla
         const reservation = await reservationsModel.findById(id)
             .populate({
                 path: 'clientId',
-                select: 'nombre apellido telefono correo'
+                select: 'name lastName phone email nombre apellido telefono correo'
             })
             .populate({
                 path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
+                select: 'vehicleName mainViewImage sideImage galleryImages plate model color year capacity dailyPrice nombreVehiculo imagenLateral placa modelo anio capacidad'
             });
            
         if (!reservation) {
@@ -676,7 +605,6 @@ reservationsController.deleteReservation = async (req, res) => {
             });
         }
  
-        // Eliminar reserva
         await reservationsModel.findByIdAndDelete(id);
        
         res.status(200).json({
@@ -689,144 +617,6 @@ reservationsController.deleteReservation = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error interno del servidor al eliminar la reserva",
-            error: error.message
-        });
-    }
-};
- 
-// Obtener reservas del usuario autenticado
-reservationsController.getUserReservations = async (req, res) => {
-    try {
-        const userId = req.user && req.user._id;
-        if (!userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'No autorizado'
-            });
-        }
-       
-        // Validar que el userId sea válido
-        if (!isValidObjectId(userId)) {
-            return res.status(400).json({
-                success: false,
-                message: "ID de usuario no válido"
-            });
-        }
-       
-        const reservations = await reservationsModel.find({ clientId: userId })
-            .populate({
-                path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad',
-                options: { lean: true }
-            })
-            .lean()
-            .sort({ creationDate: -1 });
-       
-        // Adaptar la respuesta para que el frontend tenga acceso directo a los datos del auto y la imagen lateral
-        const reservationsAdapted = reservations.map(reservation => {
-            const vehiculo = reservation.vehicleId || {};
-            return {
-                ...reservation,
-                vehiculoNombre: vehiculo.nombreVehiculo || '',
-                vehiculoModelo: vehiculo.modelo || '',
-                vehiculoColor: vehiculo.color || '',
-                vehiculoAnio: vehiculo.anio || '',
-                vehiculoCapacidad: vehiculo.capacidad || '',
-                vehiculoPlaca: vehiculo.placa || '',
-                imagenVehiculo: vehiculo.imagenLateral || '',
-            };
-        });
-       
-        res.status(200).json({
-            success: true,
-            data: reservationsAdapted,
-            count: reservationsAdapted.length
-        });
-    } catch (error) {
-        console.error('Error al obtener reservas del usuario:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor al obtener reservas',
-            error: error.message
-        });
-    }
-};
- 
-// Get reservations by vehicle ID - Obtener reservas por ID de vehículo
-reservationsController.getReservationsByVehicleId = async (req, res) => {
-    try {
-        const { vehicleId } = req.params;
- 
-        // Validar que el vehicleId sea válido
-        if (!isValidObjectId(vehicleId)) {
-            return res.status(400).json({
-                success: false,
-                message: "ID de vehículo no válido"
-            });
-        }
- 
-        // Buscar reservas por vehicleId
-        const reservations = await reservationsModel.find({ vehicleId })
-            .populate({
-                path: 'clientId',
-                select: 'nombre apellido telefono correo'
-            })
-            .populate({
-                path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
-            })
-            .sort({ creationDate: -1 });
-       
-        res.status(200).json({
-            success: true,
-            data: reservations,
-            count: reservations.length
-        });
-    } catch (error) {
-        console.error('Error al obtener reservas por vehículo:', error);
-        res.status(500).json({
-            success: false,
-            message: "Error interno del servidor al obtener reservas por vehículo",
-            error: error.message
-        });
-    }
-};
- 
-// Get reservations by status - Obtener reservas por estado
-reservationsController.getReservationsByStatus = async (req, res) => {
-    try {
-        const { status } = req.params;
- 
-        // Validar que el estado sea válido
-        if (!['Pending', 'Active', 'Completed'].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Estado no válido. Debe ser: Pending, Active o Completed"
-            });
-        }
- 
-        // Buscar reservas por estado
-        const reservations = await reservationsModel.find({ status })
-            .populate({
-                path: 'clientId',
-                select: 'nombre apellido telefono correo'
-            })
-            .populate({
-                path: 'vehicleId',
-                select: 'nombreVehiculo imagenLateral placa modelo color anio capacidad'
-            })
-            .sort({ creationDate: -1 });
-       
-        res.status(200).json({
-            success: true,
-            data: reservations,
-            count: reservations.length
-        });
-    } catch (error) {
-        console.error('Error al obtener reservas por estado:', error);
-        res.status(500).json({
-            success: false,
-            message: "Error interno del servidor al obtener reservas por estado",
             error: error.message
         });
     }
@@ -873,14 +663,14 @@ reservationsController.getMostRentedVehiclesByBrand = async (req, res) => {
             { $unwind: "$marca" },
             {
                 $group: {
-                    _id: "$marca.nombreMarca",  // agrupar por nombre de marca
-                    totalReservations: { $sum: 1 }, // total reservas
-                    uniqueVehiclesCount: { $addToSet: "$vehiculo._id" }  // conjunto de IDs únicos de vehículos
+                    _id: "$marca.nombreMarca",
+                    totalReservations: { $sum: 1 },
+                    uniqueVehiclesCount: { $addToSet: "$vehiculo._id" }
                 }
             },
             {
                 $addFields: {
-                    uniqueVehiclesCount: { $size: "$uniqueVehiclesCount" } // tamaño del conjunto (cantidad vehículos únicos)
+                    uniqueVehiclesCount: { $size: "$uniqueVehiclesCount" }
                 }
             },
             {
