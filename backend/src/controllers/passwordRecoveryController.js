@@ -8,15 +8,15 @@ import { config } from "../config.js";
 const passwordRecoveryController = {};
 
 passwordRecoveryController.requestCode = async (req, res) => {
-  const { correo } = req.body;
+  const { email } = req.body;
   try {
     let userFound;
     let userType;
-    userFound = await clientsModel.findOne({ correo });
+    userFound = await clientsModel.findOne({ email });
     if (userFound) {
       userType = "cliente";
     } else {
-      userFound = await empleadosModel.findOne({ correo });
+      userFound = await empleadosModel.findOne({ email });
       userType = "empleado";
     }
     if (!userFound) {
@@ -24,13 +24,13 @@ passwordRecoveryController.requestCode = async (req, res) => {
     }
     const code = Math.floor(10000 + Math.random() * 60000).toString();
     const token = jsonwebtoken.sign(
-      { correo, code, userType, verfied: false },
+      { email, code, userType, verified: false },
       config.JWT.secret,
       { expiresIn: "25m" }
     );
     res.cookie("tokenRecoveryCode", token, { maxAge: 25 * 60 * 1000 });
     await sendEmail(
-      correo,
+      email,
       "Código de recuperación de contraseña",
       `Tu código de verificación es ${code}`,
       HTMLRecoveryEmail(code)
@@ -56,10 +56,10 @@ passwordRecoveryController.verifyCode = async (req, res) => {
     }
     const newToken = jsonwebtoken.sign(
       {
-        correo: decoded.correo,
+        email: decoded.email,
         code: decoded.code,
         userType: decoded.userType,
-        verfied: true,
+        verified: true,
       },
       config.JWT.secret,
       { expiresIn: "25m" }
@@ -81,35 +81,35 @@ passwordRecoveryController.newPassword = async (req, res) => {
         .json({ message: "Token de recuperación no proporcionado o expirado." });
     }
     const decoded = jsonwebtoken.verify(token, config.JWT.secret);
-    if (!decoded.verfied) {
+    if (!decoded.verified) {
       return res.json({ message: "Código no verificado" });
     }
-    const { correo } = decoded;
+    const { email } = decoded;
     // Verificar que la nueva contraseña no sea igual a la anterior
     let user;
     if (decoded.userType === "cliente") {
-      user = await clientsModel.findOne({ correo });
+      user = await clientsModel.findOne({ email });
     } else if (decoded.userType === "empleado") {
-      user = await empleadosModel.findOne({ correo });
+      user = await empleadosModel.findOne({ email });
     }
     if (!user) {
       return res.json({ message: "Usuario no encontrado" });
     }
-    const isSame = await bcryptjs.compare(newPassword, user.contraseña);
+    const isSame = await bcryptjs.compare(newPassword, user.password);
     if (isSame) {
       return res.json({ message: "La nueva contraseña no puede ser igual a la anterior." });
     }
     const hashedPassword = await bcryptjs.hash(newPassword, 10);
     if (decoded.userType === "cliente") {
       await clientsModel.findOneAndUpdate(
-        { correo },
-        { contraseña: hashedPassword },
+        { email },
+        { password: hashedPassword },
         { new: true }
       );
     } else if (decoded.userType === "empleado") {
       await empleadosModel.findOneAndUpdate(
-        { correo },
-        { contraseña: hashedPassword },
+        { email },
+        { password: hashedPassword },
         { new: true }
       );
     }
