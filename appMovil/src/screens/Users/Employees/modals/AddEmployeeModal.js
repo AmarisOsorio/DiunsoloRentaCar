@@ -60,7 +60,6 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
         handleInputChange('foto', result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error al seleccionar imagen:', error);
       Alert.alert('Error', 'No se pudo seleccionar la imagen');
     }
   };
@@ -84,7 +83,6 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
         handleInputChange('foto', result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error al tomar foto:', error);
       Alert.alert('Error', 'No se pudo tomar la foto');
     }
   };
@@ -110,77 +108,117 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
     );
   };
 
-  const handleSave = async () => {
-    if (!formData.nombre.trim() || !formData.email.trim()) {
-      Alert.alert('Error', 'Por favor completa los campos obligatorios (nombre y email)');
+  const validateAndSave = async () => {
+    // Validar campos obligatorios
+    if (!formData.nombre.trim()) {
+      Alert.alert(
+        'Campo obligatorio faltante', 
+        'El nombre es obligatorio\n\nEjemplo: Carlos Eduardo Martínez'
+      );
       return;
     }
 
-    // Validación básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      Alert.alert('Error', 'Por favor ingresa un email válido');
+    if (!formData.email.trim()) {
+      Alert.alert(
+        'Campo obligatorio faltante', 
+        'El email es obligatorio\n\nEjemplo: carlos.martinez@empresa.com'
+      );
       return;
     }
 
-    // Validación de teléfono (formato salvadoreño)
-    if (formData.telefono.trim()) {
-      const phoneRegex = /^\d{4}[-\s]?\d{4}$/;
-      if (!phoneRegex.test(formData.telefono.replace(/\s/g, ''))) {
-        Alert.alert('Error', 'El teléfono debe tener el formato 1234-5678 o 12345678');
-        return;
-      }
-    }
-
-    // Validación de DUI (formato salvadoreño)
-    if (formData.dui.trim()) {
-      const duiRegex = /^\d{8}[-]?\d{1}$/;
-      if (!duiRegex.test(formData.dui.replace(/\s/g, ''))) {
-        Alert.alert('Error', 'El DUI debe tener el formato 12345678-9');
-        return;
-      }
-    }
-
-    // Validación de contraseña mínima
-    if (formData.contrasena.trim() && formData.contrasena.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    if (!formData.contrasena.trim()) {
+      Alert.alert(
+        'Campo obligatorio faltante', 
+        'La contraseña es obligatoria\n\nDebe tener al menos 6 caracteres\nEjemplo: MiClave123'
+      );
       return;
     }
 
+    if (!formData.dui.trim()) {
+      Alert.alert(
+        'Campo obligatorio faltante', 
+        'El DUI es obligatorio\n\nFormato requerido: 12345678-9\n(8 dígitos, guión, 1 dígito)'
+      );
+      return;
+    }
+
+    if (!formData.telefono.trim()) {
+      Alert.alert(
+        'Campo obligatorio faltante', 
+        'El teléfono es obligatorio\n\nFormatos válidos:\n• 2345-6789\n• 6789-1234\n• 7890-5678\n\nDebe iniciar con 2, 6 o 7'
+      );
+      return;
+    }
+
+    // Validar formato de email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      Alert.alert(
+        'Formato de email incorrecto', 
+        'El email debe tener un formato válido\n\nEjemplos correctos:\n• usuario@empresa.com\n• carlos.martinez@gmail.com\n• admin@miempresa.sv'
+      );
+      return;
+    }
+
+    // Validar teléfono
+    const phoneClean = formData.telefono.replace(/\s/g, '');
+    if (!/^[267]\d{3}[-\s]?\d{4}$/.test(phoneClean)) {
+      Alert.alert(
+        'Formato de teléfono incorrecto', 
+        'El teléfono debe seguir el formato salvadoreño\n\nFormatos válidos:\n• 2345-6789 (fijo)\n• 6789-1234 (móvil)\n• 7890-5678 (móvil)\n\nDebe iniciar con 2, 6 o 7 y tener 8 dígitos'
+      );
+      return;
+    }
+
+    // Validar DUI
+    const duiClean = formData.dui.replace(/\s/g, '');
+    
+    // Caso especial: 9 dígitos sin guión
+    if (duiClean.length === 9 && !duiClean.includes('-')) {
+      Alert.alert(
+        'Formato de DUI incorrecto', 
+        'Falta el guión (-) en el DUI\n\nFormato correcto: 12345678-9\n\nTu DUI: ' + duiClean + '\nFormato correcto: ' + duiClean.substring(0, 8) + '-' + duiClean.substring(8)
+      );
+      return;
+    }
+    
+    // Caso: números sin guión pero longitud incorrecta
+    if (/^\d+$/.test(duiClean) && duiClean.length !== 9) {
+      Alert.alert(
+        'Formato de DUI incorrecto', 
+        'El DUI debe tener exactamente 9 dígitos\n\nFormato correcto: 12345678-9\n(8 dígitos + guión + 1 dígito)\n\nTu DUI tiene ' + duiClean.length + ' dígitos'
+      );
+      return;
+    }
+    
+    // Validación completa del formato
+    if (!/^\d{8}[-]\d{1}$/.test(duiClean)) {
+      Alert.alert(
+        'Formato de DUI incorrecto', 
+        'El DUI debe seguir el formato salvadoreño\n\nFormato correcto: 12345678-9\n\n• 8 dígitos\n• Un guión (-)\n• 1 dígito verificador\n\nEjemplos válidos:\n• 03456789-0\n• 12345678-9'
+      );
+      return;
+    }
+
+    // Validar contraseña
+    if (formData.contrasena.length < 6) {
+      Alert.alert(
+        'Contraseña muy corta', 
+        'La contraseña debe tener al menos 6 caracteres\n\nRecomendaciones:\n• Mínimo 6 caracteres\n• Combina letras y números\n\nEjemplos seguros:\n• MiClave123\n• Admin2024\n• Carlos456'
+      );
+      return;
+    }
+
+    // Proceder con el guardado
     setIsLoading(true);
 
     try {
       await onConfirm(formData);
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('Error al guardar empleado:', error);
-      
-      // Manejar diferentes tipos de errores
-      let errorMessage = 'Error desconocido al guardar el empleado';
-      
-      if (error.message) {
-        if (error.message.includes('email')) {
-          errorMessage = 'El email ya está en uso o es inválido';
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = 'Error de conexión. Verifica tu internet e inténtalo de nuevo';
-        } else if (error.message.includes('400')) {
-          errorMessage = 'Datos inválidos. Verifica la información ingresada';
-        } else if (error.message.includes('500')) {
-          errorMessage = 'Error del servidor. Inténtalo más tarde';
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
       Alert.alert(
-        'Error al guardar', 
-        errorMessage,
-        [
-          {
-            text: 'Entendido',
-            style: 'default'
-          }
-        ]
+        'Error al guardar empleado', 
+        error.message,
+        [{ text: 'Entendido', style: 'default' }]
       );
     } finally {
       setIsLoading(false);
@@ -309,7 +347,7 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Contraseña</Text>
+                  <Text style={styles.label}>Contraseña *</Text>
                   <TextInput
                     style={[styles.input, isLoading && styles.disabledInput]}
                     placeholder="••••••••••••"
@@ -322,10 +360,10 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
 
                 <View style={styles.row}>
                   <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-                    <Text style={styles.label}>DUI</Text>
+                    <Text style={styles.label}>DUI *</Text>
                     <TextInput
                       style={[styles.input, isLoading && styles.disabledInput]}
-                      placeholder="123456789-0"
+                      placeholder="12345678-9"
                       value={formData.dui}
                       onChangeText={(value) => handleInputChange('dui', value)}
                       editable={!isLoading}
@@ -350,10 +388,10 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Teléfono</Text>
+                  <Text style={styles.label}>Teléfono *</Text>
                   <TextInput
                     style={[styles.input, isLoading && styles.disabledInput]}
-                    placeholder="1234-5678"
+                    placeholder="2345-6789"
                     value={formData.telefono}
                     onChangeText={(value) => handleInputChange('telefono', value)}
                     keyboardType="phone-pad"
@@ -374,7 +412,7 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
 
               <TouchableOpacity
                 style={[styles.button, styles.saveButton, isLoading && styles.disabledButton]}
-                onPress={handleSave}
+                onPress={validateAndSave}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -525,7 +563,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  // Success Modal Styles
   successContainer: {
     backgroundColor: 'white',
     borderRadius: 16,

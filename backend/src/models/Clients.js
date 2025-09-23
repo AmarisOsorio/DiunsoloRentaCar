@@ -10,7 +10,7 @@
         licenseBack [String URL],
         passportFront [String URL],
         passportBack [String URL],
-        photo [String URL]
+        photo 
 
 */
 
@@ -62,7 +62,6 @@ const clientsSchema = new Schema({
         required: false
     },
     
- 
     photo: {
         type: String,
         required: false
