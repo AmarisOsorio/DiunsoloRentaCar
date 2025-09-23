@@ -3,12 +3,14 @@ import empleadosModel from "../models/Employees.js";
 import bcryptjs from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 import { config } from "../config.js";
+import sendWelcomeMail from "../utils/mailWelcome.js";
+
 
 const loginController = {};
 
 loginController.login = async (req, res) => {
   const { email, password } = req.body; // Changed from correo/contraseña to email/password
-  
+
   try {
     let userFound;
     let userType;
@@ -17,7 +19,7 @@ loginController.login = async (req, res) => {
     if (!config.emailAdmin || !config.emailAdmin.email || !config.emailAdmin.password) {
       return res.status(500).json({ message: "Configuración de emailAdmin incompleta en config.js" });
     }
-    
+
     if (email === config.emailAdmin.email && password === config.emailAdmin.password) {
       userType = "Administrador";
       userFound = { _id: "Admin" };
@@ -28,10 +30,10 @@ loginController.login = async (req, res) => {
       if (userFound) {
         userType = userFound.rol; // Use the actual role from database
       }
-      
+
       if (!userFound) {
         // Buscar clientes por correo
-        userFound = await clientsModel.findOne({ correo: email });
+        userFound = await clientsModel.findOne({ email: email });
         if (userFound) {
           userType = "Cliente";
         }
@@ -61,7 +63,7 @@ loginController.login = async (req, res) => {
         { expiresIn: "15m" }
       );
       res.cookie("VerificationToken", tokenCode, { maxAge: 15 * 60 * 1000 });
-      const transporter = nodemailer.default.createTransporter({
+      const transporter = nodemailer.default.createTransport({
         service: "gmail",
         auth: {
           user: config.email.email_user,
@@ -113,7 +115,7 @@ loginController.login = async (req, res) => {
           console.log(error);
           return res.status(500).json({ message: "Error generando token" });
         }
-        
+
         res.cookie("authToken", token);
 
         // Formatear información del usuario para enviar al frontend
@@ -130,7 +132,8 @@ loginController.login = async (req, res) => {
             isVerified: userFound.isVerified,
             fechaRegistro: userFound.createdAt
           };
-        } else if (userType === "Administrador") {
+        }
+        else if (userType === "Administrador") {
           userData = {
             id: userFound._id,
             name: "Administrador",
@@ -156,6 +159,7 @@ loginController.login = async (req, res) => {
           userType,
           user: userData
         });
+
       }
     );
   } catch (error) {
