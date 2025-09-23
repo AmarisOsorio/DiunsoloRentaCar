@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,19 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import StatusChangeModal from '../modals/StatusChangeModal';
+import StatusSuccessModal from '../modals/StatusSuccessModal';
 
 const ReservationCard = ({
   reservation,
   getStatusText,
-  onPress, // Nueva prop para manejar el click
-  navigation // Nueva prop para navegación
+  onPress,
+  onStatusChange,
+  navigation
 }) => {
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [pendingNewStatus, setPendingNewStatus] = useState(null);
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('es-ES', {
@@ -103,6 +109,81 @@ const ReservationCard = ({
     }
   };
 
+  const getStatusToggleIcon = (status) => {
+    switch (status) {
+      case 'Pending':
+        return [
+          {
+            icon: 'checkmark-circle',
+            color: '#10B981',
+            nextStatus: 'Active',
+            message: 'Aceptar reserva'
+          },
+          {
+            icon: 'close-circle',
+            color: '#DC2626',
+            nextStatus: 'Completed',
+            message: 'Rechazar reserva'
+          }
+        ];
+      case 'Active':
+        return [
+          {
+            icon: 'checkmark-circle',
+            color: '#3B82F6',
+            nextStatus: 'Completed',
+            message: 'Completar reserva'
+          }
+        ];
+      case 'Completed':
+        return [
+          {
+            icon: 'refresh-circle',
+            color: '#F59E0B',
+            nextStatus: 'Pending',
+            message: 'Reactivar reserva'
+          }
+        ];
+      default:
+        return [
+          {
+            icon: 'checkmark-circle',
+            color: '#10B981',
+            nextStatus: 'Active',
+            message: 'Aceptar reserva'
+          }
+        ];
+    }
+  };
+
+  const handleStatusAction = (action) => {
+    setPendingNewStatus(action.nextStatus);
+    setShowChangeModal(true);
+  };
+
+  const handleConfirmChange = async () => {
+    setShowChangeModal(false);
+    
+    if (onStatusChange && pendingNewStatus) {
+      try {
+        await onStatusChange(reservation._id, pendingNewStatus);
+        setShowSuccessModal(true);
+      } catch (error) {
+        // El error ya se maneja en el componente padre
+      }
+    }
+  };
+
+  const handleCancelChange = () => {
+    setShowChangeModal(false);
+    setPendingNewStatus(null);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false);
+    setPendingNewStatus(null);
+  };
+
   // Manejar click en la card
   const handlePress = () => {
     if (onPress) {
@@ -115,64 +196,105 @@ const ReservationCard = ({
   const status = reservation.status;
   const statusText = getStatusText(reservation.status);
   const badgeStyle = getStatusBadgeStyle(status);
+  const statusActions = getStatusToggleIcon(status);
 
   return (
-    <TouchableOpacity 
-      style={styles.container}
-      onPress={handlePress}
-      activeOpacity={0.7}
-    >
-      {/* Status Badge - Dinámico basado en el estado de la BD */}
-      <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
-        <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{statusText}</Text>
-      </View>
-
-      {/* Main Content Container */}
-      <View style={styles.contentContainer}>
-        {/* Left Side - Client Info and Dates */}
-        <View style={styles.leftContent}>
-          {/* Client Name */}
-          <Text style={styles.clientName}>
-            {getClientName()}
-          </Text>
+    <>
+      <TouchableOpacity 
+        style={styles.container}
+        onPress={handlePress}
+        activeOpacity={0.7}
+      >
+        {/* Header with Status Badge and Action Buttons */}
+        <View style={styles.cardHeader}>
+          <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
+            <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{statusText}</Text>
+          </View>
           
-          {/* Vehicle Info */}
-          <Text style={styles.vehicleInfo}>
-            {getVehicleName()} {getVehicleModel()}
-          </Text>
-          
-          {/* Dates with Icons */}
-          <View style={styles.datesContainer}>
-            <View style={styles.dateItem}>
-              <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-              <Text style={styles.dateText}>
-                {formatDate(reservation.startDate)}
-              </Text>
-            </View>
-            <View style={styles.dateItem}>
-              <Ionicons name="time-outline" size={18} color="#9CA3AF" />
-              <Text style={styles.dateText}>
-                {formatDate(reservation.returnDate)}
-              </Text>
-            </View>
+          {/* Status Action Buttons */}
+          <View style={styles.statusActionsContainer}>
+            {statusActions.map((action, index) => (
+              <TouchableOpacity 
+                key={index}
+                style={[styles.statusActionButton, { borderColor: action.color }]}
+                onPress={() => handleStatusAction(action)}
+              >
+                <Ionicons name={action.icon} size={18} color={action.color} />
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
-        {/* Right Side - Vehicle Image */}
-        <View style={styles.rightContent}>
-          <Image
-            source={{ uri: getVehicleImage() }}
-            style={styles.vehicleImage}
-            resizeMode="cover"
-          />
-          
-          {/* Indicador visual de que es clickeable */}
-          <View style={styles.clickIndicator}>
-            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+        {/* Main Content Container */}
+        <View style={styles.contentContainer}>
+          {/* Left Side - Client Info and Dates */}
+          <View style={styles.leftContent}>
+            {/* Client Name */}
+            <Text style={styles.clientName}>
+              {getClientName()}
+            </Text>
+            
+            {/* Vehicle Info */}
+            <Text style={styles.vehicleInfo}>
+              {getVehicleName()} {getVehicleModel()}
+            </Text>
+            
+            {/* Dates with Icons */}
+            <View style={styles.datesContainer}>
+              <View style={styles.dateItem}>
+                <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
+                <Text style={styles.dateText}>
+                  {formatDate(reservation.startDate)}
+                </Text>
+              </View>
+              <View style={styles.dateItem}>
+                <Ionicons name="time-outline" size={18} color="#9CA3AF" />
+                <Text style={styles.dateText}>
+                  {formatDate(reservation.returnDate)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Right Side - Vehicle Image */}
+          <View style={styles.rightContent}>
+            <Image
+              source={{ uri: getVehicleImage() }}
+              style={styles.vehicleImage}
+              resizeMode="cover"
+            />
+            
+            {/* Indicador visual de que es clickeable */}
+            <View style={styles.clickIndicator}>
+              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* Status Change Modal */}
+      <StatusChangeModal
+        visible={showChangeModal}
+        onCancel={handleCancelChange}
+        onConfirm={handleConfirmChange}
+        currentStatus={reservation.status}
+        nextStatus={pendingNewStatus}
+        vehicleName={getVehicleName()}
+        clientName={getClientName()}
+        isReservation={true}
+      />
+
+      {/* Success Modal */}
+      <StatusSuccessModal
+        visible={showSuccessModal}
+        onClose={handleSuccessClose}
+        newStatus={pendingNewStatus}
+        vehicleName={getVehicleName()}
+        clientName={getClientName()}
+        isReservation={true}
+        autoClose={true}
+      />
+    </>
   );
 };
 
@@ -189,17 +311,40 @@ const styles = StyleSheet.create({
     elevation: 2,
     minHeight: 200,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   statusBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    marginBottom: 16,
   },
   statusText: {
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  statusActionsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statusActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   contentContainer: {
     flexDirection: 'row',

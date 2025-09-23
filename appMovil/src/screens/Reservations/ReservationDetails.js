@@ -16,6 +16,8 @@ import CustomDetailCalendar from './components/CustomDetailCalendar';
 import DateDisplay from './components/DateDisplay';
 import PriceDetail from './components/PriceDetail';
 import DeleteConfirmationModal from './modals/DeleteModal';
+import StatusChangeModal from './modals/StatusChangeModal';
+import StatusSuccessModal from './modals/StatusSuccessModal';
 import { useFetchReservations } from './hooks/useFetchReservations';
 
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
@@ -28,6 +30,11 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [updating, setUpdating] = useState(false);
+  
+  // Estados para cambios de status
+  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
+  const [showStatusSuccessModal, setShowStatusSuccessModal] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
   
   // Estado de edición
   const [editedData, setEditedData] = useState({
@@ -197,60 +204,46 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
     }
   };
 
-  // Función para aceptar reserva
-  const handleAcceptReservation = async () => {
-    Alert.alert(
-      'Aceptar Reserva',
-      '¿Estás seguro de que deseas aceptar esta reserva? Esto cambiará su estado a "Activa".',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Aceptar',
-          style: 'default',
-          onPress: async () => {
-            try {
-              setUpdating(true);
-              const updated = await updateReservation(reservationId, { status: 'Active' });
-              setReservation(updated);
-              setEditedData(prev => ({ ...prev, status: 'Active' }));
-              Alert.alert('Éxito', 'Reserva aceptada correctamente');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo aceptar la reserva');
-            } finally {
-              setUpdating(false);
-            }
-          }
-        }
-      ]
-    );
+  // Funciones para cambios de estado
+  const handleAcceptReservation = () => {
+    setPendingStatusChange('Active');
+    setShowStatusChangeModal(true);
   };
 
-  // Función para rechazar reserva
-  const handleRejectReservation = async () => {
-    Alert.alert(
-      'Rechazar Reserva',
-      '¿Estás seguro de que deseas rechazar esta reserva? Esto cambiará su estado a "Completado" (liberando el vehículo).',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Rechazar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setUpdating(true);
-              const updated = await updateReservation(reservationId, { status: 'Completed' });
-              setReservation(updated);
-              setEditedData(prev => ({ ...prev, status: 'Completed' }));
-              Alert.alert('Éxito', 'Reserva rechazada correctamente');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo rechazar la reserva');
-            } finally {
-              setUpdating(false);
-            }
-          }
-        }
-      ]
-    );
+  const handleRejectReservation = () => {
+    setPendingStatusChange('Completed');
+    setShowStatusChangeModal(true);
+  };
+
+  const handleCompleteReservation = () => {
+    setPendingStatusChange('Completed');
+    setShowStatusChangeModal(true);
+  };
+
+  const handleConfirmStatusChange = async () => {
+    setShowStatusChangeModal(false);
+    
+    try {
+      setUpdating(true);
+      const updated = await updateReservation(reservationId, { status: pendingStatusChange });
+      setReservation(updated);
+      setEditedData(prev => ({ ...prev, status: pendingStatusChange }));
+      setShowStatusSuccessModal(true);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo cambiar el estado de la reserva');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleCancelStatusChange = () => {
+    setShowStatusChangeModal(false);
+    setPendingStatusChange(null);
+  };
+
+  const handleStatusSuccessClose = () => {
+    setShowStatusSuccessModal(false);
+    setPendingStatusChange(null);
   };
 
   // Funciones para actualizar los datos editados
@@ -286,6 +279,44 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
       return `${reservation.clientId.name || ''} ${reservation.clientId.lastName || ''}`.trim();
     }
     return 'Cliente';
+  };
+
+  const getStatusBadgeStyle = (status) => {
+    switch (status) {
+      case 'Active':
+        return {
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          textColor: '#10B981',
+          dotColor: '#10B981'
+        };
+      case 'Pending':
+        return {
+          backgroundColor: 'rgba(251, 146, 60, 0.15)',
+          textColor: '#F59E0B',
+          dotColor: '#F59E0B'
+        };
+      case 'Completed':
+        return {
+          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          textColor: '#3B82F6',
+          dotColor: '#3B82F6'
+        };
+      default:
+        return {
+          backgroundColor: 'rgba(107, 114, 128, 0.15)',
+          textColor: '#6B7280',
+          dotColor: '#6B7280'
+        };
+    }
+  };
+
+  const getStatusTextLocal = (status) => {
+    switch (status) {
+      case 'Active': return 'Activa';
+      case 'Pending': return 'Pendiente';
+      case 'Completed': return 'Completada';
+      default: return status;
+    }
   };
 
   if (loading) {
@@ -346,29 +377,66 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Estado de la reserva - Solo visible cuando no esté editando */}
-        {!isEditing && reservation.status === 'Pending' && (
+        {/* Estado de la reserva - Enhanced with better styling and actions */}
+        {!isEditing && (
           <View style={styles.statusActionsContainer}>
-            <Text style={styles.statusActionsTitle}>Acciones de reserva</Text>
-            <View style={styles.statusActions}>
-              <TouchableOpacity 
-                style={styles.acceptButton}
-                onPress={handleAcceptReservation}
-                disabled={updating}
-              >
-                <Ionicons name="checkmark-circle" size={20} color="white" />
-                <Text style={styles.acceptButtonText}>Aceptar</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.rejectButton}
-                onPress={handleRejectReservation}
-                disabled={updating}
-              >
-                <Ionicons name="close-circle" size={20} color="white" />
-                <Text style={styles.rejectButtonText}>Rechazar</Text>
-              </TouchableOpacity>
+            <Text style={styles.statusActionsTitle}>Gestión de reserva</Text>
+            
+            {/* Current Status Display */}
+            <View style={styles.currentStatusContainer}>
+              <Text style={styles.currentStatusLabel}>Estado actual:</Text>
+              <View style={[styles.currentStatusBadge, getStatusBadgeStyle(reservation.status)]}>
+                <View style={[styles.currentStatusDot, { backgroundColor: getStatusBadgeStyle(reservation.status).dotColor }]} />
+                <Text style={[styles.currentStatusText, { color: getStatusBadgeStyle(reservation.status).textColor }]}>
+                  {getStatusTextLocal(reservation.status)}
+                </Text>
+              </View>
             </View>
+            
+            {/* Action Buttons based on status */}
+            {reservation.status === 'Pending' && (
+              <View style={styles.statusActions}>
+                <TouchableOpacity 
+                  style={styles.acceptButton}
+                  onPress={handleAcceptReservation}
+                  disabled={updating}
+                >
+                  <Ionicons name="checkmark-circle" size={20} color="white" />
+                  <Text style={styles.acceptButtonText}>Aceptar</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.rejectButton}
+                  onPress={handleRejectReservation}
+                  disabled={updating}
+                >
+                  <Ionicons name="close-circle" size={20} color="white" />
+                  <Text style={styles.rejectButtonText}>Rechazar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {reservation.status === 'Active' && (
+              <View style={styles.statusActions}>
+                <TouchableOpacity 
+                  style={styles.completeButton}
+                  onPress={handleCompleteReservation}
+                  disabled={updating}
+                >
+                  <Ionicons name="flag" size={20} color="white" />
+                  <Text style={styles.completeButtonText}>Completar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {reservation.status === 'Completed' && (
+              <View style={styles.statusInfoContainer}>
+                <Ionicons name="information-circle" size={20} color="#3B82F6" />
+                <Text style={styles.statusInfoText}>
+                  Esta reserva ha sido completada. El vehículo está disponible para nuevas reservas.
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -432,6 +500,29 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeleteModal(false)}
         reservationName={getClientName()}
+      />
+
+      {/* Status Change Modal */}
+      <StatusChangeModal
+        visible={showStatusChangeModal}
+        onCancel={handleCancelStatusChange}
+        onConfirm={handleConfirmStatusChange}
+        currentStatus={reservation?.status}
+        nextStatus={pendingStatusChange}
+        vehicleName={reservation?.vehicleId?.vehicleName}
+        clientName={getClientName()}
+        isReservation={true}
+      />
+
+      {/* Status Success Modal */}
+      <StatusSuccessModal
+        visible={showStatusSuccessModal}
+        onClose={handleStatusSuccessClose}
+        newStatus={pendingStatusChange}
+        vehicleName={reservation?.vehicleId?.vehicleName}
+        clientName={getClientName()}
+        isReservation={true}
+        autoClose={true}
       />
     </SafeAreaView>
   );
@@ -502,15 +593,41 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F59E0B',
   },
   statusActionsTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#374151',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  currentStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  currentStatusLabel: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  currentStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  currentStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  currentStatusText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   statusActions: {
     flexDirection: 'row',
@@ -557,6 +674,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  completeButton: {
+    flex: 1,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  completeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  statusInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F0F9FF',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  statusInfoText: {
+    fontSize: 14,
+    color: '#1E40AF',
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 20,
   },
   basicInfoContainer: {
     backgroundColor: 'white',

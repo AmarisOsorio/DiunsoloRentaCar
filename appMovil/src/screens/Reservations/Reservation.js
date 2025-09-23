@@ -18,39 +18,75 @@ import { useFetchReservations } from './hooks/useFetchReservations';
 const ReservationScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredReservations, setFilteredReservations] = useState([]);
+  const [activeTab, setActiveTab] = useState('Todos'); // 'Todos', 'Pending', 'Active', 'Completed'
   
   const {
     reservations,
     loading,
     error,
     refreshReservations,
-    deleteReservation
+    deleteReservation,
+    updateReservation
   } = useFetchReservations();
 
   useEffect(() => {
     if (reservations) {
       filterReservations();
     }
-  }, [reservations, searchText]);
+  }, [reservations, searchText, activeTab]);
 
   const filterReservations = () => {
-    if (!searchText.trim()) {
-      setFilteredReservations(reservations || []);
-      return;
+    if (!reservations) return;
+
+    let filtered = reservations;
+
+    // Filtrar por búsqueda
+    if (searchText.trim()) {
+      filtered = reservations.filter(reservation => {
+        const vehicleName = reservation.vehicleId?.vehicleName?.toLowerCase() || '';
+        const vehicleBrand = reservation.vehicleId?.brand?.toLowerCase() || '';
+        const clientName = getClientName(reservation).toLowerCase();
+        const status = reservation.status?.toLowerCase() || '';
+        const searchLower = searchText.toLowerCase();
+
+        return vehicleName.includes(searchLower) ||
+               vehicleBrand.includes(searchLower) ||
+               clientName.includes(searchLower) ||
+               status.includes(searchLower);
+      });
     }
 
-    const filtered = reservations?.filter(reservation => {
-      const vehicleName = reservation.vehicleId?.vehicleName?.toLowerCase() || '';
-      const clientName = getClientName(reservation).toLowerCase();
-      const status = reservation.status?.toLowerCase() || '';
-      const searchLower = searchText.toLowerCase();
-
-      return vehicleName.includes(searchLower) ||
-             clientName.includes(searchLower) ||
-             status.includes(searchLower);
-    }) || [];
+    // Filtrar por estado activo (solo si no es "Todos")
+    if (activeTab !== 'Todos') {
+      filtered = filtered.filter(reservation => reservation.status === activeTab);
+    }
 
     setFilteredReservations(filtered);
+  };
+
+  const handleStatusChange = async (reservationId, newStatus) => {
+    try {
+      // Encontrar la reserva actual
+      const reservation = reservations.find(r => r._id === reservationId);
+      if (!reservation) return;
+
+      // Crear los datos actualizados manteniendo toda la información original
+      const updateData = {
+        clientId: reservation.clientId._id,
+        vehicleId: reservation.vehicleId._id,
+        startDate: reservation.startDate,
+        returnDate: reservation.returnDate,
+        pricePerDay: reservation.pricePerDay,
+        status: newStatus
+      };
+
+      await updateReservation(reservationId, updateData);
+
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      Alert.alert('Error', 'No se pudo cambiar el estado de la reserva');
+      throw error; // Re-throw para que el componente Card pueda manejar el error
+    }
   };
 
   const getClientName = (reservation) => {
@@ -67,11 +103,25 @@ const ReservationScreen = ({ navigation }) => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'Active': return 'Activa';
+      case 'Active': return 'Aprobada';
       case 'Pending': return 'Pendiente';
-      case 'Completed': return 'Completado';
+      case 'Completed': return 'Rechazada';
       default: return status;
     }
+  };
+
+  const getTabTitle = (status) => {
+    switch (status) {
+      case 'Active': return 'Aprobadas';
+      case 'Pending': return 'Pendientes';
+      case 'Completed': return 'Rechazadas';
+      default: return status;
+    }
+  };
+
+  const getReservationCount = (status) => {
+    if (!reservations) return 0;
+    return reservations.filter(reservation => reservation.status === status).length;
   };
 
   const handleAddReservation = () => {
@@ -105,6 +155,122 @@ const ReservationScreen = ({ navigation }) => {
         }
       ]
     );
+  };
+
+  const getTabColors = (status) => {
+    switch (status) {
+      case 'Pending':
+        return {
+          backgroundColor: '#F59E0B',
+          textColor: 'white',
+          inactiveBackground: '#FEF3C7',
+          inactiveText: '#F59E0B'
+        };
+      case 'Active':
+        return {
+          backgroundColor: '#10B981',
+          textColor: 'white',
+          inactiveBackground: '#D1FAE5',
+          inactiveText: '#10B981'
+        };
+      case 'Completed':
+        return {
+          backgroundColor: '#DC2626',
+          textColor: 'white',
+          inactiveBackground: '#FEE2E2',
+          inactiveText: '#DC2626'
+        };
+      default:
+        return {
+          backgroundColor: '#4A90E2',
+          textColor: 'white',
+          inactiveBackground: '#DBEAFE',
+          inactiveText: '#4A90E2'
+        };
+    }
+  };
+
+  const renderTabButton = (status) => {
+    const isActive = activeTab === status;
+    const count = status === 'Todos' ? reservations?.length || 0 : getReservationCount(status);
+    const colors = getTabColors(status);
+    
+    return (
+      <TouchableOpacity
+        key={status}
+        style={[
+          styles.tabButton, 
+          {
+            backgroundColor: isActive ? colors.backgroundColor : colors.inactiveBackground
+          }
+        ]}
+        onPress={() => setActiveTab(status)}
+      >
+        <Text style={[
+          styles.tabButtonText,
+          {
+            color: isActive ? colors.textColor : colors.inactiveText
+          }
+        ]}>
+          {status === 'Todos' ? 'Todos' : getTabTitle(status)}
+        </Text>
+        {count > 0 && (
+          <View style={[
+            styles.tabBadge,
+            {
+              backgroundColor: isActive ? 'rgba(255, 255, 255, 0.3)' : '#E5E7EB'
+            }
+          ]}>
+            <Text style={[
+              styles.tabBadgeText,
+              {
+                color: isActive ? 'white' : '#6B7280'
+              }
+            ]}>
+              {count}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  const getEmptyStateMessage = () => {
+    if (activeTab === 'Todos') {
+      if (searchText) {
+        return 'No se encontraron reservas que coincidan con tu búsqueda';
+      }
+      return 'Aún no tienes reservas registradas';
+    }
+    
+    const tabName = getTabTitle(activeTab).toLowerCase();
+    if (searchText) {
+      return `No se encontraron reservas ${tabName} que coincidan con tu búsqueda`;
+    }
+    return `No hay reservas ${tabName}`;
+  };
+
+  const getEmptyStateTitle = () => {
+    if (activeTab === 'Todos') {
+      if (searchText) {
+        return 'Sin resultados';
+      }
+      return 'Sin reservas';
+    }
+    
+    if (searchText) {
+      return 'Sin resultados';
+    }
+    return `No hay reservas ${getTabTitle(activeTab).toLowerCase()}`;
+  };
+
+  const getEmptyIcon = () => {
+    if (activeTab === 'Todos') {
+      return 'calendar-outline';
+    }
+    return activeTab === 'Pending' ? 'time-outline' : 
+           activeTab === 'Active' ? 'checkmark-circle-outline' : 
+           'close-circle-outline';
   };
 
   if (error) {
@@ -146,6 +312,11 @@ const ReservationScreen = ({ navigation }) => {
             onChangeText={setSearchText}
             placeholderTextColor="#9CA3AF"
           />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
         </View>
         <TouchableOpacity style={styles.filterButton}>
           <Ionicons name="options" size={20} color="#4A90E2" />
@@ -158,11 +329,23 @@ const ReservationScreen = ({ navigation }) => {
           style={styles.addButton}
           onPress={handleAddReservation}
         >
-          <Text style={styles.addButtonText}>Agregar reserva</Text>
-          <View style={styles.addIconContainer}>
-            <Ionicons name="add" size={24} color="white" />
-          </View>
+          <Ionicons name="add" size={20} color="white" style={styles.addIcon} />
+          <Text style={styles.addButtonText}>Agregar</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Status Tabs - Sistema de filtros mejorado */}
+      <View style={styles.tabsContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsScrollContainer}
+        >
+          {renderTabButton('Todos')}
+          {renderTabButton('Pending')}
+          {renderTabButton('Active')}
+          {renderTabButton('Completed')}
+        </ScrollView>
       </View>
 
       {/* Reservation List */}
@@ -185,27 +368,44 @@ const ReservationScreen = ({ navigation }) => {
           </View>
         ) : filteredReservations.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={64} color="#D1D5DB" />
+            <Ionicons 
+              name={getEmptyIcon()} 
+              size={64} 
+              color="#D1D5DB" 
+            />
             <Text style={styles.emptyTitle}>
-              {searchText ? 'Sin resultados' : 'No hay reservas'}
+              {getEmptyStateTitle()}
             </Text>
             <Text style={styles.emptyText}>
-              {searchText 
-                ? 'No se encontraron reservas que coincidan con tu búsqueda' 
-                : 'Agrega tu primera reserva para comenzar'
-              }
+              {getEmptyStateMessage()}
             </Text>
+            {!searchText && (activeTab === 'Pending' || activeTab === 'Todos') && (
+              <TouchableOpacity 
+                style={styles.emptyActionButton}
+                onPress={handleAddReservation}
+              >
+                <Text style={styles.emptyActionButtonText}>Agregar reserva</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
-          filteredReservations.map((reservation) => (
-            <ReservationCard
-              key={reservation._id}
-              reservation={reservation}
-              getStatusText={getStatusText}
-              onPress={() => handleCardPress(reservation)}
-              navigation={navigation}
-            />
-          ))
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {activeTab === 'Todos' ? `Todas las reservas` : getTabTitle(activeTab)} ({filteredReservations.length})
+              </Text>
+            </View>
+            {filteredReservations.map((reservation) => (
+              <ReservationCard
+                key={reservation._id}
+                reservation={reservation}
+                getStatusText={getStatusText}
+                onPress={() => handleCardPress(reservation)}
+                onStatusChange={handleStatusChange}
+                navigation={navigation}
+              />
+            ))}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -273,6 +473,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#374151',
   },
+  clearButton: {
+    marginLeft: 8,
+    padding: 2,
+  },
   filterButton: {
     backgroundColor: 'white',
     borderRadius: 16,
@@ -290,7 +494,7 @@ const styles = StyleSheet.create({
   },
   addButtonContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   addButton: {
     flexDirection: 'row',
@@ -312,10 +516,53 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 12,
   },
-  addIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 8,
-    padding: 4,
+  addIcon: {
+    marginRight: 8,
+  },
+  tabsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  tabsScrollContainer: {
+    paddingHorizontal: 4,
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  tabBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  tabBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  sectionHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
   },
   scrollContainer: {
     flex: 1,
@@ -353,6 +600,18 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 24,
+  },
+  emptyActionButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyActionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   errorContainer: {
     flex: 1,
