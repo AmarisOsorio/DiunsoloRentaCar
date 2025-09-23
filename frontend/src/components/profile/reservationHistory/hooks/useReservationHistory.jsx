@@ -27,16 +27,17 @@ export const useReservas = () => {
 
   // Flag para controlar si se debe hacer fetch de reservas
   const shouldFetch = isAuthenticated && (reservasInvalidated || !hasInitializedRef.current);
+  
   // Función para cargar reservas
   const loadReservas = async () => {
-    console.log('🔄 loadReservas iniciado');
+    console.log('📄 loadReservas iniciado');
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔄 Llamando a getUserReservations...');
+      console.log('📄 Llamando a getUserReservations...');
       const result = await getUserReservations();
-      console.log('🔄 Resultado de getUserReservations:', result);
+      console.log('📄 Resultado de getUserReservations:', result);
       
       if (result.success && Array.isArray(result.reservas)) {
         // Adaptar los campos a lo que espera el frontend
@@ -47,7 +48,8 @@ export const useReservas = () => {
           vehiculoID: r.vehicleId || r.vehiculoID || r.vehiculoId || {},
           estado: r.status || r.estado || '',
           precioPorDia: r.pricePerDay || r.precioPorDia || '',
-          cliente: r.client || r.cliente || [],
+          // clientId ahora viene del populate, no del array client
+          clientId: r.clientId || {},
         }));
         console.log('✅ Reservas reales cargadas:', reservasAdaptadas.length);
         setReservas(reservasAdaptadas);
@@ -69,7 +71,12 @@ export const useReservas = () => {
     const testReservas = [
       {
         _id: '1',
-        clientId: 'test-client-id',
+        clientId: {
+          _id: 'test-client-id',
+          name: 'Usuario Demo',
+          phone: '1234567890',
+          email: 'demo@example.com'
+        },
         vehicleId: {
           _id: 'test-vehicle-1',
           vehicleName: 'Toyota Corolla (Demo)',
@@ -81,16 +88,16 @@ export const useReservas = () => {
         startDate: '2025-01-15T10:00:00.000Z',
         returnDate: '2025-01-20T10:00:00.000Z',
         status: 'Pending',
-        pricePerDay: 30000,
-        client: [{
-          name: 'Usuario Demo',
-          phone: '1234567890',
-          email: 'demo@example.com'
-        }]
+        pricePerDay: 30000
       },
       {
         _id: '2',
-        clientId: 'test-client-id',
+        clientId: {
+          _id: 'test-client-id',
+          name: 'Usuario Demo',
+          phone: '1234567890',
+          email: 'demo@example.com'
+        },
         vehicleId: {
           _id: 'test-vehicle-2',
           vehicleName: 'Honda Civic (Demo)',
@@ -102,12 +109,7 @@ export const useReservas = () => {
         startDate: '2025-02-01T09:00:00.000Z',
         returnDate: '2025-02-05T09:00:00.000Z',
         status: 'Active',
-        pricePerDay: 25000,
-        client: [{
-          name: 'Usuario Demo',
-          phone: '1234567890',
-          email: 'demo@example.com'
-        }]
+        pricePerDay: 25000
       }
     ];
     
@@ -118,13 +120,13 @@ export const useReservas = () => {
   };
 
   useEffect(() => {
-    console.log('🔄 useEffect ejecutado - shouldFetch:', shouldFetch, 'hasInitialized:', hasInitializedRef.current);
-    console.log('🔄 Auth state - isAuthenticated:', isAuthenticated, 'userInfo:', userInfo ? 'exists' : 'null');
-    console.log('🔄 reservasInvalidated:', reservasInvalidated);
+    console.log('📄 useEffect ejecutado - shouldFetch:', shouldFetch, 'hasInitialized:', hasInitializedRef.current);
+    console.log('📄 Auth state - isAuthenticated:', isAuthenticated, 'userInfo:', userInfo ? 'exists' : 'null');
+    console.log('📄 reservasInvalidated:', reservasInvalidated);
     
     // Si shouldFetch es false, no hacer nada
     if (!shouldFetch) {
-      console.log('🔄 shouldFetch es false, no haciendo nada');
+      console.log('📄 shouldFetch es false, no haciendo nada');
       return;
     }
     
@@ -137,12 +139,12 @@ export const useReservas = () => {
     
     // Si las reservas están invalidadas o es la primera vez, cargar
     if (reservasInvalidated || !hasInitializedRef.current) {
-      console.log('🔄 Iniciando carga de reservas');
+      console.log('📄 Iniciando carga de reservas');
       hasInitializedRef.current = true;
       loadReservas();
     }
     
-  }, [shouldFetch, reservasInvalidated]); // Agregamos reservasInvalidated como dependencia
+  }, [shouldFetch, reservasInvalidated]);
 
   // Función para forzar recarga de reservas (útil después de cambios)
   const reloadReservas = async () => {
@@ -153,7 +155,7 @@ export const useReservas = () => {
   const handleEditReservation = (reserva) => {
     console.log('✏️ Editando reserva:', reserva);
     // Solo permitir editar si está pendiente
-    if (reserva.estado?.toLowerCase() !== 'pendiente') {
+    if (reserva.estado?.toLowerCase() !== 'pending' && reserva.status?.toLowerCase() !== 'pending') {
       setError('Solo se pueden editar reservas con estado "Pendiente"');
       return;
     }
@@ -167,7 +169,19 @@ export const useReservas = () => {
     
     setLoading(true);
     try {
-      const result = await updateReservation(editingReservation._id, updatedData);
+      // Preparar datos para el backend simplificado (solo clientId, sin campo client)
+      const dataToSend = {
+        clientId: updatedData.clientId || editingReservation.clientId?._id || editingReservation.clientId,
+        vehicleId: updatedData.vehicleId || editingReservation.vehicleId?._id || editingReservation.vehiculoID?._id,
+        startDate: updatedData.startDate || updatedData.fechaInicio,
+        returnDate: updatedData.returnDate || updatedData.fechaDevolucion,
+        status: updatedData.status || updatedData.estado,
+        pricePerDay: updatedData.pricePerDay || updatedData.precioPorDia
+      };
+
+      console.log('📄 Enviando datos actualizados:', dataToSend);
+      
+      const result = await updateReservation(editingReservation._id, dataToSend);
       
       if (result.success) {
         console.log('✅ Reserva actualizada correctamente');
@@ -196,7 +210,7 @@ export const useReservas = () => {
   const handleDeleteReservation = (reserva) => {
     console.log('🗑️ Intentando eliminar reserva:', reserva);
     // Solo permitir eliminar si está pendiente
-    if (reserva.estado?.toLowerCase() !== 'pendiente') {
+    if (reserva.estado?.toLowerCase() !== 'pending' && reserva.status?.toLowerCase() !== 'pending') {
       setError('Solo se pueden eliminar reservas con estado "Pendiente"');
       return;
     }
