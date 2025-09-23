@@ -142,7 +142,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
           <div className="forgot-password-modal-steps">
             <span
               className={`forgot-password-step${step >= 1 ? ' active' : ''}`}
-              style={{cursor: step > 1 ? 'pointer' : 'default'}}
+              style={{ cursor: step > 1 ? 'pointer' : 'default' }}
               onClick={() => {
                 if (step > 1 && typeof setStep === 'function') {
                   resetAll();
@@ -164,7 +164,18 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
             <span className={`forgot-password-step${step >= 3 ? ' active' : ''}`}>3</span>
           </div>
           <div className="forgot-password-modal-desc">Recupera tu cuenta en 3 pasos</div>
-
+          {/* Paso 1: Correo electrónico */}
+          {step === 1 && (
+            <form className="forgot-password-modal-form" data-step={step} onSubmit={correoForm.handleSubmit(handleCorreo)}>
+              <div style={{ width: '100%' }}>
+                <label className="forgot-password-modal-label forgot-password-modal-label-bg" htmlFor="correo">Correo electrónico</label>
+                <input className="forgot-password-modal-input" id="email" name="email" type="email" {...correoForm.register('email', { required: true })} />
+              </div>
+              <div className="forgot-password-modal-actions">
+                <button type="submit" className="forgot-password-modal-btn" disabled={loading}>{loading ? 'Enviando...' : 'Enviar código'}</button>
+              </div>
+            </form>
+          )}
           {/* Paso 2: Código de verificación */}
           {step === 2 && (
             <form className="forgot-password-modal-form" data-step={step} onSubmit={codeForm.handleSubmit(handleCode)}>
@@ -257,7 +268,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
                     {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
-                <label className="forgot-password-modal-label forgot-password-modal-label-bg" htmlFor="confirmPassword" style={{marginTop: '14px'}}>Confirmar contraseña</label>
+                <label className="forgot-password-modal-label forgot-password-modal-label-bg" htmlFor="confirmPassword" style={{ marginTop: '14px' }}>Confirmar contraseña</label>
                 <div className="input-eye-input-container">
                   <input
                     className="forgot-password-modal-input"
@@ -297,18 +308,7 @@ const ForgotPasswordModal = ({ open, onClose, onBackToLogin }) => {
             </form>
           )}
 
-          {/* Paso 1: Correo electrónico */}
-          {step === 1 && (
-            <form className="forgot-password-modal-form" data-step={step} onSubmit={correoForm.handleSubmit(handleCorreo)}>
-              <div style={{width: '100%'}}>
-                <label className="forgot-password-modal-label forgot-password-modal-label-bg" htmlFor="correo">Correo electrónico</label>
-                <input className="forgot-password-modal-input" id="correo" name="correo" type="email" {...correoForm.register('correo', { required: true })} />
-              </div>
-              <div className="forgot-password-modal-actions">
-                <button type="submit" className="forgot-password-modal-btn" disabled={loading}>{loading ? 'Enviando...' : 'Enviar código'}</button>
-              </div>
-            </form>
-          )}
+
         </div>
       </div>
     </div>

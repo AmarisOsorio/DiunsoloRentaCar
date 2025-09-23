@@ -141,12 +141,12 @@ const login = async ({ email, password }) => {
     return res.json();
   };
 
-  const requestPasswordRecovery = async (correo) => {
+  const requestPasswordRecovery = async (email) => {
     const res = await fetch(`${API_URL}/passwordRecovery/request`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correo })
+      body: JSON.stringify({ email })
     });
     return res.json();
   };
