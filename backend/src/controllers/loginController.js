@@ -8,11 +8,6 @@ import sendWelcomeMail from "../utils/mailWelcome.js";
 
 const loginController = {};
 
-//Maximum login attempts
-const maxAttempts = 3;
-//Lock time in milliseconds (15 minutes)
-const lockTime = 15 * 60 * 1000;
-
 loginController.login = async (req, res) => {
   const { email, password } = req.body; // Changed from correo/contraseña to email/password
 
@@ -46,44 +41,7 @@ loginController.login = async (req, res) => {
     }
 
     if (!userFound) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    //Check if user is locked
-    if (userType !== "Admin") {
-    if (userFound.lockTime && userFound.lockTime > Date.now()) {
-        const remainingTime = Math.ceil((userFound.lockTime - Date.now()) / 60000);
-        return res.json({message: `Cuenta bloqueada. Intenta de nuevo en ${remainingTime} minutos.`});
-    }
-  }
-
-    //If not admin
-    if (userType !== "Admin"){
-
-      //Compares hashed password
-      const matches = await bcryptjs.compare(password, userFound.password)
-
-      //Invalid password
-      if (!matches){
-        //Invalid password, increment login attempts
-        userFound.loginAttempts = (userFound.loginAttempts) + 1;
-        
-        if (userFound.loginAttempts > maxAttempts) {
-          userFound.lockTime = Date.now() + lockTime;
-          userFound.loginAttempts = 0;
-          await userFound.save();
-          return res.status(403).json({message: "Demasiados intentos fallidos. La cuenta ha sido bloqueada por 15 minutos."});
-        }
-        
-        await userFound.save();
-        return res.status(400).json({message: "Contraseña invalida"});
-      }
-
-        //Reset login attempts and lock time
-        userFound.loginAttempts = 0;
-        userFound.lockTime = null;
-        await userFound.save();
-
+      return res.status(401).json({ message: "Usuario no encontrado" });
     }
 
     // Si es cliente y no está verificado
@@ -198,6 +156,8 @@ loginController.login = async (req, res) => {
 
         res.json({
           message: "Login exitoso",
+          userType,
+          user: userData
         });
 
       }
