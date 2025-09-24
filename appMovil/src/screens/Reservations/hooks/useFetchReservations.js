@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Para emulador Android usa 10.0.2.2 en lugar de localhost
+// Configuración de la URL base de la API
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
 
 export const useFetchReservations = () => {
@@ -8,7 +8,35 @@ export const useFetchReservations = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Función para obtener todas las reservas
+  // Función auxiliar para manejar respuestas HTTP
+  const handleResponse = async (response) => {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+      throw new Error(errorData.message || `HTTP ${response.status}`);
+    }
+    return response.json();
+  };
+
+  // Función auxiliar para manejar errores
+  const handleError = (err) => {
+    let errorMessage = 'Error desconocido';
+    
+    if (err.message.includes('Network request failed') || err.message.includes('fetch')) {
+      errorMessage = `No se puede conectar al servidor. Verifica que el backend esté en ${API_BASE_URL}`;
+    } else if (err.message.includes('timeout')) {
+      errorMessage = 'Tiempo de espera agotado. El servidor tardó demasiado en responder.';
+    } else if (err.message.includes('JSON')) {
+      errorMessage = 'Error al procesar la respuesta del servidor.';
+    } else if (err.message.includes('404')) {
+      errorMessage = 'Endpoint no encontrado. Verifica que la ruta esté disponible.';
+    } else {
+      errorMessage = err.message;
+    }
+    
+    return errorMessage;
+  };
+
+  // Obtener todas las reservas
   const fetchReservations = useCallback(async () => {
     try {
       setLoading(true);
@@ -20,58 +48,161 @@ export const useFetchReservations = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        timeout: 15000,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
+      const result = await handleResponse(response);
 
       if (result.success) {
-        const reservationsData = result.data || [];
-        
-        const validReservations = reservationsData.filter(reservation => {
-          return reservation._id && 
-                 reservation.startDate && 
-                 reservation.returnDate &&
-                 reservation.status;
-        });
-
-        setReservations(validReservations);
+        setReservations(result.data || []);
       } else {
         throw new Error(result.message || 'Error en la respuesta del servidor');
       }
     } catch (err) {
-      let errorMessage = 'Error desconocido';
-      
-      if (err.message.includes('Network request failed') || err.message.includes('fetch')) {
-        errorMessage = 'No se puede conectar al servidor. Verifica que el backend esté ejecutándose en ' + API_BASE_URL;
-      } else if (err.message.includes('timeout')) {
-        errorMessage = 'Tiempo de espera agotado. El servidor tardó demasiado en responder.';
-      } else if (err.message.includes('JSON')) {
-        errorMessage = 'Error al procesar la respuesta del servidor.';
-      } else if (err.message.includes('404')) {
-        errorMessage = 'Endpoint no encontrado. Verifica que la ruta /api/reservations esté disponible.';
-      } else {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+      const errorMsg = handleError(err);
+      setError(errorMsg);
       setReservations([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Función para refrescar reservas
+  // Obtener reservas del usuario autenticado
+  const fetchUserReservations = useCallback(async (token) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/my-reservations`, {
+        method: 'GET',
+        headers,
+      });
+
+      const result = await handleResponse(response);
+
+      if (result.success) {
+        setReservations(result.data || []);
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Obtener reservas por vehículo
+  const fetchReservationsByVehicle = useCallback(async (vehicleId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/vehicle/${vehicleId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const result = await handleResponse(response);
+
+      if (result.success) {
+        setReservations(result.data || []);
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Obtener reservas por estado
+  const fetchReservationsByStatus = useCallback(async (status) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Validar estado antes de hacer la petición
+      if (!['Pending', 'Active', 'Completed'].includes(status)) {
+        throw new Error('Estado no válido. Debe ser: Pending, Active o Completed');
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/status/${status}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const result = await handleResponse(response);
+
+      if (result.success) {
+        setReservations(result.data || []);
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Obtener una reserva por ID
+  const fetchReservationById = useCallback(async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const result = await handleResponse(response);
+
+      if (result.success) {
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Refrescar reservas
   const refreshReservations = useCallback(async () => {
     await fetchReservations();
   }, [fetchReservations]);
 
-  // Función para crear una nueva reserva
+  // Crear una nueva reserva
   const createReservation = useCallback(async (reservationData) => {
     try {
       setError(null);
@@ -85,14 +216,9 @@ export const useFetchReservations = () => {
         body: JSON.stringify(reservationData),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Error al crear reserva');
-      }
+      const result = await handleResponse(response);
 
       if (result.success) {
-        // Actualizar la lista local con populate
         const newReservation = result.data;
         setReservations(prev => [newReservation, ...prev]);
         return newReservation;
@@ -100,12 +226,13 @@ export const useFetchReservations = () => {
         throw new Error(result.message || 'Error en la respuesta del servidor');
       }
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      throw new Error(errorMsg);
     }
   }, []);
 
-  // Función para eliminar una reserva
+  // Eliminar una reserva
   const deleteReservation = useCallback(async (id) => {
     try {
       setError(null);
@@ -118,14 +245,9 @@ export const useFetchReservations = () => {
         },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Error al eliminar reserva');
-      }
+      const result = await handleResponse(response);
 
       if (result.success) {
-        // Actualizar la lista local
         setReservations(prev => 
           prev.filter(reservation => reservation._id !== id)
         );
@@ -134,12 +256,13 @@ export const useFetchReservations = () => {
         throw new Error(result.message || 'Error en la respuesta del servidor');
       }
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      throw new Error(errorMsg);
     }
   }, []);
 
-  // Función para actualizar una reserva
+  // Actualizar una reserva
   const updateReservation = useCallback(async (id, reservationData) => {
     try {
       setError(null);
@@ -153,14 +276,9 @@ export const useFetchReservations = () => {
         body: JSON.stringify(reservationData),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Error al actualizar reserva');
-      }
+      const result = await handleResponse(response);
 
       if (result.success) {
-        // Actualizar la lista local
         const updatedReservation = result.data;
         setReservations(prev => 
           prev.map(reservation => 
@@ -172,8 +290,69 @@ export const useFetchReservations = () => {
         throw new Error(result.message || 'Error en la respuesta del servidor');
       }
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+  }, []);
+
+  // Obtener vehículos más rentados por marca
+  const getMostRentedByBrand = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/most-rented-brands`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const result = await handleResponse(response);
+
+      if (result.success) {
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Obtener vehículos más rentados por modelo
+  const getMostRentedByModel = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/most-rented-models`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const result = await handleResponse(response);
+
+      if (result.success) {
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      const errorMsg = handleError(err);
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -188,11 +367,21 @@ export const useFetchReservations = () => {
     loading,
     error,
 
-    // Funciones principales
+    // Funciones principales CRUD
     fetchReservations,
     refreshReservations,
     createReservation,
     deleteReservation,
     updateReservation,
+
+    // Funciones específicas
+    fetchReservationById,
+    fetchUserReservations,
+    fetchReservationsByVehicle,
+    fetchReservationsByStatus,
+
+    // Funciones de estadísticas
+    getMostRentedByBrand,
+    getMostRentedByModel,
   };
 };

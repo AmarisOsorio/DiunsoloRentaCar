@@ -141,12 +141,12 @@ const login = async ({ email, password }) => {
     return res.json();
   };
 
-  const requestPasswordRecovery = async (correo) => {
+  const requestPasswordRecovery = async (email) => {
     const res = await fetch(`${API_URL}/passwordRecovery/request`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correo })
+      body: JSON.stringify({ email })
     });
     return res.json();
   };
@@ -402,26 +402,48 @@ const login = async ({ email, password }) => {
   // Función para crear una reserva
   const createReservation = useCallback(async (reservaData) => {
     try {
-  const res = await fetch(`${API_URL}/reservations`, {
+      console.log('📝 [AuthContext] createReservation called with data:', reservaData);
+      
+      // Asegurar que solo se envíen los campos necesarios sin el campo client
+      const cleanReservaData = {
+        clientId: reservaData.clientId,
+        vehicleId: reservaData.vehicleId,
+        startDate: reservaData.startDate,
+        returnDate: reservaData.returnDate,
+        status: reservaData.status || 'Pending',
+        pricePerDay: reservaData.pricePerDay
+      };
+
+      console.log('📝 [AuthContext] Clean data being sent:', cleanReservaData);
+      
+      const res = await fetch(`${API_URL}/reservations`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(reservaData)
+        body: JSON.stringify(cleanReservaData)
       });
+      
       const data = await res.json();
+      console.log('📝 [AuthContext] createReservation response:', data);
+      
       if (res.ok && (data.success || data.reservaId)) {
         // Invalidar las reservas para que se recarguen
         invalidateReservations();
-        return { success: true, reservaId: data.reservaId, message: data.message || 'Reserva creada correctamente' };
+        return { 
+          success: true, 
+          reservaId: data.data?._id || data.reservaId, 
+          message: data.message || 'Reserva creada correctamente' 
+        };
       }
       return { success: false, message: data.message || 'Error al crear la reserva' };
     } catch (error) {
+      console.error('[createReservation] error:', error);
       return { success: false, message: 'Error de conexión' };
     }
   }, [API_URL, invalidateReservations]);
-
+  
   // Función para eliminar una reserva
   const deleteReservation = useCallback(async (reservaId) => {
     try {

@@ -250,7 +250,7 @@ registerClientsController.verifyEmail = async (req, res) => {
 registerClientsController.resendVerificationEmail = async (req, res) => {
   try {
     //Required data
-    const token = req.cookies.verificationToken;
+    const token = req.cookies.VerificationToken;
 
     if (!token) {
       return res.status(400).json({ message: "Token de verificación no encontrado" });
@@ -284,7 +284,7 @@ registerClientsController.resendVerificationEmail = async (req, res) => {
     );
 
     //Update cookie
-    res.cookie("verificationToken", newToken, { maxAge: 2 * 60 * 60 * 1000 });
+    res.cookie("VerificationToken", newToken, { maxAge: 2 * 60 * 60 * 1000 });
 
     //Send new email
     await sendVerificationEmail(client.email, client.name, client.lastName, verificationCode);
