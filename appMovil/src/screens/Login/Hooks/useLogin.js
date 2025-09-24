@@ -7,9 +7,10 @@ export default function useLogin() {
   const [userType, setUserType] = useState(null);
   const [user, setUser] = useState(null);
 
-  // Configuración de URL para producción
   const getBaseUrl = () => {
-    return 'https://diunsolorentacar.onrender.com';
+    const baseUrl = 'https://diunsolorentacar.onrender.com';
+    console.log('BASE_URL:', baseUrl);
+    return baseUrl;
   };
 
   const login = async ({ email, password }) => {
@@ -17,29 +18,50 @@ export default function useLogin() {
     setError(null);
     try {
       const baseUrl = getBaseUrl();
-      const response = await fetch(`${baseUrl}/api/login`, {
+      const loginUrl = `${baseUrl}/api/login`;
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Error de autenticación');
+      const responseText = await response.text();
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        setError('Error: Invalid server response format');
         setLoading(false);
         return false;
       }
 
-      setUserType(data.userType);
-      setUser(data.user);
+      if (!response.ok) {
+        setError(data.message || 'Authentication error');
+        setLoading(false);
+        return false;
+      }
+
+      // Since the server only returns a success message,
+      // we'll create a basic user object
+      const userData = {
+        email,
+        role: 'client', // Default role
+        message: data.message
+      };
+
+      setUserType(userData.role);
+      setUser(userData);
       setLoading(false);
       return true;
+
     } catch (err) {
-      console.error('Error de login:', err);
-      setError('Error de conexión. Verifica que el servidor esté ejecutándose.');
+      console.error('Login error:', err);
+      setError('Connection error. Please verify the server is running.');
       setLoading(false);
       return false;
     }

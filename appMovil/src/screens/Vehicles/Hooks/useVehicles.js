@@ -5,9 +5,6 @@ import { Platform, Alert } from 'react-native';
 // URL base de la API del backend
 const BASE_URL = 'https://diunsolorentacar.onrender.com';
 
-// Debug logs
-console.log('Using BASE_URL:', BASE_URL);
-
 // Hook principal que maneja el estado y lógica de la pantalla de vehículos
 export default function useVehicles() {
 	// Lista de marcas obtenidas del backend
@@ -41,7 +38,6 @@ export default function useVehicles() {
 	// Obtener marcas desde el backend
 	const fetchBrands = async () => {
 		try {
-			console.log('Fetching brands from:', `${BASE_URL}/api/brands`);
 			const res = await fetch(`${BASE_URL}/api/brands`, {
 				method: 'GET',
 				headers: {
@@ -53,7 +49,6 @@ export default function useVehicles() {
 				throw new Error(`HTTP error! status: ${res.status}`);
 			}
 			const data = await res.json();
-			console.log('Brands fetched:', data.length);
 			setBrands(data);
 		} catch (e) {
 			console.error('Error loading brands:', e);
@@ -69,7 +64,6 @@ export default function useVehicles() {
 	// Obtener vehículos desde el backend
 	const fetchVehicles = async () => {
 		try {
-			console.log('Fetching vehicles from:', `${BASE_URL}/api/vehicles`);
 			const res = await fetch(`${BASE_URL}/api/vehicles`, {
 				method: 'GET',
 				headers: {
@@ -81,7 +75,6 @@ export default function useVehicles() {
 				throw new Error(`HTTP error! status: ${res.status}`);
 			}
 			const data = await res.json();
-			console.log('Vehicles fetched:', data.length);
 			setVehicles(data);
 		} catch (e) {
 			console.error('Error loading vehicles:', e);

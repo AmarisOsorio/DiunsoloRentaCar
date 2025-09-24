@@ -54,9 +54,15 @@ export default function LoginScreen({ onLogin }) {
 
     // Handler para login
     const handleLogin = async () => {
+        if (!email || !password) {
+            setError('Por favor ingresa email y contraseña');
+            return;
+        }
+        
         const success = await loginRequest({ email, password });
+        console.log('Login result:', success);
         if (success) {
-            // El login será manejado por el useEffect anterior
+            console.log('Login exitoso, esperando cambio de estado');
         }
     };
 
