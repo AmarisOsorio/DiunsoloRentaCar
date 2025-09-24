@@ -1,11 +1,6 @@
 /*
     Fields:
         clientId (string),
-        client (array of objects){
-            name (string),
-            phone (string),
-            email (string)
-        },
         vehicleId (string),
         startDate (date),
         returnDate (date),
@@ -24,20 +19,6 @@ const reservationsSchema = new Schema({
         ref: 'Clients',
         required: true
     },
-    client: [ { 
-        name: {
-            type: String,
-            required: true
-        },
-        phone: {
-            type: String,
-            required: true
-        },
-        email: { 
-            type: String,
-            required: true
-        }
-    }],
     vehicleId: {
         type: Schema.Types.ObjectId,
         ref: 'Vehicle', 
@@ -60,6 +41,11 @@ const reservationsSchema = new Schema({
         type: Number,
         required: true
     },
+    total: {
+        type: Number,
+        required: true
+    },
+
     creationDate: {  
         type: Date,
         default: Date.now

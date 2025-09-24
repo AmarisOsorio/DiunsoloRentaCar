@@ -13,8 +13,9 @@ const API_BASE_URL = 'http://10.0.2.2:4000/api';
 
 const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [reservations, setReservations] = useState([]);
   const [maintenances, setMaintenances] = useState([]);
-  const [tempStartDate, setTempStartDate] = useState(null); // Fecha temporal para primer click
+  const [tempStartDate, setTempStartDate] = useState(null);
 
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -23,14 +24,40 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
 
   const dayNames = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
-  // Cargar mantenimientos cuando cambie el vehículo seleccionado
+  // Cargar reservas y mantenimientos cuando cambie el vehículo seleccionado
   useEffect(() => {
     if (selectedVehicle) {
+      fetchReservationsForVehicle(selectedVehicle._id);
       fetchMaintenancesForVehicle(selectedVehicle._id);
     } else {
+      setReservations([]);
       setMaintenances([]);
     }
   }, [selectedVehicle]);
+
+  const fetchReservationsForVehicle = async (vehicleId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reservations`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          const vehicleReservations = result.data.filter(
+            reservation => reservation.vehicleId._id === vehicleId
+          );
+          setReservations(vehicleReservations);
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar reservas:', error);
+    }
+  };
 
   const fetchMaintenancesForVehicle = async (vehicleId) => {
     try {
@@ -45,7 +72,6 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          // Filtrar mantenimientos solo para el vehículo seleccionado
           const vehicleMaintenances = result.data.filter(
             maintenance => maintenance.vehicleId._id === vehicleId
           );
@@ -67,12 +93,10 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
 
     const days = [];
     
-    // Días vacíos al inicio
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     
-    // Días del mes
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
@@ -93,7 +117,6 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    // Normalizar fechas a solo fecha (sin hora)
     checkDate.setHours(0, 0, 0, 0);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
@@ -101,15 +124,22 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
     return checkDate >= start && checkDate <= end;
   };
 
-  const getMaintenanceForDate = (day) => {
+  const getReservationForDate = (day) => {
     if (!day) return null;
     
-    const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return reservations.find(reservation => {
+      const startDate = new Date(reservation.startDate);
+      const endDate = new Date(reservation.returnDate);
+      return isDateInRange(day, startDate, endDate);
+    });
+  };
+
+  const getMaintenanceForDate = (day) => {
+    if (!day) return null;
     
     return maintenances.find(maintenance => {
       const startDate = new Date(maintenance.startDate);
       const endDate = new Date(maintenance.returnDate);
-      
       return isDateInRange(day, startDate, endDate);
     });
   };
@@ -117,13 +147,11 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
   const getDayStyle = (day) => {
     if (!day) return null;
     
-    // Verificar si es la fecha temporal (primer click)
     const isTempStartDate = tempStartDate && 
       day === tempStartDate.getDate() && 
       currentMonth.getMonth() === tempStartDate.getMonth() && 
       currentMonth.getFullYear() === tempStartDate.getFullYear();
     
-    // Solo mostrar el rango cuando ambas fechas están definidas (startDate y endDate)
     const isInSelectedRange = startDate && endDate && isDateInRange(day, startDate, endDate);
     const isStartDate = startDate && endDate && 
       day === startDate.getDate() && 
@@ -134,15 +162,14 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       currentMonth.getMonth() === endDate.getMonth() && 
       currentMonth.getFullYear() === endDate.getFullYear();
     
-    // Verificar si hay mantenimiento existente en esta fecha
+    const reservation = getReservationForDate(day);
     const maintenance = getMaintenanceForDate(day);
     
-    // Prioridad: fecha temporal > rango seleccionado > mantenimientos existentes
     if (isTempStartDate) {
       return styles.tempStartDay;
     }
     
-    // Nueva selección de mantenimiento (color más oscuro - igual que el de detalles)
+    // Nueva reserva (color azul)
     if (isInSelectedRange) {
       if (isStartDate && isEndDate) {
         return styles.selectedSingleDay;
@@ -155,7 +182,29 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       }
     }
     
-    // Si hay mantenimiento existente, mostrar en color de mantenimiento (amarillo claro)
+    // Reservas existentes (color azul más claro)
+    if (reservation) {
+      const reservationStart = new Date(reservation.startDate);
+      const reservationEnd = new Date(reservation.returnDate);
+      const isReservationStart = day === reservationStart.getDate() && 
+        currentMonth.getMonth() === reservationStart.getMonth() && 
+        currentMonth.getFullYear() === reservationStart.getFullYear();
+      const isReservationEnd = day === reservationEnd.getDate() && 
+        currentMonth.getMonth() === reservationEnd.getMonth() && 
+        currentMonth.getFullYear() === reservationEnd.getFullYear();
+      
+      if (isReservationStart && isReservationEnd) {
+        return styles.reservationSingleDay;
+      } else if (isReservationStart) {
+        return styles.reservationStartDay;
+      } else if (isReservationEnd) {
+        return styles.reservationEndDay;
+      } else {
+        return styles.reservationMiddleDay;
+      }
+    }
+    
+    // Mantenimientos (color amarillo)
     if (maintenance) {
       const maintenanceStart = new Date(maintenance.startDate);
       const maintenanceEnd = new Date(maintenance.returnDate);
@@ -183,14 +232,13 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
   const getDayTextStyle = (day) => {
     if (!day) return null;
     
-    // Verificar si es la fecha temporal (primer click)
     const isTempStartDate = tempStartDate && 
       day === tempStartDate.getDate() && 
       currentMonth.getMonth() === tempStartDate.getMonth() && 
       currentMonth.getFullYear() === tempStartDate.getFullYear();
     
-    // Solo mostrar texto especial cuando ambas fechas están definidas
     const isInSelectedRange = startDate && endDate && isDateInRange(day, startDate, endDate);
+    const reservation = getReservationForDate(day);
     const maintenance = getMaintenanceForDate(day);
     
     if (isTempStartDate) {
@@ -199,6 +247,10 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
     
     if (isInSelectedRange) {
       return styles.selectedDayText;
+    }
+    
+    if (reservation) {
+      return styles.reservationDayText;
     }
     
     if (maintenance) {
@@ -222,22 +274,24 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
       return;
     }
     
-    // Verificar si hay mantenimiento existente
+    // Verificar si hay reserva o mantenimiento en esta fecha
+    const existingReservation = getReservationForDate(day);
     const existingMaintenance = getMaintenanceForDate(day);
-    if (existingMaintenance) {
-      Alert.alert(
-        'Fecha ocupada',
-        `Esta fecha ya está ocupada por otro mantenimiento: "${existingMaintenance.maintenanceType}". Por favor selecciona otra fecha.`
-      );
+    
+    if (existingReservation) {
+      Alert.alert('Fecha ocupada', 'Esta fecha ya está reservada por otro cliente.');
       return;
     }
     
-    // Si ya hay un rango completo (startDate y endDate), reiniciar completamente
+    if (existingMaintenance) {
+      Alert.alert('Fecha en mantenimiento', 'El vehículo está en mantenimiento en esta fecha.');
+      return;
+    }
+    
+    // Lógica de selección igual que en mantenimientos
     if (startDate && endDate) {
-      // Limpiar todo primero
       onDateSelect(null, 'end');
       onDateSelect(null, 'start');
-      // Luego establecer nueva selección temporal
       setTimeout(() => {
         setTempStartDate(selectedDate);
       }, 20);
@@ -245,26 +299,21 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
     }
     
     if (!tempStartDate) {
-      // Primera selección - guardar temporalmente, no enviar aún
       setTempStartDate(selectedDate);
     } else {
-      // Segunda selección - ahora enviar ambas fechas
       let finalStartDate = tempStartDate;
       let finalEndDate = selectedDate;
       
-      // Si la segunda fecha es anterior, hacer swap
       if (selectedDate < tempStartDate) {
         finalStartDate = selectedDate;
         finalEndDate = tempStartDate;
       }
       
-      // Enviar ambas fechas al componente padre
       onDateSelect(finalStartDate, 'start');
       setTimeout(() => {
         onDateSelect(finalEndDate, 'end');
       }, 10);
       
-      // Limpiar estado temporal
       setTempStartDate(null);
     }
   };
@@ -326,15 +375,13 @@ const CustomCalendar = ({ selectedVehicle, startDate, endDate, onDateSelect }) =
         <View style={styles.legend}>
           <Text style={styles.legendTitle}>Leyenda:</Text>
           <View style={styles.legendItems}>
-            {(startDate && endDate) && (
-              <View style={styles.legendItem}>
-                <View style={[styles.legendColor, { backgroundColor: '#af6006ff' }]} />
-                <Text style={styles.legendText}>Nuevo mantenimiento</Text>
-              </View>
-            )}
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#4A90E2' }]} />
+              <Text style={styles.legendText}>Reserva</Text>
+            </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendText}>Mantenimientos existentes</Text>
+              <Text style={styles.legendText}>Mantenimiento</Text>
             </View>
           </View>
         </View>
@@ -403,26 +450,45 @@ const styles = StyleSheet.create({
     borderColor: '#0EA5E9',
   },
   
-  // Estilos para selección actual (nuevo mantenimiento - color más oscuro)
+  // Estilos para nueva reserva (color azul)
   selectedStartDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#4A90E2',
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
   },
   selectedMiddleDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#4A90E2',
   },
   selectedEndDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#4A90E2',
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
   },
   selectedSingleDay: {
-    backgroundColor: '#af6006ff',
+    backgroundColor: '#4A90E2',
     borderRadius: 20,
   },
   
-  // Estilos para mantenimientos existentes (amarillo claro)
+  // Estilos para reservas existentes (azul claro)
+  reservationStartDay: {
+    backgroundColor: '#60A5FA',
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  reservationMiddleDay: {
+    backgroundColor: '#60A5FA',
+  },
+  reservationEndDay: {
+    backgroundColor: '#60A5FA',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  reservationSingleDay: {
+    backgroundColor: '#60A5FA',
+    borderRadius: 20,
+  },
+  
+  // Estilos para mantenimiento (amarillo)
   maintenanceStartDay: {
     backgroundColor: '#F59E0B',
     borderTopLeftRadius: 20,
@@ -452,6 +518,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   selectedDayText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
+  },
+  reservationDayText: {
     fontSize: 16,
     color: 'white',
     fontWeight: '600',

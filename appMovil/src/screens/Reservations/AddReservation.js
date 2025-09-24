@@ -11,33 +11,43 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import VehicleSelector from './components/VehicleSelector';
-import MaintenanceTypeSelector from './components/TypeSelector';
+import ClientSelector from './components/ClientSelector';
 import CustomCalendar from './components/CustomCalendar';
 import DateInput from './components/DateInput';
+import PriceInput from './components/PriceInput';
 import ConfirmationModal from './modals/Confirmation';
-import SuccessModal from './modals/SaveMaintenance';
-import { useFetchMaintenances } from '../Maintenances/hooks/useFetchMaintenances';
+import SuccessModal from './modals/SaveReservation';
+import { useFetchReservations } from '../Reservations/hooks/useFetchReservations';
 
 // Para emulador Android usa 10.0.2.2 en lugar de localhost
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
 
-const AddMaintenanceScreen = ({ navigation }) => {
+const AddReservationScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
+  const [clients, setClients] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [maintenanceType, setMaintenanceType] = useState('Cambio de aceite');
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [clientData, setClientData] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [pricePerDay, setPricePerDay] = useState('');
   const [status, setStatus] = useState('Pending');
   const [loading, setLoading] = useState(false);
   const [vehiclesLoading, setVehiclesLoading] = useState(true);
+  const [clientsLoading, setClientsLoading] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
-  const { createMaintenance } = useFetchMaintenances();
+  const { createReservation } = useFetchReservations();
 
-  // Cargar vehículos desde la API
+  // Cargar vehículos y clientes desde la API
   useEffect(() => {
     fetchVehicles();
+    fetchClients();
   }, []);
 
   const fetchVehicles = async () => {
@@ -65,14 +75,38 @@ const AddMaintenanceScreen = ({ navigation }) => {
     }
   };
 
+  const fetchClients = async () => {
+    try {
+      setClientsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/clients`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Error al cargar clientes`);
+      }
+
+      const clientsData = await response.json();
+      setClients(clientsData);
+    } catch (error) {
+      console.error('Error al cargar clientes:', error);
+      Alert.alert('Error', 'No se pudieron cargar los clientes');
+    } finally {
+      setClientsLoading(false);
+    }
+  };
+
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleCancel = () => {
     // Verificar si hay datos sin guardar
-    if (selectedVehicle || maintenanceType !== 'Cambio de aceite' || 
-        startDate || endDate) {
+    if (selectedVehicle || selectedClient || startDate || endDate || pricePerDay.trim()) {
       setShowConfirmationModal(true);
     } else {
       navigation.goBack();
@@ -92,6 +126,19 @@ const AddMaintenanceScreen = ({ navigation }) => {
     return date.toISOString();
   };
 
+  const calculateTotalDays = () => {
+    if (!startDate || !endDate) return 0;
+    const timeDifference = endDate - startDate;
+    const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+    return Math.max(1, daysDifference); // Mínimo 1 día
+  };
+
+  const calculateTotal = () => {
+    const days = calculateTotalDays();
+    const price = parseFloat(pricePerDay) || 0;
+    return days * price;
+  };
+
   const handleSave = async () => {
     // Validaciones
     if (!selectedVehicle) {
@@ -99,8 +146,13 @@ const AddMaintenanceScreen = ({ navigation }) => {
       return;
     }
 
-    if (!maintenanceType.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el tipo de mantenimiento');
+    if (!selectedClient && (!clientData.name.trim() || !clientData.phone.trim() || !clientData.email.trim())) {
+      Alert.alert('Error', 'Por favor selecciona un cliente o completa los datos del cliente');
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      Alert.alert('Error', 'Por favor selecciona las fechas de inicio y fin');
       return;
     }
 
@@ -109,25 +161,56 @@ const AddMaintenanceScreen = ({ navigation }) => {
       return;
     }
 
+    if (!pricePerDay.trim() || parseFloat(pricePerDay) <= 0) {
+      Alert.alert('Error', 'Por favor ingresa un precio por día válido');
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const maintenanceData = {
+      // Preparar datos del cliente
+      let finalClientData = null;
+      let clientId = null;
+
+      if (selectedClient) {
+        clientId = selectedClient._id;
+        finalClientData = [{
+          name: `${selectedClient.name || ''} ${selectedClient.lastName || ''}`.trim(),
+          phone: selectedClient.phone || '',
+          email: selectedClient.email || ''
+        }];
+      } else {
+        // Usar datos del formulario
+        finalClientData = [{
+          name: clientData.name.trim(),
+          phone: clientData.phone.trim(),
+          email: clientData.email.trim()
+        }];
+        // Para este caso, necesitarías crear un cliente temporal o usar el primer cliente disponible
+        if (clients.length > 0) {
+          clientId = clients[0]._id; // Usar el primer cliente como fallback
+        }
+      }
+
+      const reservationData = {
+        clientId: clientId,
+        client: finalClientData,
         vehicleId: selectedVehicle._id,
-        maintenanceType: maintenanceType.trim(),
         startDate: formatDateForAPI(startDate),
         returnDate: formatDateForAPI(endDate),
-        status: status
+        status: status,
+        pricePerDay: parseFloat(pricePerDay)
       };
 
-      await createMaintenance(maintenanceData);
+      await createReservation(reservationData);
       
       // Mostrar modal de éxito
       setShowSuccessModal(true);
 
     } catch (error) {
-      console.error('Error al crear mantenimiento:', error);
-      Alert.alert('Error', error.message || 'No se pudo guardar el mantenimiento');
+      console.error('Error al crear reserva:', error);
+      Alert.alert('Error', error.message || 'No se pudo guardar la reserva');
     } finally {
       setLoading(false);
     }
@@ -138,48 +221,46 @@ const AddMaintenanceScreen = ({ navigation }) => {
     navigation.goBack();
   };
 
-
-// En AddMaintenanceScreen.js, reemplaza la función handleDateChange con esta versión:
-
-const handleDateChange = (date, type) => {
-  if (type === 'start') {
-    setStartDate(date);
-    // No modificar automáticamente endDate cuando se selecciona startDate desde el calendario
-  } else if (type === 'end') {
-    if (date === null) {
-      // Permitir limpiar la fecha de fin
-      setEndDate(null);
-    } else if (startDate && date >= startDate) {
-      setEndDate(date);
-    } else if (startDate && date < startDate) {
-      Alert.alert('Error', 'La fecha de devolución debe ser posterior o igual a la fecha de inicio');
-    } else {
-      // Si no hay startDate, establecer endDate normalmente
-      setEndDate(date);
+  const handleDateChange = (date, type) => {
+    if (type === 'start') {
+      setStartDate(date);
+      // Actualizar precio sugerido basado en el vehículo
+      if (selectedVehicle && selectedVehicle.dailyPrice) {
+        setPricePerDay(selectedVehicle.dailyPrice.toString());
+      }
+    } else if (type === 'end') {
+      if (date === null) {
+        setEndDate(null);
+      } else if (startDate && date >= startDate) {
+        setEndDate(date);
+      } else if (startDate && date < startDate) {
+        Alert.alert('Error', 'La fecha de devolución debe ser posterior o igual a la fecha de inicio');
+      } else {
+        setEndDate(date);
+      }
     }
-  }
-};
-
-  const formatDateForDisplay = (date) => {
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
   };
 
-  if (vehiclesLoading) {
+  const handleVehicleChange = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    // Auto-completar precio si el vehículo tiene precio diario
+    if (vehicle && vehicle.dailyPrice) {
+      setPricePerDay(vehicle.dailyPrice.toString());
+    }
+  };
+
+  if (vehiclesLoading || clientsLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Añadir mantenimiento</Text>
+          <Text style={styles.headerTitle}>Añadir reserva</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.loadingText}>Cargando vehículos...</Text>
+          <Text style={styles.loadingText}>Cargando datos...</Text>
         </View>
       </SafeAreaView>
     );
@@ -192,7 +273,7 @@ const handleDateChange = (date, type) => {
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Añadir mantenimiento</Text>
+        <Text style={styles.headerTitle}>Añadir reserva</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -200,16 +281,19 @@ const handleDateChange = (date, type) => {
         <VehicleSelector 
           vehicles={vehicles}
           selectedVehicle={selectedVehicle}
-          onSelectVehicle={setSelectedVehicle}
+          onSelectVehicle={handleVehicleChange}
         />
 
-        {/* Maintenance Type */}
-        <MaintenanceTypeSelector 
-          maintenanceType={maintenanceType}
-          onSelectType={setMaintenanceType}
+        {/* Client Selector */}
+        <ClientSelector 
+          clients={clients}
+          selectedClient={selectedClient}
+          onSelectClient={setSelectedClient}
+          clientData={clientData}
+          onClientDataChange={setClientData}
         />
 
-        {/* Status Tabs - Mantenimiento, Reservado, Disponible */}
+        {/* Status Tabs */}
         <View style={styles.statusSection}>
           <View style={styles.statusTabs}>
             <TouchableOpacity 
@@ -290,9 +374,17 @@ const handleDateChange = (date, type) => {
           )}
         </View>
 
-        {/* Status Selection for Maintenance */}
-        <View style={styles.maintenanceStatusSection}>
-          <Text style={styles.statusLabel}>Estado de mantenimiento</Text>
+        {/* Price Input */}
+        <PriceInput 
+          pricePerDay={pricePerDay}
+          onPriceChange={setPricePerDay}
+          totalDays={calculateTotalDays()}
+          totalAmount={calculateTotal()}
+        />
+
+        {/* Status Selection for Reservation */}
+        <View style={styles.reservationStatusSection}>
+          <Text style={styles.statusLabel}>Estado de reserva</Text>
           
           <TouchableOpacity 
             style={[styles.statusOption, status === 'Active' && styles.statusActive]}
@@ -320,7 +412,7 @@ const handleDateChange = (date, type) => {
           >
             <View style={[styles.statusDot, status === 'Completed' && styles.statusDotCompleted]} />
             <Text style={[styles.statusText, status === 'Completed' && styles.statusTextCompleted]}>
-              Finalizada
+              Completada
             </Text>
           </TouchableOpacity>
         </View>
@@ -450,7 +542,7 @@ const styles = StyleSheet.create({
   dateSection: {
     marginBottom: 24,
   },
-  maintenanceStatusSection: {
+  reservationStatusSection: {
     marginBottom: 32,
   },
   statusLabel: {
@@ -561,5 +653,4 @@ const styles = StyleSheet.create({
   },
 });
 
-
-export default AddMaintenanceScreen;
+export default AddReservationScreen;
