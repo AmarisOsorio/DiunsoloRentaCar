@@ -193,6 +193,23 @@
 .form-input.error {
   border-color: #e74c3c;
 }
+
+/* Estilos para campos de solo lectura (bloqueados) */
+.form-input.readonly {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.form-input.readonly:focus {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  box-shadow: none;
+  outline: none;
+}
+
 .field-error {
   color: #e74c3c;
   font-size: 0.9rem;

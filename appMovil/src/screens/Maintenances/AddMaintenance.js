@@ -138,24 +138,27 @@ const AddMaintenanceScreen = ({ navigation }) => {
     navigation.goBack();
   };
 
-  const handleDateChange = (date, type) => {
-    if (type === 'start') {
-      setStartDate(date);
-      // Si no hay fecha de fin o la fecha de fin es antes que la nueva fecha de inicio, actualizarla
-      if (!endDate || endDate <= date) {
-        const newEndDate = new Date(date);
-        newEndDate.setDate(newEndDate.getDate() + 1);
-        setEndDate(newEndDate);
-      }
-    } else if (type === 'end') {
-      // Solo permitir fechas posteriores a la fecha de inicio
-      if (startDate && date > startDate) {
-        setEndDate(date);
-      } else {
-        Alert.alert('Error', 'La fecha de devolución debe ser posterior a la fecha de inicio');
-      }
+
+// En AddMaintenanceScreen.js, reemplaza la función handleDateChange con esta versión:
+
+const handleDateChange = (date, type) => {
+  if (type === 'start') {
+    setStartDate(date);
+    // No modificar automáticamente endDate cuando se selecciona startDate desde el calendario
+  } else if (type === 'end') {
+    if (date === null) {
+      // Permitir limpiar la fecha de fin
+      setEndDate(null);
+    } else if (startDate && date >= startDate) {
+      setEndDate(date);
+    } else if (startDate && date < startDate) {
+      Alert.alert('Error', 'La fecha de devolución debe ser posterior o igual a la fecha de inicio');
+    } else {
+      // Si no hay startDate, establecer endDate normalmente
+      setEndDate(date);
     }
-  };
+  }
+};
 
   const formatDateForDisplay = (date) => {
     return date.toLocaleDateString('es-ES', {

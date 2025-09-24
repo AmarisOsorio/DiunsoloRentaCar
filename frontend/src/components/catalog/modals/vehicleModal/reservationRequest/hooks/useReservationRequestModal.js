@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../../../../hooks/useAuth';
-const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
-  // Obtener autenticación y datos de usuario
-  const { isAuthenticated, userInfo, createReservation } = useAuth();
-  // Estado para el nombre de la marca
+
+const useReservationRequestModal = ({ isOpen, onClose, vehicle, editingReservationData = null }) => {
+  const { isAuthenticated, userInfo, createReservation, updateReservation } = useAuth();
   const [brandName, setBrandName] = useState('');
 
-  // Estado local para los datos del formulario de reserva
   const [formData, setFormData] = useState({
     startDate: '',
     endDate: '',
@@ -15,7 +13,6 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
     clientEmail: ''
   });
 
-  // Fecha mínima (hoy)
   const today = new Date().toISOString().split('T')[0];
 
   // Galería de imágenes del vehículo
@@ -43,7 +40,6 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
     return { images: unifiedImages };
   };
 
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { images } = createUnifiedImageArray();
   const hasImages = images.length > 0;
@@ -55,30 +51,58 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
   };
 
   const [validationErrors, setValidationErrors] = useState({});
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // Autocompletar datos del usuario autenticado al abrir el modal
+  // Determinar si estamos editando una reserva
+  const isEditingMode = editingReservationData && editingReservationData.reservationId;
+
+  // Autocompletar datos al abrir el modal
   useEffect(() => {
     if (isOpen) {
       setValidationErrors({});
-      if (isAuthenticated && userInfo) {
-        let fullName = '';
-        if (userInfo.nombres && userInfo.apellidos) {
-          fullName = `${userInfo.nombres} ${userInfo.apellidos}`.trim();
+      setError(null);
+      
+      if (isEditingMode) {
+        // Modo edición: usar datos de la reserva existente
+        setFormData({
+          startDate: editingReservationData.startDate || '',
+          endDate: editingReservationData.returnDate || '',
+          clientName: editingReservationData.clientName || '',
+          clientPhone: '', // Se auto-completa del usuario
+          clientEmail: '' // Se auto-completa del usuario
+        });
+        
+        // Completar datos del usuario autenticado
+        if (isAuthenticated && userInfo) {
+          setFormData(prev => ({
+            ...prev,
+            clientPhone: userInfo.telefono || userInfo.phone || '',
+            clientEmail: userInfo.correo || userInfo.email || '',
+          }));
         }
-        setFormData(prev => ({
-          ...prev,
-          clientName: fullName,
-          clientPhone: userInfo.telefono || userInfo.phone || '',
-          clientEmail: userInfo.correo || userInfo.email || '',
-        }));
+      } else {
+        // Modo creación: usar datos del usuario autenticado
+        if (isAuthenticated && userInfo) {
+          let fullName = '';
+          if (userInfo.nombres && userInfo.apellidos) {
+            fullName = `${userInfo.nombres} ${userInfo.apellidos}`.trim();
+          } else if (userInfo.name && userInfo.lastName) {
+            fullName = `${userInfo.name} ${userInfo.lastName}`.trim();
+          }
+          
+          setFormData(prev => ({
+            ...prev,
+            clientName: fullName,
+            clientPhone: userInfo.telefono || userInfo.phone || '',
+            clientEmail: userInfo.correo || userInfo.email || '',
+          }));
+        }
       }
     }
-  }, [isOpen, isAuthenticated, userInfo]);
+  }, [isOpen, isAuthenticated, userInfo, editingReservationData, isEditingMode]);
 
-  // Manejar cambios en los campos del formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -93,7 +117,6 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
     }
   };
 
-  // Validar el formulario y devolver errores en español
   const validateForm = () => {
     const errors = {};
     if (!formData.startDate) {
@@ -133,7 +156,6 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
     return errors;
   };
 
-  // Restablecer el formulario
   const resetForm = () => {
     setFormData({
       startDate: '',
@@ -143,41 +165,66 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
       clientEmail: ''
     });
     setValidationErrors({});
+    setError(null);
   };
 
-  // Enviar la reserva (dummy, solo para mantener la estructura)
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
       setError('Usuario no autenticado al intentar enviar reserva');
       return;
     }
+    
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
-    // Enviar la reserva al backend
+
+    setLoading(true);
     setError(null);
     setValidationErrors({});
     setSuccess(false);
-    // Construir datos para el backend
-    const reservaData = {
-  clientId: userInfo?._id || userInfo?.id,
-      vehicleId: vehicle?._id,
-      startDate: formData.startDate,
-      returnDate: formData.endDate,
-      status: 'Pending',
-  pricePerDay: vehicle?.dailyPrice || 0,
-      client: [{
-        name: formData.clientName,
-        phone: formData.clientPhone,
-        email: formData.clientEmail
-      }]
-    };
-    // Llamar a createReservation del contexto
-    createReservation(reservaData)
-      .then(result => {
+
+    try {
+      if (isEditingMode) {
+        // Actualizar reserva existente (solo cambiar vehículo)
+        const updateData = {
+          clientId: userInfo?._id || userInfo?.id,
+          vehicleId: vehicle?._id,
+          startDate: formData.startDate,
+          returnDate: formData.endDate,
+          status: 'Pending',
+          pricePerDay: vehicle?.dailyPrice || 0
+        };
+
+        const result = await updateReservation(editingReservationData.reservationId, updateData);
+        
+        if (result.success) {
+          setSuccess(true);
+          setTimeout(() => {
+            setSuccess(false);
+            resetForm();
+            if (onClose) onClose();
+            // Redirigir al perfil después de actualizar
+            window.location.href = '/perfil';
+          }, 1800);
+        } else {
+          setError(result.message || 'No se pudo actualizar la reserva.');
+        }
+      } else {
+        // Crear nueva reserva
+        const reservaData = {
+          clientId: userInfo?._id || userInfo?.id,
+          vehicleId: vehicle?._id,
+          startDate: formData.startDate,
+          returnDate: formData.endDate,
+          status: 'Pending',
+          pricePerDay: vehicle?.dailyPrice || 0
+        };
+
+        const result = await createReservation(reservaData);
+        
         if (result.success || result.reservaId) {
           setSuccess(true);
           setTimeout(() => {
@@ -188,32 +235,35 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle }) => {
         } else {
           setError(result.message || 'No se pudo crear la reserva.');
         }
-      })
-      .catch(err => {
-        setError('Error al crear la reserva.');
-      });
+      }
+    } catch (err) {
+      setError(`Error al ${isEditingMode ? 'actualizar' : 'crear'} la reserva.`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
-  formData,
-  setFormData,
-  validationErrors,
-  setValidationErrors,
-  loading,
-  error,
-  success,
-  handleSubmit,
-  handleInputChange,
-  resetForm,
-  isAuthenticated,
-  today,
-  images,
-  hasImages,
-  currentImageIndex,
-  setCurrentImageIndex,
-  nextImage,
-  prevImage,
+    formData,
+    setFormData,
+    validationErrors,
+    setValidationErrors,
+    loading,
+    error,
+    success,
+    handleSubmit,
+    handleInputChange,
+    resetForm,
+    isAuthenticated,
+    today,
+    images,
+    hasImages,
+    currentImageIndex,
+    setCurrentImageIndex,
+    nextImage,
+    prevImage,
+    isEditingMode
   };
-}
+};
 
 export default useReservationRequestModal;
