@@ -93,6 +93,7 @@ registerClientsController.registerClients = async (req, res) => {
     let lBackUrl = "";
     let pFrontUrl = "";
     let pBackUrl = "";
+    let photoUrl = ""; // AGREGADO: Variable para foto de perfil
 
     if (req.files) {      
       if (req.files.licenseFront && req.files.licenseFront[0]) {
@@ -109,6 +110,11 @@ registerClientsController.registerClients = async (req, res) => {
       
       if (req.files.passportBack && req.files.passportBack[0]) {
         pBackUrl = await uploadImage(req.files.passportBack[0], "diunsolo/passports");
+      }
+
+      // AGREGADO: Manejar foto de perfil
+      if (req.files.photo && req.files.photo[0]) {
+        photoUrl = await uploadImage(req.files.photo[0], "diunsolo/profiles");
       }
     }
 
@@ -127,6 +133,7 @@ registerClientsController.registerClients = async (req, res) => {
       licenseBack: lBackUrl,
       passportFront: pFrontUrl,
       passportBack: pBackUrl,
+      photo: photoUrl, // AGREGADO: Guardar la foto de perfil
       isVerified: false
     });
 

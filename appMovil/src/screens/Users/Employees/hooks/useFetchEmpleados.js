@@ -90,27 +90,30 @@ export const useFetchEmpleados = () => {
     await fetchEmpleados();
   }, [fetchEmpleados]);
 
-  // Función para crear un nuevo empleado
+  // Función para crear un nuevo empleado - CORREGIDA
   const createEmpleado = useCallback(async (empleadoData) => {
     try {
       setError(null);
 
       // Crear FormData para enviar archivo de imagen
       const formData = new FormData();
-      formData.append('name', empleadoData.nombre); // Frontend usa 'nombre', backend usa 'name'
+      
+      // IMPORTANTE: Usar los nombres exactos que espera el backend
+      formData.append('name', empleadoData.nombre); 
       formData.append('email', empleadoData.email);
       formData.append('password', empleadoData.contrasena);
       formData.append('dui', empleadoData.dui);
-      formData.append('phone', empleadoData.telefono); // Frontend usa 'telefono', backend usa 'phone'
+      formData.append('phone', empleadoData.telefono); 
       formData.append('rol', empleadoData.rol);
       
       if (empleadoData.foto) {
-        // Si es una URI local de imagen, crear un objeto File
+        // Si es una URI local de imagen, crear un objeto File compatible con React Native
         const imageUri = empleadoData.foto;
         const filename = imageUri.split('/').pop();
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image';
         
+        // En React Native, FormData acepta objetos con uri, name y type
         formData.append('photo', {
           uri: imageUri,
           name: filename,
@@ -122,6 +125,7 @@ export const useFetchEmpleados = () => {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          // NO incluir Content-Type cuando usas FormData
         },
         body: formData,
       }, 15000);
@@ -129,7 +133,28 @@ export const useFetchEmpleados = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Error al crear empleado');
+        // Manejar errores específicos del backend con mensajes detallados
+        let errorMessage = result.message || 'Error al crear empleado';
+        
+        if (result.message) {
+          if (result.message.includes('Ya existe un empleado con ese email')) {
+            errorMessage = 'Este email ya está registrado por otro empleado';
+          } else if (result.message.includes('Ya existe un empleado con ese DUI')) {
+            errorMessage = 'Este DUI ya está registrado por otro empleado';
+          } else if (result.message.includes('El email debe tener un formato válido')) {
+            errorMessage = 'Formato de email inválido\n\nEjemplo correcto: juan.perez@empresa.com';
+          } else if (result.message.includes('El teléfono debe tener formato')) {
+            errorMessage = 'Formato de teléfono inválido\n\nFormatos válidos:\n• 2345-6789\n• 6789-1234\n• 7890-5678\n\nDebe iniciar con 2, 6 o 7';
+          } else if (result.message.includes('El DUI debe tener formato')) {
+            errorMessage = 'Formato de DUI inválido\n\nEjemplo correcto: 12345678-9\n(8 dígitos, guión, 1 dígito)';
+          } else if (result.message.includes('La contraseña debe tener al menos')) {
+            errorMessage = 'Contraseña muy corta\n\nLa contraseña debe tener al menos 6 caracteres\n\nEjemplo: MiClave123';
+          } else if (result.message.includes('Todos los campos obligatorios')) {
+            errorMessage = 'Campos obligatorios faltantes\n\nVerifica que hayas completado:\n• Nombre completo\n• Email\n• Contraseña\n• DUI\n• Teléfono';
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Refrescar la lista después de crear
@@ -173,7 +198,7 @@ export const useFetchEmpleados = () => {
     }
   }, []);
 
-  // Función para actualizar un empleado
+  // Función para actualizar un empleado - CORREGIDA
   const updateEmpleado = useCallback(async (id, empleadoData) => {
     try {
       setError(null);
@@ -223,6 +248,7 @@ export const useFetchEmpleados = () => {
         method: 'PUT',
         headers: {
           'Accept': 'application/json',
+          // NO incluir Content-Type cuando usas FormData
         },
         body: formData,
       }, 15000);
@@ -230,7 +256,26 @@ export const useFetchEmpleados = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Error al actualizar empleado');
+        // Manejar errores específicos del backend con mensajes detallados
+        let errorMessage = result.message || 'Error al actualizar empleado';
+        
+        if (result.message) {
+          if (result.message.includes('Ya existe un empleado con ese email')) {
+            errorMessage = 'Este email ya está registrado por otro empleado';
+          } else if (result.message.includes('Ya existe un empleado con ese DUI')) {
+            errorMessage = 'Este DUI ya está registrado por otro empleado';
+          } else if (result.message.includes('El email debe tener un formato válido')) {
+            errorMessage = 'Formato de email inválido\n\nEjemplo correcto: juan.perez@empresa.com';
+          } else if (result.message.includes('El teléfono debe tener formato')) {
+            errorMessage = 'Formato de teléfono inválido\n\nFormatos válidos:\n• 2345-6789\n• 6789-1234\n• 7890-5678\n\nDebe iniciar con 2, 6 o 7';
+          } else if (result.message.includes('El DUI debe tener formato')) {
+            errorMessage = 'Formato de DUI inválido\n\nEjemplo correcto: 12345678-9\n(8 dígitos, guión, 1 dígito)';
+          } else if (result.message.includes('La contraseña debe tener al menos')) {
+            errorMessage = 'Contraseña muy corta\n\nLa contraseña debe tener al menos 6 caracteres\n\nEjemplo: MiClave123';
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Refrescar la lista después de actualizar
@@ -269,6 +314,7 @@ export const useFetchEmpleados = () => {
     empleados,
     loading,
     error,
+    setError: (error) => setError(error),
 
     // Funciones principales
     fetchEmpleados,

@@ -9,11 +9,11 @@ import { useAuth } from '../Context/AuthContext';
   
 // Importar las pantallas
 import HomeScreen from '../screens/HomeScreen';
-import Marcas from '../screens/Marcas/Marcas';
+import Marcas from '../screens/Brands/Brands';
 import MaintenanceScreen from '../screens/Maintenances/Maintenance';
 import ReservationScreen from '../screens/Reservations/Reservation';
 import ProfileScreen from '../screens/ProfileScreen';
-import Usuarios from '../screens/Usuarios/Usuarios';
+import Usuarios from '../screens/Users/Users';
 import VehiclesScreen from '../screens/Vehicles/Vehicles'; // Nueva pantalla de vehículos
 
 const Tab = createBottomTabNavigator();
@@ -21,12 +21,12 @@ const Tab = createBottomTabNavigator();
 // Definición de los tabs con iconos y componentes
 const TabArr = [
   { route: 'Home', label: 'Inicio', icon: 'home', component: HomeScreen, roles: ['Administrador', 'Gestor', 'Empleado'] },
-  { route: 'Vehicles', label: 'Vehículos', icon: 'car-sport', component: VehiclesScreen, roles: ['Administrador', 'Gestor'] }, // Nueva entrada para vehículos
+  { route: 'Vehicles', label: 'Vehículos', icon: 'car-sport', component: VehiclesScreen, roles: ['Administrador', 'Gestor'] },
   { route: 'Marcas', label: 'Marcas', icon: 'business', component: Marcas, roles: ['Administrador'] },
   { route: 'Maintenance', label: 'Mantto.', icon: 'construct', component: MaintenanceScreen, title: 'Mantenimiento', roles: ['Administrador', 'Gestor'] },
   { route: 'Reservations', label: 'Reservas', icon: 'calendar', component: ReservationScreen, roles: ['Administrador', 'Empleado'] },
-  { route: 'Profile', label: 'Perfil', icon: 'person', component: ProfileScreen, roles: ['Gestor', 'Empleado'] }, // Visible para Gestor y Empleado
-  { route: 'Users', label: 'Usuarios', icon: 'people', component: Usuarios, hidden: true, roles: ['Administrador'] }, // Solo en popout para Admin
+  { route: 'Users', label: 'Usuarios', icon: 'people', component: Usuarios, roles: ['Administrador', 'Gestor', 'Empleado'], hidden: true }, // En popout para Admin, visible para otros
+  { route: 'Profile', label: 'Perfil', icon: 'person', component: ProfileScreen, roles: ['Gestor', 'Empleado'] },
 ];
 
 // Animaciones para el tab
@@ -130,7 +130,7 @@ const MorePopout = ({ visible, onClose, navigation, userRole }) => {
   const getPopoutOptions = () => {
     const options = [];
     
-    // Usuarios solo para Administrador (ya que tiene muchas opciones)
+    // Usuarios solo para Administrador (en el popout)
     if (userRole === 'Administrador') {
       options.push({
         key: 'users',
@@ -195,15 +195,26 @@ const getVisibleTabs = (userRole) => {
   });
 };
 
+// Función para determinar cuántos tabs mostrar en la barra principal
+const getMainTabs = (visibleTabs, userRole) => {
+  // Para administradores, mostrar los primeros 5 tabs excluyendo los hidden
+  if (userRole === 'Administrador') {
+    return visibleTabs.filter(tab => !tab.hidden).slice(0, 5);
+  }
+  
+  // Para otros roles, mostrar todos sus tabs disponibles (incluyendo Usuarios que no está hidden para ellos)
+  return visibleTabs.filter(tab => !tab.hidden);
+};
+
 // Componente principal del Tab Navigator
 const TabNavigator = () => {
   const [showMore, setShowMore] = useState(false);
   const navigation = useNavigation();
-  const { userType, logout } = useAuth(); // Added logout here
+  const { userType, logout } = useAuth();
 
   // Obtener tabs visibles basado en el rol
   const visibleTabs = getVisibleTabs(userType);
-  const mainTabs = visibleTabs.filter(tab => !tab.hidden);
+  const mainTabs = getMainTabs(visibleTabs, userType);
 
   // Función para manejar logout
   const handleLogout = () => {
@@ -243,8 +254,9 @@ const TabNavigator = () => {
             />
           );
         })}
-        {/* Botón Ver más solo para Administrador */}
-        {userType === 'Administrador' && (
+        
+        {/* Botón Ver más solo para Administrador (si tiene más de 5 tabs) */}
+        {userType === 'Administrador' && visibleTabs.length > 5 && (
           <TouchableOpacity
             style={{ alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}
             onPress={() => setShowMore(true)}
@@ -270,6 +282,7 @@ const TabNavigator = () => {
             </Text>
           </TouchableOpacity>
         )}
+        
         {/* Para Gestor y Empleado, mostrar botón de Cerrar Sesión directamente */}
         {(userType === 'Gestor' || userType === 'Empleado') && (
           <TouchableOpacity
@@ -298,6 +311,7 @@ const TabNavigator = () => {
           </TouchableOpacity>
         )}
       </View>
+      
       {/* Popout solo para Administrador */}
       {userType === 'Administrador' && (
         <MorePopout
@@ -340,7 +354,6 @@ const TabNavigator = () => {
             component={item.component}
             options={{
               title: item.title || item.label,
-              tabBarButton: item.hidden ? () => null : undefined,
             }}
           />
         ))}

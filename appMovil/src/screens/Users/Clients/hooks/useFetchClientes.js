@@ -95,13 +95,15 @@ export const useFetchClientes = () => {
     await fetchClientes();
   }, [fetchClientes]);
 
-  // Función para crear un nuevo cliente (registro)
+  // Función para crear un nuevo cliente - CORREGIDA
   const createCliente = useCallback(async (clienteData) => {
     try {
       setError(null);
 
       // Crear FormData para enviar archivos de imágenes
       const formData = new FormData();
+      
+      // IMPORTANTE: Usar los nombres exactos que espera el backend
       formData.append('name', clienteData.name);
       formData.append('lastName', clienteData.lastName);
       formData.append('email', clienteData.email);
@@ -114,7 +116,7 @@ export const useFetchClientes = () => {
       }
       formData.append('phone', phoneFormatted);
       
-      // Convertir fecha a formato ISO si es un objeto Date
+      // Convertir fecha a formato ISO si es un objeto Date o está en formato DD/MM/YYYY
       if (clienteData.birthDate instanceof Date) {
         formData.append('birthDate', clienteData.birthDate.toISOString().split('T')[0]);
       } else if (clienteData.birthDate && clienteData.birthDate.includes('/')) {
@@ -161,6 +163,7 @@ export const useFetchClientes = () => {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          // NO incluir Content-Type cuando usas FormData
         },
         body: formData,
       }, 15000);
@@ -221,7 +224,7 @@ export const useFetchClientes = () => {
     }
   }, []);
 
-  // Función para actualizar un cliente
+  // Función para actualizar un cliente - CORREGIDA
   const updateCliente = useCallback(async (id, clienteData) => {
     try {
       setError(null);
@@ -229,6 +232,7 @@ export const useFetchClientes = () => {
       // Crear FormData para enviar archivos de imágenes
       const formData = new FormData();
       
+      // Solo agregar campos que han cambiado
       const textFields = ['name', 'lastName', 'email', 'password'];
       textFields.forEach(field => {
         if (clienteData[field] && clienteData[field] !== '••••••••••••') {
@@ -294,6 +298,7 @@ export const useFetchClientes = () => {
         method: 'PUT',
         headers: {
           'Accept': 'application/json',
+          // NO incluir Content-Type cuando usas FormData
         },
         body: formData,
       }, 15000);

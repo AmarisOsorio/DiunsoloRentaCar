@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, StyleSheet, Animated } from 'react-native';
+import { View, Image, StyleSheet, Animated, Dimensions } from 'react-native';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function SplashScreen({ onAnimationEnd }) {
   const rotateAnimTop = useRef(new Animated.Value(0)).current;
@@ -133,35 +135,35 @@ const styles = StyleSheet.create({
   },
   StraightTop: {
     position: 'absolute',
-    top: -120,
-    left: -70,
-    width: 600,
-    height: 400,
+    top: -0.19 * screenHeight,
+    left: -0.18 * screenWidth,
+    width: screenWidth * 1.7,
+    height: screenHeight * 0.65,
     zIndex: 1,
   },
   StraightBottom: {
     position: 'absolute',
-    top: 400,
-    left: -120,
-    width: 600,
-    height: 400,
+    top: screenHeight * 0.65,
+    left: -0.5 * screenWidth,
+    width: screenWidth * 1.7,
+    height: screenHeight * 0.65,
     zIndex: 1,
   },
   RoundTop: {
     position: 'absolute',
-    bottom: 525,
-    right: -125,
-    width: 341,
-    height: 357,
+    bottom: screenHeight * 0.85,
+    right: -0.35 * screenWidth,
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.95,
     resizeMode: 'contain',
     zIndex: 2,
   },
   RoundBottom: {
     position: 'absolute',
-    bottom: -150,
-    right: 125,
-    width: 341,
-    height: 357,
+    bottom: -0.24 * screenHeight,
+    right: screenWidth * 0.35,
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.95,
     resizeMode: 'contain',
     zIndex: 2,
   },
@@ -172,9 +174,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   logo: {
-    width: 312,
-    height: 103,
-    bottom: 30,
+    width: screenWidth * 0.8,
+    height: screenWidth * 0.26,
+    bottom: 0.04 * screenHeight,
     resizeMode: 'contain',
   }
 });
