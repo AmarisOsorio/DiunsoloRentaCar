@@ -1,7 +1,13 @@
 import dotenv from "dotenv";
-// Ejecutamos la libreria
-// para acceder al .env
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from 'url';
+
+// Obtener __dirname para módulos ES6
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Especificar la ruta correcta del archivo .env
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 export const config = {
   db: {

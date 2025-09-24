@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from '../appMovil/src/Context/AuthContext';
+import { AuthProvider } from '../appMovil/src/Context/AuthContext';
 import SplashScreen from './src/screens/SplashScreen/SplashScreen';
 import AppNavigationContainer from './src/navigation/NavigatorContainer';
 
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
-  const { isAuthenticated } = useAuth();
 
   const handleSplashEnd = () => {
     setShowSplash(false);

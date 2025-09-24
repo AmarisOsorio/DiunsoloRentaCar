@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
+
 // Configuración de la URL base de la API
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
 

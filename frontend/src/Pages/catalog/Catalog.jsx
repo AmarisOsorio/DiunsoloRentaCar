@@ -11,6 +11,7 @@ import useCatalog from './hooks/useCatalog.js';
 import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
 import { useFilteredVehicles } from '../../components/catalog/filters/hook/usefilters.js';
 
+
 // Componente principal del catálogo de vehículos
 const Catalog = () => {
   const location = useLocation();

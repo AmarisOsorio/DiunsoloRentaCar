@@ -12,6 +12,7 @@ passwordRecoveryController.requestCode = async (req, res) => {
   try {
     let userFound;
     let userType;
+
     userFound = await clientsModel.findOne({ email });
     if (userFound) {
       userType = "cliente";
@@ -95,7 +96,9 @@ passwordRecoveryController.newPassword = async (req, res) => {
     if (!user) {
       return res.json({ message: "Usuario no encontrado" });
     }
+    
     const isSame = await bcryptjs.compare(newPassword, user.password);
+
     if (isSame) {
       return res.json({ message: "La nueva contraseña no puede ser igual a la anterior." });
     }
