@@ -187,9 +187,9 @@ export default function NewVehicle({ navigation, route }) {
             <Text style={styles.headerTitle}>Añadir vehículo</Text>
           </View>
           <View style={[styles.headerCurveContainer, { width: '100%' }]} pointerEvents="none">
-            <Svg height="80" width="100%" viewBox="0 0 400 80" preserveAspectRatio="none">
-              <Path d="M0,0 H400 V80 H0 Z" fill="#3D83D2" />
-              <Path d="M0,60 Q200,10 400,60 L400,80 L0,80 Z" fill="#F2F2F2" />
+            <Svg height="50" width="100%" viewBox="0 0 400 50" preserveAspectRatio="none">
+              <Path d="M0,0 H400 V50 H0 Z" fill="#3D83D2" />
+              <Path d="M0,35 Q200,0 400,35 L400,50 L0,50 Z" fill="#F2F2F2" />
             </Svg>
           </View>
         </View>
@@ -820,16 +820,16 @@ const styles = StyleSheet.create({
   },
   headerBg: {
     backgroundColor: '#3D83D2',
-    height: 140, 
+    height: 120, 
     overflow: 'hidden',
     position: 'relative',
+    zIndex: 2,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    paddingTop: Platform.OS === 'ios' ? 55 : 35, 
-    paddingBottom: 12,
+    paddingTop: Platform.OS === 'ios' ? 45 : 25, 
+    paddingBottom: 8,
     paddingHorizontal: 16,
   },
   backButton: {
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -848,8 +848,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: -5,
-    height: 80,
+    bottom: 0,
+    height: 50,
     width: '100%',
     overflow: 'hidden',
     zIndex: 1,
