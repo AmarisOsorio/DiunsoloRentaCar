@@ -15,6 +15,7 @@ import ReservationScreen from '../screens/Reservations/Reservation';
 import ProfileScreen from '../screens/ProfileScreen';
 import Usuarios from '../screens/Users/Users';
 import VehiclesScreen from '../screens/Vehicles/Vehicles'; // Nueva pantalla de vehículos
+import ContractsScreen from '../screens/Contracts/ContractsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,6 +28,9 @@ const TabArr = [
   { route: 'Reservations', label: 'Reservas', icon: 'calendar', component: ReservationScreen, roles: ['Administrador', 'Empleado'] },
   { route: 'Users', label: 'Usuarios', icon: 'people', component: Usuarios, roles: ['Administrador', 'Gestor', 'Empleado'], hidden: true }, // En popout para Admin, visible para otros
   { route: 'Profile', label: 'Perfil', icon: 'person', component: ProfileScreen, roles: ['Gestor', 'Empleado'] },
+
+    { route: 'Contracts', label: 'Contratos', icon: 'document-text', component: ContractsScreen, roles: ['Administrador', 'Gestor', 'Empleado'] },
+
 ];
 
 // Animaciones para el tab
@@ -199,7 +203,7 @@ const getVisibleTabs = (userRole) => {
 const getMainTabs = (visibleTabs, userRole) => {
   // Para administradores, mostrar los primeros 5 tabs excluyendo los hidden
   if (userRole === 'Administrador') {
-    return visibleTabs.filter(tab => !tab.hidden).slice(0, 5);
+    return visibleTabs.filter(tab => !tab.hidden).slice(0, 6);
   }
   
   // Para otros roles, mostrar todos sus tabs disponibles (incluyendo Usuarios que no está hidden para ellos)
