@@ -1,36 +1,54 @@
 // Importaciones principales de React y los íconos usados en el modal
+<<<<<<< HEAD
 import React from 'react';
 import { useState } from 'react';
+=======
+import { useState, useEffect } from 'react';
+>>>>>>> 40349ca4f3c8c6305971b210111fa3fe3b4178f3
 import { useAuth } from '../../../../hooks/useAuth';
-import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
+import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar, FaExchangeAlt } from 'react-icons/fa';
 import './VehicleModal.css';
-
 
 /**
  * Modal de detalles de vehículo.
  * Muestra información básica y galería de imágenes del vehículo.
- * Permite abrir el modal de solicitud de reserva.
- *
- * Props:
- *  - isOpen: boolean, controla la visibilidad del modal
- *  - onClose: función para cerrar el modal
- *  - vehicle: objeto con los datos del vehículo seleccionado
- *  - onOpenReservationRequest: función para abrir el modal de solicitud de reserva (opcional)
+ * Detecta si está en modo edición y cambia el comportamiento del botón.
  */
 
-// VehicleModal: Modal de detalles de vehículo
 const VehicleModal = ({
   isOpen,
   onClose,
   vehicle,
-  onOpenReservationRequest, // Función para abrir el modal de reserva
-  onOpenLoginModal // Función para abrir el modal de login
+  onOpenReservationRequest,
+  onOpenLoginModal
 }) => {
-  // Estado para la imagen actual en el carrusel
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  
+  // Detectar si estamos en modo edición
+  const [isEditingMode, setIsEditingMode] = useState(false);
+  const [editingReservationData, setEditingReservationData] = useState(null);
 
-  // Si el modal no está abierto o no hay vehículo, no renderizar nada
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const editingReservation = urlParams.get('editingReservation') === 'true';
+    
+    if (editingReservation) {
+      setIsEditingMode(true);
+      setEditingReservationData({
+        reservationId: urlParams.get('reservationId'),
+        startDate: urlParams.get('startDate'),
+        returnDate: urlParams.get('returnDate'),
+        clientName: urlParams.get('clientName')
+      });
+    } else {
+      setIsEditingMode(false);
+      setEditingReservationData(null);
+    }
+  }, [location.search]);
+
   if (!isOpen || !vehicle) return null;
 
   // Unifica las imágenes del vehículo (mainViewImage, sideImage, galleryImages)
@@ -90,7 +108,52 @@ const VehicleModal = ({
     }
   };
 
-  // Render principal del modal
+  // Manejar click del botón principal - CORREGIDO
+  const handleMainButtonClick = () => {
+    if (isEditingMode) {
+      // En modo edición, cerrar este modal y redirigir al perfil con parámetros para abrir modal de edición
+      onClose();
+      
+      // CORRECCIÓN: Incluir información completa del vehículo
+      const vehicleInfo = {
+        vehicleId: vehicle._id,
+        vehicleName: vehicle.vehicleName || vehicle.brand || 'Vehículo',
+        brand: vehicle.brandId?.brandName || vehicle.brand || '',
+        model: vehicle.model || '',
+        year: vehicle.year || '',
+        color: vehicle.color || '',
+        capacity: vehicle.capacity || '',
+        dailyPrice: vehicle.dailyPrice || 25000,
+        mainViewImage: vehicle.mainViewImage || '',
+        sideImage: vehicle.sideImage || '',
+        // Incluir todas las propiedades que el componente pueda necesitar
+        ...vehicle
+      };
+      
+      const params = new URLSearchParams({
+        openEditModal: 'true',
+        reservationId: editingReservationData.reservationId,
+        selectedVehicleId: vehicleInfo.vehicleId,
+        selectedVehicleName: vehicleInfo.vehicleName,
+        selectedVehicleBrand: vehicleInfo.brand,
+        selectedVehicleModel: vehicleInfo.model,
+        selectedVehicleYear: vehicleInfo.year,
+        selectedVehicleColor: vehicleInfo.color,
+        selectedVehicleCapacity: vehicleInfo.capacity,
+        selectedVehiclePrice: vehicleInfo.dailyPrice,
+        selectedVehicleMainImage: vehicleInfo.mainViewImage || vehicleInfo.sideImage || '',
+        startDate: editingReservationData.startDate,
+        returnDate: editingReservationData.returnDate,
+        clientName: editingReservationData.clientName
+      }).toString();
+      
+      window.location.href = `/perfil?${params}`;
+    } else {
+      // En modo normal, comportamiento estándar
+      onOpenReservationRequest(vehicle);
+    }
+  };
+
   return (
     // Fondo oscuro del modal
     <div className="modal-overlay" onClick={onClose}>
@@ -100,12 +163,26 @@ const VehicleModal = ({
         <div className="vehicle-details-header">
           <h2>
             <FaCar />
-            Detalles del Vehículo
+            {isEditingMode ? 'Cambiar a este vehículo' : 'Detalles del Vehículo'}
           </h2>
           <button className="modal-close-btn" onClick={onClose}>
             <FaTimes />
           </button>
         </div>
+
+        {/* Mensaje informativo en modo edición */}
+        {isEditingMode && (
+          <div style={{
+            background: '#e3f2fd',
+            border: '1px solid #1976d2',
+            padding: '12px 24px',
+            color: '#1976d2',
+            fontWeight: '500',
+            fontSize: '0.95rem'
+          }}>
+            🔄 Selecciona este vehículo para reemplazar el actual en tu reserva
+          </div>
+        )}
 
         <div className="vehicle-details-content">
           {/* Galería de imágenes con carrusel */}
@@ -205,6 +282,13 @@ const VehicleModal = ({
                     <span className="detail-label">Capacidad:</span>
                     <span className="detail-value">{vehicle.capacity} personas</span>
                   </div>
+                  {/* Precio por día */}
+                  {vehicle.dailyPrice && (
+                    <div className="detail-item">
+                      <span className="detail-label">Precio por día:</span>
+                      <span className="detail-value">₡{vehicle.dailyPrice.toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -213,15 +297,38 @@ const VehicleModal = ({
 
         {/* Footer del modal con acciones */}
         <div className="vehicle-details-footer">
-          {/* Botón para abrir el modal de solicitud de reserva o login */}
+          {/* Botón cambia según el modo */}
           {isAuthenticated ? (
             <button
               className="request-reservation-btn"
-              onClick={typeof onOpenReservationRequest === 'function' ? () => onOpenReservationRequest(vehicle) : undefined}
-              title="Request Reservation"
+              onClick={handleMainButtonClick}
+              title={isEditingMode ? "Cambiar a este vehículo" : "Solicitar Reserva"}
+              style={isEditingMode ? {
+                background: '#ff9800',
+                borderColor: '#ff9800'
+              } : {}}
+              onMouseOver={(e) => {
+                if (isEditingMode) {
+                  e.target.style.background = '#f57c00';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (isEditingMode) {
+                  e.target.style.background = '#ff9800';
+                }
+              }}
             >
-              <FaCalendar />
-              Solicitar Reserva
+              {isEditingMode ? (
+                <>
+                  <FaExchangeAlt />
+                  Cambiar a este Auto
+                </>
+              ) : (
+                <>
+                  <FaCalendar />
+                  Solicitar Reserva
+                </>
+              )}
             </button>
           ) : (
             <button
@@ -244,4 +351,3 @@ const VehicleModal = ({
 };
 
 export default VehicleModal;
-

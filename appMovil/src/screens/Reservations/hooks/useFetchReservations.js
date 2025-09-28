@@ -20,7 +20,6 @@ export const useFetchReservations = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        timeout: 15000,
       });
 
       if (!response.ok) {
@@ -33,6 +32,7 @@ export const useFetchReservations = () => {
       if (result.success) {
         const reservationsData = result.data || [];
         
+        // Validar que las reservas tengan la estructura correcta
         const validReservations = reservationsData.filter(reservation => {
           return reservation._id && 
                  reservation.startDate && 
@@ -66,6 +66,152 @@ export const useFetchReservations = () => {
     }
   }, []);
 
+  // Función para obtener reservas del usuario autenticado
+  const fetchUserReservations = useCallback(async (token) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      // Agregar token si se proporciona
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/my-reservations`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        const reservationsData = result.data || [];
+        setReservations(reservationsData);
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      setError(err.message);
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Función para obtener reservas por vehículo
+  const fetchReservationsByVehicle = useCallback(async (vehicleId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/vehicle/${vehicleId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        const reservationsData = result.data || [];
+        setReservations(reservationsData);
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      setError(err.message);
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Función para obtener reservas por estado
+  const fetchReservationsByStatus = useCallback(async (status) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/status/${status}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        const reservationsData = result.data || [];
+        setReservations(reservationsData);
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      setError(err.message);
+      setReservations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Función para obtener una reserva por ID
+  const fetchReservationById = useCallback(async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Función para refrescar reservas
   const refreshReservations = useCallback(async () => {
     await fetchReservations();
@@ -92,7 +238,7 @@ export const useFetchReservations = () => {
       }
 
       if (result.success) {
-        // Actualizar la lista local con populate
+        // Actualizar la lista local con la nueva reserva (ya viene populated del backend)
         const newReservation = result.data;
         setReservations(prev => [newReservation, ...prev]);
         return newReservation;
@@ -160,7 +306,7 @@ export const useFetchReservations = () => {
       }
 
       if (result.success) {
-        // Actualizar la lista local
+        // Actualizar la lista local con la reserva actualizada (ya viene populated del backend)
         const updatedReservation = result.data;
         setReservations(prev => 
           prev.map(reservation => 
@@ -177,6 +323,74 @@ export const useFetchReservations = () => {
     }
   }, []);
 
+  // Función para obtener estadísticas de vehículos más rentados por marca
+  const getMostRentedByBrand = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/most-rented-brands`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Función para obtener estadísticas de vehículos más rentados por modelo
+  const getMostRentedByModel = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/reservations/most-rented-models`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        return result.data;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Cargar reservas al inicializar el hook
   useEffect(() => {
     fetchReservations();
@@ -188,11 +402,21 @@ export const useFetchReservations = () => {
     loading,
     error,
 
-    // Funciones principales
+    // Funciones principales CRUD
     fetchReservations,
     refreshReservations,
     createReservation,
     deleteReservation,
     updateReservation,
+
+    // Funciones específicas
+    fetchReservationById,
+    fetchUserReservations,
+    fetchReservationsByVehicle,
+    fetchReservationsByStatus,
+
+    // Funciones de estadísticas
+    getMostRentedByBrand,
+    getMostRentedByModel,
   };
 };

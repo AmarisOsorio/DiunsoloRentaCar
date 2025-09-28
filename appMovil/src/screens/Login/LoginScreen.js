@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity, TextInput, Animated, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, Image, TouchableOpacity, TextInput, Animated, ActivityIndicator, Dimensions } from 'react-native';
 import { useAuth } from '../../Context/AuthContext';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import useLogin from './Hooks/useLogin';
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 export default function LoginScreen({ onLogin }) {
+    const navigation = useNavigation();
+    
     const tireTopSlide = useRef(new Animated.Value(-200)).current;
     const tireBottomSlide = useRef(new Animated.Value(-200)).current;
     const bottomElementsFade = useRef(new Animated.Value(0)).current;
@@ -18,31 +23,76 @@ export default function LoginScreen({ onLogin }) {
     const { login: authLogin } = useAuth();
 
     useEffect(() => {
-        setTimeout(() => {
-            Animated.parallel([
-                Animated.timing(tireTopSlide, {
-                    toValue: 0,
-                    duration: 800,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(tireBottomSlide, {
-                    toValue: 0,
-                    duration: 900,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(bottomElementsFade, {
-                    toValue: 1,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(bottomElementsSlide, {
-                    toValue: 0,
-                    duration: 1200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        }, 100);
+        // Reset animations when component mounts or refocuses
+        const resetAnimations = () => {
+            tireTopSlide.setValue(-200);
+            tireBottomSlide.setValue(-200);
+            bottomElementsFade.setValue(0);
+            bottomElementsSlide.setValue(100);
+            
+            setTimeout(() => {
+                Animated.parallel([
+                    Animated.timing(tireTopSlide, {
+                        toValue: 0,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(tireBottomSlide, {
+                        toValue: 0,
+                        duration: 900,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsFade, {
+                        toValue: 1,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsSlide, {
+                        toValue: 0,
+                        duration: 1200,
+                        useNativeDriver: true,
+                    }),
+                ]).start();
+            }, 100);
+        };
+
+        resetAnimations();
     }, [tireTopSlide, tireBottomSlide, bottomElementsFade, bottomElementsSlide]);
+
+    // Reset animations when screen comes back into focus
+    useFocusEffect(
+        React.useCallback(() => {
+            tireTopSlide.setValue(-200);
+            tireBottomSlide.setValue(-200);
+            bottomElementsFade.setValue(0);
+            bottomElementsSlide.setValue(100);
+            
+            setTimeout(() => {
+                Animated.parallel([
+                    Animated.timing(tireTopSlide, {
+                        toValue: 0,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(tireBottomSlide, {
+                        toValue: 0,
+                        duration: 900,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsFade, {
+                        toValue: 1,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(bottomElementsSlide, {
+                        toValue: 0,
+                        duration: 1200,
+                        useNativeDriver: true,
+                    }),
+                ]).start();
+            }, 100);
+        }, [tireTopSlide, tireBottomSlide, bottomElementsFade, bottomElementsSlide])
+    );
 
     // Efecto para manejar login exitoso
     useEffect(() => {
@@ -124,9 +174,7 @@ export default function LoginScreen({ onLogin }) {
                 ) : null}
                 <View style={styles.forgotContainer}>
                     <Text style={styles.forgotText}>¿No recuerdas tu contraseña?</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.forgotLink}>Recuperar Contraseña</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.forgotLink}>Recuperar Contraseña</Text>
                 </View>
                 <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
                     {loading ? (
@@ -136,6 +184,15 @@ export default function LoginScreen({ onLogin }) {
                     )}
                 </TouchableOpacity>
             </Animated.View>
+
+            {/* Invisible overlay button for "Recuperar Contraseña" */}
+            <TouchableOpacity 
+                style={styles.forgotOverlayButton}
+                onPress={() => navigation.navigate('ForgotPassword')}
+                activeOpacity={1}
+            >
+                <Text style={styles.invisibleText}>Recuperar Contraseña</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -146,34 +203,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#3D83D2',
     },
     logo: {
-        width: 312,
-        height: 103,
+        width: screenWidth * 0.8,
+        height: screenWidth * 0.26,
         resizeMode: 'contain',
-        marginTop: -30,
-        left: 13,
+        marginTop: -0.02 * screenHeight,
+        left: 0.06 * screenWidth,
         zIndex: 11,
     },
     topSection: {
         backgroundColor: '#3D83D2',
-        paddingTop: 60,
-        paddingBottom: 20,
+        paddingTop: 0.08 * screenHeight,
+        paddingBottom: 0.025 * screenHeight,
         alignItems: 'center',
         position: 'relative',
     },
     tireMarkTop: {
         position: 'absolute',
-        top: -165,
-        left: 0,
-        width: 393,
-        height: 325,
+        top: -0.22 * screenHeight,
+        left: -0.18 * screenWidth,
+        width: screenWidth * 1.3,
+        height: screenHeight * 0.65,
         resizeMode: 'contain',
     },
     tireMarkBottom: {
         position: 'absolute',
-        top: -50,
-        left: 0,
-        width: 470,
-        height: 400,
+        top: screenHeight * 0.080,
+        left: -0.01 * screenWidth,
+        width: screenWidth * 1.3,
+        height: screenHeight * 0.65,
         resizeMode: 'contain',
     },
     carSection: {
@@ -181,26 +238,28 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'relative',
         width: '100%',
-        height: 140,
-        marginBottom: 10,
+        height: screenHeight * 0.18,
+        marginBottom: 0.012 * screenHeight,
         zIndex: 10,
+        elevation: 10
     },
     car: {
-        width: 381,
-        height: 286,
+        width: screenWidth * 1,
+        height: screenHeight * 1,
         resizeMode: 'contain',
-        marginTop: -10,
-        left: 20,
+        marginTop: -0.012 * screenHeight,
+        left: 0.05 * screenWidth,
         zIndex: 12,
+        elevation: 12
     },
     formSection: {
         backgroundColor: '#fff',
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
         marginTop: 0,
-        paddingHorizontal: 32,
-        paddingTop: 32,
-        paddingBottom: 24,
+        paddingHorizontal: 0.08 * screenWidth,
+        paddingTop: 0.04 * screenHeight,
+        paddingBottom: 0.03 * screenHeight,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
@@ -208,78 +267,96 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 4,
         zIndex: 9,
+        pointerEvents: 'box-none', // Allow touches to pass to children
     },
     BG: {
         position: 'absolute',
-        top: -325,
+        top: -0.39 * screenHeight,
         left: 0,
-        paddingTop: 32,
-        paddingBottom: 100,
-        width: 400,
-        height: 1000,
+        paddingTop: 0.04 * screenHeight,
+        paddingBottom: 0.13 * screenHeight,
+        width: screenWidth,
+        height: screenHeight * 1.1,
         zIndex: -1,
+        pointerEvents: 'none', // This is key - disable touch on BG
     },
     title: {
-        fontSize: 22,
+        fontSize: 0.018 * screenHeight + 12,
         fontWeight: 'bold',
         color: '#1A237E',
-        marginBottom: 24,
+        marginBottom: 0.03 * screenHeight,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: 1.5,
         borderBottomColor: '#3571B8',
-        marginBottom: 18,
+        marginBottom: 0.022 * screenHeight,
         width: '100%',
     },
     icon: {
-        width: 18,
-        height: 18,
-        marginRight: 8,
+        width: 0.045 * screenWidth,
+        height: 0.045 * screenWidth,
+        marginRight: 0.02 * screenWidth,
         tintColor: '#3571B8',
         resizeMode: 'contain',
     },
     input: {
         flex: 1,
-        height: 40,
-        fontSize: 16,
+        height: 0.06 * screenHeight,
+        fontSize: 0.014 * screenHeight + 8,
         color: '#3571B8',
     },
     errorText: {
         color: 'red',
-        marginBottom: 8,
-        fontSize: 14,
+        marginBottom: 0.01 * screenHeight,
+        fontSize: 0.017 * screenHeight + 6,
         textAlign: 'center',
     },
     forgotContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         width: '100%',
-        marginBottom: 18,
+        marginBottom: 0.022 * screenHeight,
+        left: screenWidth * -0.028,
     },
     forgotText: {
-        fontSize: 12,
+        fontSize: 0.012 * screenHeight + 4,
         color: '#757575',
     },
     forgotLink: {
-        fontSize: 12,
+        fontSize: 0.012 * screenHeight + 4,
         color: '#3571B8',
-        marginLeft: 6,
+        marginLeft: 0.015 * screenWidth,
         textDecorationLine: 'underline',
     },
     loginButton: {
         backgroundColor: '#1A237E',
         borderRadius: 24,
-        paddingVertical: 12,
-        paddingHorizontal: 32,
+        paddingVertical: 0.017 * screenHeight,
+        paddingHorizontal: 0.08 * screenWidth,
         alignItems: 'center',
-        width: '100%',
-        marginTop: 8,
+        width: '80%',
+        marginTop: 0.01 * screenHeight,
     },
     loginButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 0.018 * screenHeight + 8,
         fontWeight: 'bold',
+    },
+    forgotOverlayButton: {
+        position: 'absolute',
+        marginTop: 0.668 * screenHeight,
+        right: screenWidth * -0.04,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        zIndex: 9999,
+        elevation: 9999,
+    },
+    invisibleText: {
+        opacity: 0,
+        color: 'white',
+        backgroundColor: 'rgba(132, 49, 49, 1), 0, 0, 255',
+        padding: 5,
     },
 });

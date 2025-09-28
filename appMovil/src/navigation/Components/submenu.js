@@ -14,14 +14,28 @@ export default function MorePopout({ visible, onClose, navigation }) {
       />
       <View style={styles.popoutWrapper}>
         <View style={styles.popoutContent}>
-          <TouchableOpacity style={styles.popoutRow} onPress={() => { onClose(); navigation.navigate('Clients'); }}>
-            <Ionicons name="people" size={36} color="#153A8B" style={styles.popoutIcon} />
-            <Text style={styles.popoutItem}>Usuarios</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.popoutRow} onPress={() => { onClose(); navigation.navigate('Maintenance'); }}>
-            <Ionicons name="build" size={36} color="#153A8B" style={styles.popoutIcon} />
-            <Text style={styles.popoutItem}>Mantenimientos</Text>
-          </TouchableOpacity>
+              {/* FIX: Navegación a Usuarios */}
+              <TouchableOpacity 
+                style={styles.popoutRow} 
+                onPress={() => {
+                  onClose();
+                  navigation.navigate('MainTabs', { screen: 'Users' });
+                }}
+              >
+                <Ionicons name="people" size={36} color="#153A8B" style={styles.popoutIcon} />
+                <Text style={styles.popoutItem}>Usuarios</Text>
+              </TouchableOpacity>
+              {/* FIX: Navegación a Mantenimientos */}
+              <TouchableOpacity 
+                style={styles.popoutRow} 
+                onPress={() => {
+                  onClose();
+                  navigation.navigate('MainTabs', { screen: 'Maintenance' });
+                }}
+              >
+                <Ionicons name="build" size={36} color="#153A8B" style={styles.popoutIcon} />
+                <Text style={styles.popoutItem}>Mantenimientos</Text>
+              </TouchableOpacity>
         </View>
         <View pointerEvents="none" style={styles.popoutArrow} />
       </View>

@@ -46,15 +46,17 @@ export default function useLogin() {
         return false;
       }
 
-      // Since the server only returns a success message,
-      // we'll create a basic user object
+      // The server returns userType and user data
       const userData = {
+        ...data.user,
         email,
-        role: 'client', // Default role
         message: data.message
       };
 
-      setUserType(userData.role);
+      console.log('Server response:', data);
+      console.log('Setting user type to:', data.userType);
+      
+      setUserType(data.userType);
       setUser(userData);
       setLoading(false);
       return true;
