@@ -20,7 +20,7 @@ const VehicleSelector = ({ vehicles, selectedVehicle, onSelectVehicle }) => {
         };
       case 'Reservado':
         return {
-          backgroundColor: 'rgba(74, 144, 226, 0.15)', // Cambiado a azul para reservas
+          backgroundColor: 'rgba(74, 144, 226, 0.15)',
           color: '#4A90E2'
         };
       case 'Mantenimiento':
@@ -50,7 +50,7 @@ const VehicleSelector = ({ vehicles, selectedVehicle, onSelectVehicle }) => {
   };
 
   const formatCurrency = (price) => {
-    return `Q ${parseFloat(price).toFixed(2)}`;
+    return `$ ${parseFloat(price).toFixed(2)}`;
   };
 
   if (!vehicles || vehicles.length === 0) {
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   selectedCard: {
-    borderColor: '#4A90E2', // Azul para reservas
+    borderColor: '#4A90E2',
     borderWidth: 2,
     shadowColor: '#4A90E2',
     shadowOpacity: 0.15,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#4A90E2', // Azul para reservas
+    backgroundColor: '#4A90E2',
     borderColor: '#4A90E2',
   },
   imageContainer: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1E40AF', // Azul para reservas
+    color: '#1E40AF',
     textAlign: 'center',
     marginBottom: 4,
     lineHeight: 24,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#F0F9FF', // Fondo azul claro
+    backgroundColor: '#F0F9FF',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#BAE6FD',

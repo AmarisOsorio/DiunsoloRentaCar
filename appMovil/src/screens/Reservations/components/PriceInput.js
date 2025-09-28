@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 const PriceInput = ({ pricePerDay, onPriceChange, totalDays, totalAmount }) => {
 
   const formatCurrency = (amount) => {
-    return `Q ${amount.toFixed(2)}`;
+    return `$ ${amount.toFixed(2)}`;
   };
 
   return (
@@ -19,7 +19,7 @@ const PriceInput = ({ pricePerDay, onPriceChange, totalDays, totalAmount }) => {
       
       <View style={styles.priceInputContainer}>
         <View style={styles.currencyContainer}>
-          <Text style={styles.currencySymbol}>Q</Text>
+          <Text style={styles.currencySymbol}>$</Text>
         </View>
         <TextInput
           style={styles.priceInput}

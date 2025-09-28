@@ -374,7 +374,7 @@ const EditReservationScreen = ({ route, navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Precio por día</Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.currencySymbol}>Q</Text>
+            <Text style={styles.currencySymbol}>$</Text>
             <TextInput
               style={styles.priceInput}
               value={pricePerDay}
@@ -394,7 +394,7 @@ const EditReservationScreen = ({ route, navigation }) => {
 
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryTitle}>Precio total</Text>
-          <Text style={styles.totalValue}>Q {calculateTotal().toFixed(2)}</Text>
+          <Text style={styles.totalValue}>$ {calculateTotal().toFixed(2)}</Text>
         </View>
 
         {/* Botones */}
@@ -449,7 +449,7 @@ const EditReservationScreen = ({ route, navigation }) => {
                 <View style={styles.vehicleModalInfo}>
                   <Text style={styles.vehicleModalName}>{item.vehicleName}</Text>
                   <Text style={styles.vehicleModalDetails}>{item.year} - {item.model}</Text>
-                  <Text style={styles.vehicleModalPrice}>Q{item.dailyPrice}/día</Text>
+                  <Text style={styles.vehicleModalPrice}>${item.dailyPrice}/día</Text>
                 </View>
               </TouchableOpacity>
             )}
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 16,
-    color: '#333',
+   color: '#333',
   },
   summaryValue: {
     fontSize: 16,

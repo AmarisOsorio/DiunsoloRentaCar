@@ -16,8 +16,6 @@ import CustomDetailCalendar from './components/CustomDetailCalendar';
 import DateDisplay from './components/DateDisplay';
 import PriceDetail from './components/PriceDetail';
 import DeleteConfirmationModal from './modals/DeleteModal';
-import StatusChangeModal from './modals/StatusChangeModal';
-import StatusSuccessModal from './modals/StatusSuccessModal';
 import { useFetchReservations } from './hooks/useFetchReservations';
 
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
@@ -31,12 +29,7 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [updating, setUpdating] = useState(false);
   
-  // Estados para cambios de status
-  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
-  const [showStatusSuccessModal, setShowStatusSuccessModal] = useState(false);
-  const [pendingStatusChange, setPendingStatusChange] = useState(null);
-  
-  // Estado de edición
+  // Estados para los datos editables
   const [editedData, setEditedData] = useState({
     vehicleId: null,
     clientId: null,
@@ -73,7 +66,6 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
       const result = await response.json();
       if (result.success) {
         setReservation(result.data);
-        // Inicializar datos de edición con los valores originales
         setEditedData({
           vehicleId: result.data.vehicleId,
           clientId: result.data.clientId,
@@ -124,7 +116,6 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   };
 
   const handleUpdate = async () => {
-    // Validaciones
     if (!editedData.vehicleId) {
       Alert.alert('Error', 'Por favor selecciona un vehículo');
       return;
@@ -175,7 +166,6 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
   };
 
   const handleCancel = () => {
-    // Restaurar datos originales
     setEditedData({
       vehicleId: reservation.vehicleId,
       clientId: reservation.clientId,
@@ -204,49 +194,6 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
     }
   };
 
-  // Funciones para cambios de estado
-  const handleAcceptReservation = () => {
-    setPendingStatusChange('Active');
-    setShowStatusChangeModal(true);
-  };
-
-  const handleRejectReservation = () => {
-    setPendingStatusChange('Completed');
-    setShowStatusChangeModal(true);
-  };
-
-  const handleCompleteReservation = () => {
-    setPendingStatusChange('Completed');
-    setShowStatusChangeModal(true);
-  };
-
-  const handleConfirmStatusChange = async () => {
-    setShowStatusChangeModal(false);
-    
-    try {
-      setUpdating(true);
-      const updated = await updateReservation(reservationId, { status: pendingStatusChange });
-      setReservation(updated);
-      setEditedData(prev => ({ ...prev, status: pendingStatusChange }));
-      setShowStatusSuccessModal(true);
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo cambiar el estado de la reserva');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleCancelStatusChange = () => {
-    setShowStatusChangeModal(false);
-    setPendingStatusChange(null);
-  };
-
-  const handleStatusSuccessClose = () => {
-    setShowStatusSuccessModal(false);
-    setPendingStatusChange(null);
-  };
-
-  // Funciones para actualizar los datos editados
   const handleVehicleChange = (vehicle) => {
     setEditedData(prev => ({ ...prev, vehicleId: vehicle }));
   };
@@ -355,7 +302,6 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
     );
   }
 
-  // Determinar qué datos mostrar (editados o originales)
   const displayData = isEditing ? editedData : reservation;
 
   return (
@@ -377,78 +323,15 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Estado de la reserva - Enhanced with better styling and actions */}
-        {!isEditing && (
-          <View style={styles.statusActionsContainer}>
-            <Text style={styles.statusActionsTitle}>Gestión de reserva</Text>
-            
-            {/* Current Status Display */}
-            <View style={styles.currentStatusContainer}>
-              <Text style={styles.currentStatusLabel}>Estado actual:</Text>
-              <View style={[styles.currentStatusBadge, getStatusBadgeStyle(reservation.status)]}>
-                <View style={[styles.currentStatusDot, { backgroundColor: getStatusBadgeStyle(reservation.status).dotColor }]} />
-                <Text style={[styles.currentStatusText, { color: getStatusBadgeStyle(reservation.status).textColor }]}>
-                  {getStatusTextLocal(reservation.status)}
-                </Text>
-              </View>
-            </View>
-            
-            {/* Action Buttons based on status */}
-            {reservation.status === 'Pending' && (
-              <View style={styles.statusActions}>
-                <TouchableOpacity 
-                  style={styles.acceptButton}
-                  onPress={handleAcceptReservation}
-                  disabled={updating}
-                >
-                  <Ionicons name="checkmark-circle" size={20} color="white" />
-                  <Text style={styles.acceptButtonText}>Aceptar</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.rejectButton}
-                  onPress={handleRejectReservation}
-                  disabled={updating}
-                >
-                  <Ionicons name="close-circle" size={20} color="white" />
-                  <Text style={styles.rejectButtonText}>Rechazar</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            
-            {reservation.status === 'Active' && (
-              <View style={styles.statusActions}>
-                <TouchableOpacity 
-                  style={styles.completeButton}
-                  onPress={handleCompleteReservation}
-                  disabled={updating}
-                >
-                  <Ionicons name="flag" size={20} color="white" />
-                  <Text style={styles.completeButtonText}>Completar</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            
-            {reservation.status === 'Completed' && (
-              <View style={styles.statusInfoContainer}>
-                <Ionicons name="information-circle" size={20} color="#3B82F6" />
-                <Text style={styles.statusInfoText}>
-                  Esta reserva ha sido completada. El vehículo está disponible para nuevas reservas.
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Información básica - Temporalmente simplificada */}
+        {/* Información básica */}
         <View style={styles.basicInfoContainer}>
           <Text style={styles.sectionTitle}>Información básica</Text>
           <Text style={styles.infoText}>Vehículo: {displayData.vehicleId?.vehicleName || 'No asignado'}</Text>
           <Text style={styles.infoText}>Cliente: {getClientName()}</Text>
-          <Text style={styles.infoText}>Estado: {displayData.status}</Text>
-          <Text style={styles.infoText}>Precio por día: Q{displayData.pricePerDay}</Text>
+          <Text style={styles.infoText}>Estado: {getStatusTextLocal(displayData.status)}</Text>
+          <Text style={styles.infoText}>Precio por día: ${displayData.pricePerDay}</Text>
           <Text style={styles.infoText}>Días: {calculateTotalDays(displayData.startDate, displayData.returnDate)}</Text>
-          <Text style={styles.infoText}>Total: Q{(parseFloat(displayData.pricePerDay) * calculateTotalDays(displayData.startDate, displayData.returnDate)).toFixed(2)}</Text>
+          <Text style={styles.infoText}>Total: ${(parseFloat(displayData.pricePerDay) * calculateTotalDays(displayData.startDate, displayData.returnDate)).toFixed(2)}</Text>
         </View>
 
         {/* Mostrar diferentes botones según el modo */}
@@ -500,29 +383,6 @@ const ReservationDetailsScreen = ({ route, navigation }) => {
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeleteModal(false)}
         reservationName={getClientName()}
-      />
-
-      {/* Status Change Modal */}
-      <StatusChangeModal
-        visible={showStatusChangeModal}
-        onCancel={handleCancelStatusChange}
-        onConfirm={handleConfirmStatusChange}
-        currentStatus={reservation?.status}
-        nextStatus={pendingStatusChange}
-        vehicleName={reservation?.vehicleId?.vehicleName}
-        clientName={getClientName()}
-        isReservation={true}
-      />
-
-      {/* Status Success Modal */}
-      <StatusSuccessModal
-        visible={showStatusSuccessModal}
-        onClose={handleStatusSuccessClose}
-        newStatus={pendingStatusChange}
-        vehicleName={reservation?.vehicleId?.vehicleName}
-        clientName={getClientName()}
-        isReservation={true}
-        autoClose={true}
       />
     </SafeAreaView>
   );
@@ -582,135 +442,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     marginTop: 16,
-  },
-  statusActionsContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statusActionsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  currentStatusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  currentStatusLabel: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  currentStatusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  currentStatusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  currentStatusText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statusActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  acceptButton: {
-    flex: 1,
-    backgroundColor: '#10B981',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  acceptButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  rejectButton: {
-    flex: 1,
-    backgroundColor: '#DC2626',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  rejectButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  completeButton: {
-    flex: 1,
-    backgroundColor: '#3B82F6',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  completeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  statusInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F0F9FF',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-  },
-  statusInfoText: {
-    fontSize: 14,
-    color: '#1E40AF',
-    marginLeft: 8,
-    flex: 1,
-    lineHeight: 20,
   },
   basicInfoContainer: {
     backgroundColor: 'white',
