@@ -15,7 +15,7 @@ import clientsRoutes from "./src/routes/clients.js";
 import employeesRoutes from "./src/routes/Employees.js";
 import vehiclesRoutes from "./src/routes/vehicles.js";
 import reservationsRoutes from "./src/routes/reservations.js"; //
-import contractsRoutes from "./src/routes/contratos.js";
+import contractsRoutes from "./src/routes/contracts.js";
 import maintenancesRoutes from "./src/routes/maintenances.js";//--
 import brandsRoutes from "./src/routes/brands.js";
 import dashboardRoutes from "./src/routes/DashboardController.js";

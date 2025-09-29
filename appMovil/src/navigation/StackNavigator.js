@@ -12,6 +12,7 @@ import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails
 import AddReservationScreen from '../screens/Reservations/AddReservation';
 import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails';
 import EditReservationScreen from '../screens/Reservations/EditReservationScreen';
+import AddContractScreen from '../screens/Contracts/AddContractsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -125,6 +126,13 @@ const StackNavigator = () => {
           presentation: 'card',
           gestureEnabled: true,
         }}
+      />
+
+      {/* Añadir Contrato */}
+      <Stack.Screen
+        name="AddContract"
+        component={AddContractScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
