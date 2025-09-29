@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const apiUrl = "https://diunsolorentacar.onrender.com/api/vehicles"
+const apiUrl = "http://localhost:4000/api/vehicles"
 
 const useCatalog = () => {
   const [vehicles, setVehicles] = useState([]);

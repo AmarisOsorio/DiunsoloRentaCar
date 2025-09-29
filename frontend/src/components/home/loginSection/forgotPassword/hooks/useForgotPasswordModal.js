@@ -28,16 +28,9 @@ function useForgotPasswordModal(onClose) {
   const handleCorreo = async (data) => {
     setLoading(true);
     setMessage('');
-<<<<<<< HEAD
-    setCorreoGuardado(data.correo);
-    const result = await requestPasswordRecovery(data.correo);
-    console.log('Respuesta recuperación:', result);
-    setMessage(result.message || 'Error inesperado');
-=======
     setCorreoGuardado(data.email);
     const result = await requestPasswordRecovery(data.email);
     setMessage(result.message);
->>>>>>> 40349ca4f3c8c6305971b210111fa3fe3b4178f3
     setLoading(false);
     if (result.message && result.message.includes('enviado')) {
       setStep(2);

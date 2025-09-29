@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 export { AuthContext };
 
 export const AuthProvider = ({ children }) => {
-  const API_URL = import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
   const [userType, setUserType] = useState(() => localStorage.getItem('userType'));
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('isAuthenticated') === 'true');
   const [userInfo, setUserInfo] = useState(() => {
@@ -499,4 +499,4 @@ const login = async ({ email, password }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+};  

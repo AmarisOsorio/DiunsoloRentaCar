@@ -1,18 +1,5 @@
-<<<<<<< HEAD
-  // Importaciones de librerías y componentes necesarios para el catálogo
-  import React from 'react';
-  import { useState } from 'react';
-  import './Catalog.css';
-  import VehicleCard from '../../components/catalog/VehicleCard/VehicleCard.jsx';
-  import VehicleModal from '../../components/catalog/modals/vehicleModal/VehicleModal.jsx';
-  import ReservationRequestModal from '../../components/catalog/modals/vehicleModal/reservationRequest/ReservationRequestModal.jsx';
-  import CatalogFilters from '../../components/catalog/filters/filters.jsx';
-  import catalogBG from '../../assets/bannerCatalog.webp';
-  import useCatalog from './hooks/useCatalog.js';
-  import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
-  import { useFilteredVehicles } from '../../components/catalog/filters/hook/usefilters.js';
-=======
 // Importaciones de librerías y componentes necesarios para el catálogo
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Catalog.css';
@@ -24,8 +11,7 @@ import catalogBG from '../../assets/bannerCatalog.webp';
 import useCatalog from './hooks/useCatalog.js';
 import useVehicleModal from '../../components/catalog/modals/vehicleModal/hooks/useVehicleModal.js';
 import { useFilteredVehicles } from '../../components/catalog/filters/hook/usefilters.js';
->>>>>>> 40349ca4f3c8c6305971b210111fa3fe3b4178f3
-
+  
 // Componente principal del catálogo de vehículos
 const Catalog = () => {
   const location = useLocation();
