@@ -22,11 +22,17 @@ export const ensureTempDirectory = (req, res, next) => {
 
 // Middleware para verificar que los datos del vehículo están completos
 export const validateVehicleData = (req, res, next) => {
+  console.log('Middleware validateVehicleData ejecutado');
+  console.log('Method:', req.method);
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Body keys:', Object.keys(req.body));
+  console.log('Files:', req.files ? Object.keys(req.files) : 'No files');
+  
   // Para actualizaciones (PUT), ser más flexible
   const isUpdate = req.method === 'PUT';
-  
+
   if (isUpdate) {
-    console.log('🔍 Validación para actualización - permitiendo campos parciales');
+    console.log('Validación para actualización - permitiendo campos parciales');
     // Para updates, solo validar que los campos presentes sean válidos
     const { year, capacity, dailyPrice } = req.body;
 
@@ -63,6 +69,31 @@ export const validateVehicleData = (req, res, next) => {
   ];
 
   const missing = required.filter(field => !req.body[field]);
+
+  // Función auxiliar para validar URLs
+  const isValidUrl = (string) => {
+    try {
+      const url = new URL(string);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
+  };
+
+  // Validar imágenes principales (mainViewImage y sideImage) - acepta archivos o URLs
+  const hasMainViewImage = 
+    (req.files && req.files.mainViewImage && req.files.mainViewImage.length > 0) || 
+    (req.body.mainViewImage && (typeof req.body.mainViewImage === 'string' && isValidUrl(req.body.mainViewImage)));
+  
+  const hasSideImage = 
+    (req.files && req.files.sideImage && req.files.sideImage.length > 0) || 
+    (req.body.sideImage && (typeof req.body.sideImage === 'string' && isValidUrl(req.body.sideImage)));
+
+  if (!hasMainViewImage || !hasSideImage) {
+    return res.status(400).json({
+      message: 'Faltan imágenes principales (mainViewImage o sideImage). Proporciona archivos o URLs válidas.'
+    });
+  }
 
   if (missing.length > 0) {
     return res.status(400).json({

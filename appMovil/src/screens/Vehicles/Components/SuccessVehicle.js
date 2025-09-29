@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { View, Text, StyleSheet, Modal, Animated, Easing } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function SuccessVehicle({ visible, message = '¡Vehículo agregado exitosamente!' }) {
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
+  const confettiAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     if (visible) {
@@ -13,8 +14,15 @@ export default function SuccessVehicle({ visible, message = '¡Vehículo agregad
         friction: 5,
         tension: 80,
       }).start();
+      Animated.timing(confettiAnim, {
+        toValue: 1,
+        duration: 900,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.exp),
+      }).start();
     } else {
       scaleAnim.setValue(0);
+      confettiAnim.setValue(0);
     }
   }, [visible]);
 
@@ -22,8 +30,16 @@ export default function SuccessVehicle({ visible, message = '¡Vehículo agregad
 
   return (
     <View style={styles.overlay}>
+      {/* Confetti animado */}
+      <Animated.View style={[styles.confettiContainer, { opacity: confettiAnim }]}> 
+        <Image source={{ uri: CONFETTI_URL }} style={styles.confetti} resizeMode="contain" />
+      </Animated.View>
       <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}> 
-        <Ionicons name="checkmark-circle" size={80} color="#3D83D2" style={{ marginBottom: 12 }} />
+        <View style={styles.iconCircle}>
+          <Ionicons name="car-sport" size={54} color="#fff" style={{ marginBottom: 0 }} />
+        </View>
+        <Ionicons name="checkmark-circle" size={60} color="#3D83D2" style={{ marginBottom: 8, marginTop: -18 }} />
+        <Text style={styles.title}>¡Nuevo vehículo agregado!</Text>
         <Text style={styles.text}>{message}</Text>
       </Animated.View>
     </View>
@@ -33,27 +49,71 @@ export default function SuccessVehicle({ visible, message = '¡Vehículo agregad
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(0,0,0,0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 999,
   },
+  confettiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  confetti: {
+    width: 220,
+    height: 120,
+    marginTop: 10,
+    opacity: 0.92,
+  },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 22,
-    padding: 32,
+    borderRadius: 26,
+    paddingVertical: 38,
+    paddingHorizontal: 32,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#3D83D2',
     shadowOpacity: 0.18,
     shadowRadius: 16,
     elevation: 8,
+    zIndex: 3,
+    minWidth: 270,
   },
-  text: {
-    fontSize: 20,
+  iconCircle: {
+    backgroundColor: '#3D83D2',
+    borderRadius: 40,
+    width: 80,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 0,
+    marginTop: -30,
+    borderWidth: 4,
+    borderColor: '#fff',
+    shadowColor: '#3D83D2',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 22,
     color: '#3D83D2',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    marginBottom: 2,
+    letterSpacing: 0.2,
+  },
+  text: {
+    fontSize: 16,
+    color: '#3977ce',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 2,
+    letterSpacing: 0.1,
   },
 });

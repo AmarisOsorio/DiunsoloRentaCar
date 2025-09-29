@@ -7,21 +7,10 @@ export default function useLogin() {
   const [userType, setUserType] = useState(null);
   const [user, setUser] = useState(null);
 
-  // Configuración de URLs para diferentes plataformas
   const getBaseUrl = () => {
-    if (Platform.OS === 'android') {
-      // Para emulador de Android
-      return 'http://10.0.2.2:4000';
-      // Para dispositivo físico Android, usa tu IP local:
-      // return 'http://192.168.1.XXX:4000'; // Reemplaza XXX con tu IP
-    } else if (Platform.OS === 'ios') {
-      // Para simulador iOS
-      return 'http://localhost:4000';
-      // Para dispositivo físico iOS, usa tu IP local:
-      // return 'http://192.168.1.XXX:4000'; // Reemplaza XXX con tu IP
-    }
-    // Fallback para web
-    return 'http://localhost:4000';
+    const baseUrl = 'https://diunsolorentacar.onrender.com';
+    console.log('BASE_URL:', baseUrl);
+    return baseUrl;
   };
 
   const login = async ({ email, password }) => {
@@ -29,29 +18,52 @@ export default function useLogin() {
     setError(null);
     try {
       const baseUrl = getBaseUrl();
-      const response = await fetch(`${baseUrl}/api/login`, {
+      const loginUrl = `${baseUrl}/api/login`;
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Error de autenticación');
+      const responseText = await response.text();
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        setError('Error: Invalid server response format');
         setLoading(false);
         return false;
       }
 
+      if (!response.ok) {
+        setError(data.message || 'Authentication error');
+        setLoading(false);
+        return false;
+      }
+
+      // The server returns userType and user data
+      const userData = {
+        ...data.user,
+        email,
+        message: data.message
+      };
+
+      console.log('Server response:', data);
+      console.log('Setting user type to:', data.userType);
+      
       setUserType(data.userType);
-      setUser(data.user);
+      setUser(userData);
       setLoading(false);
       return true;
+
     } catch (err) {
-      console.error('Error de login:', err);
-      setError('Error de conexión. Verifica que el servidor esté ejecutándose.');
+      console.error('Login error:', err);
+      setError('Connection error. Please verify the server is running.');
       setLoading(false);
       return false;
     }

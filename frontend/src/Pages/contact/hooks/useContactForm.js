@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api';
 
 export default function useContactoForm() {
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: '' });

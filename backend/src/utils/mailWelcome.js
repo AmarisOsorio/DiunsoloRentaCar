@@ -32,7 +32,7 @@ async function sendWelcomeMail({ correo, nombre }) {
           <span style="font-size: 1.15rem; color: #1C318C; font-weight: 600;">¡Ya puedes reservar tu vehículo favorito!</span>
         </div>
         <div style="width:100%;margin: 18px auto 0 auto;">
-          <a href="http://localhost:5173/catalogo" style="display:block;margin:0 auto;padding:12px 28px;background:#009BDB;color:#fff;text-decoration:none;border-radius:7px;font-weight:bold;font-size:1.1rem;text-align:center;max-width:fit-content;">Ir al Catálogo</a>
+          <a href="https://diunsolo-rent-car.vercel.app/catalogo" style="display:block;margin:0 auto;padding:12px 28px;background:#009BDB;color:#fff;text-decoration:none;border-radius:7px;font-weight:bold;font-size:1.1rem;text-align:center;max-width:fit-content;">Ir al Catálogo</a>
         </div>
         <ul style="margin-top:1.5rem; color:#1C318C; font-size:1rem;">
           <li>Amplia selección de vehículos</li>
@@ -45,7 +45,7 @@ async function sendWelcomeMail({ correo, nombre }) {
           <a href="https://wa.me/50374234724" style="color:#009BDB; text-decoration:none; font-weight:bold;" target="_blank">7423-4724</a>
         </p>
         <div style="text-align: center; margin-top: 18px;">
-          <a href="http://localhost:5173" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
+          <a href="https://diunsolo-rent-car.vercel.app" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
         </div>
       </div>
     `

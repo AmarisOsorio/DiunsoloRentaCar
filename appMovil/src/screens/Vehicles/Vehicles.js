@@ -1,15 +1,16 @@
 // Importaciones principales de React y componentes de React Native
 import React, { useRef, useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import { Animated, ActivityIndicator } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { Animated, ActivityIndicator, StatusBar } from 'react-native';
 import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, FlatList, StyleSheet, Platform } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from '@expo/vector-icons/Ionicons';
 // Hook personalizado para lógica de vehículos
 import useVehicles from './Hooks/useVehicles';
 // Componentes de Vehicles
 import FilterState from './Components/FilterState';
 import BrandLogo from './Components/BrandLogo';
-import VehicleCard from './Components/VehicleCard';
+import MemoizedVehicleCard from './Components/MemoizedVehicleCard';
 
 // Componente principal de la pantalla de gestión de vehículos
 export default function Vehicles() {
@@ -24,7 +25,8 @@ export default function Vehicles() {
 		handleBrandSelect, // Función para seleccionar marca
 		statusFilter, // Estado actual del filtro de estado
 		setStatusFilter, // Setter para filtro de estado
-		loading // Estado de carga (debe estar en el hook useVehicles)
+		loading, // Estado de carga (debe estar en el hook useVehicles)
+		refreshVehicles // Función para refrescar la lista de vehículos
 	} = useVehicles();
 
 	// Estado local para el input de búsqueda
@@ -34,14 +36,38 @@ export default function Vehicles() {
 	const [submenuVisible, setSubmenuVisible] = useState(false);
 	const [submenuPos] = useState({ x: 250, y: 80 }); // posición fija para todos
 
-	// Handler para agregar vehículo (navega a NewVehicle)
+	// Refrescar vehículos cuando la pantalla recibe el foco
+	// Esto se ejecuta cuando volvemos de NewVehicle
+	useFocusEffect(
+		React.useCallback(() => {
+			// Solo refrescar si ya se montó el componente
+			const timeoutId = setTimeout(() => {
+				refreshVehicles();
+			}, 500); // Agregar un pequeño retraso para evitar múltiples llamadas
+
+			return () => clearTimeout(timeoutId);
+		}, [])
+	);
+
+	// Handler para agregar vehículo (navega a NewVehicle sin pasar funciones)
 	const handleAddVehicle = () => {
 		navigation.navigate('NewVehicle');
 	};
 
+	const handleVehiclePress = (vehicle) => {
+		navigation.navigate('VehicleDetails', { vehicleId: vehicle._id });
+	};
+
 	// Render principal de la pantalla
 	return (
-		<View style={styles.screen}>
+		<SafeAreaProvider>
+			<SafeAreaView style={styles.screen}>
+				<StatusBar 
+					backgroundColor="#3D83D2" 
+					barStyle="light-content" 
+					translucent={false}
+					animated={true}
+				/>
 			{/* Cabecera azul con título y buscador */}
 			<View style={styles.headerContainer}>
 				<Text style={styles.header}>Gestiona tu flota.</Text>
@@ -168,14 +194,23 @@ export default function Vehicles() {
 				<FlatList
 					data={filteredVehicles}
 					renderItem={({ item, index }) => (
-						<VehicleCard item={item} index={index} />
+						<MemoizedVehicleCard 
+							item={item} 
+							index={index} 
+							onPress={() => handleVehiclePress(item)}
+						/>
 					)}
 					keyExtractor={item => item._id}
 					contentContainerStyle={styles.vehicleList}
 					showsVerticalScrollIndicator={false}
+					maxToRenderPerBatch={10}
+					windowSize={5}
+					removeClippedSubviews={true}
+					initialNumToRender={8}
 				/>
 			</View>
-		</View>
+			</SafeAreaView>
+		</SafeAreaProvider>
 	);
 }
 

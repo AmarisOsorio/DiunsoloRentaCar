@@ -64,7 +64,7 @@ export default function EmployeeDetailsModal({ visible, empleado, onClose, onUpd
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['image'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,

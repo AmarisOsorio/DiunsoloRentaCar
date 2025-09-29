@@ -126,7 +126,7 @@ export default function AddClientModal({ visible, onClose, onConfirm }) {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['image'],
         allowsEditing: true,
         aspect: field === 'foto' ? [1, 1] : [4, 3],
         quality: 0.7,

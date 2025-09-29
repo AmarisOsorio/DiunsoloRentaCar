@@ -18,6 +18,21 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Android/IntelliJ
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+
+# iOS
+ios/Pods/
+ios/build/
+ios/Podfile.lock
+ios/xcuserdata/
+
 # Metro
 .metro-health-check*
 
@@ -25,13 +40,41 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+logs/
+*.log
 
 # macOS
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# Environment files
+.env
+.env.*
+!.env.example
 
-# typescript
+# TypeScript
 *.tsbuildinfo
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Testing
+coverage/
+__tests__/coverage/
+
+# Build artifacts
+*.jsbundle
+*.bundle
+*.bundle.map
+
+# Temporary files
+*.swp
+*.swo
+*.tmp
+*.temp
+._*
+
+# Cache
+.eslintcache
+.babel.json
