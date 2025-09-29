@@ -5,11 +5,13 @@ import TabNavigator from './TabNavigator';
 // Import modal/stack screens
 import AddMaintenanceScreen from '../screens/Maintenances/AddMaintenance';
 import NewVehicleScreen from '../screens/Vehicles/NewVehicle';
+import EditVehicleScreen from '../screens/Vehicles/EditVehicle';
 import BrandsScreen from '../screens/Vehicles/Brands';
+import VehicleDetailsScreen from '../screens/Vehicles/VehicleDetails';
 import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails';
 import AddReservationScreen from '../screens/Reservations/AddReservation';
 import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails';
-import EditReservationScreen from '../screens/Reservations/EditReservationScreen'; // Nueva importación
+import EditReservationScreen from '../screens/Reservations/EditReservationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,8 +39,8 @@ const StackNavigator = () => {
         }}
       />
 
-       {/* Pantalla detalles mantenimiento */}
-       <Stack.Screen
+      {/* Pantalla detalles mantenimiento */}
+      <Stack.Screen
         name="MaintenanceDetails"
         component={MaintenanceDetailsScreen}
         options={{
@@ -52,6 +54,28 @@ const StackNavigator = () => {
       <Stack.Screen
         name="NewVehicle"
         component={NewVehicleScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
+
+      {/* Pantalla para editar vehículo */}
+      <Stack.Screen
+        name="EditVehicle"
+        component={EditVehicleScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
+
+      {/* Pantalla detalles vehículo */}
+      <Stack.Screen
+        name="VehicleDetails"
+        component={VehicleDetailsScreen}
         options={{
           headerShown: false,
           presentation: 'card',

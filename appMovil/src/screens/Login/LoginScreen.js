@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 0.08 * screenWidth,
         alignItems: 'center',
         width: '80%',
-        marginTop: 0.01 * screenHeight,
+        marginTop: 0.03 * screenHeight,
     },
     loginButtonText: {
         color: '#fff',
