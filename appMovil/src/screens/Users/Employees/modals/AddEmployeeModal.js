@@ -50,7 +50,7 @@ export default function AddEmployeeModal({ visible, onClose, onConfirm }) {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['image'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,

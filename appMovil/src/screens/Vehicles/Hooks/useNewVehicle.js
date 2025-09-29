@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // 👈
 
+const BASE_URL = 'https://diunsolorentacar.onrender.com';
+const BRANDS_API_URL = `${BASE_URL}/api/brands`;
+const STORAGE_KEY = '@NewVehicleForm';
 
-const BRANDS_API_URL = 'http://10.0.2.2:4000/api/brands';
 const vehicleTypes = [
   { label: 'Pick up', value: 'Pick up' },
   { label: 'SUV', value: 'SUV' },
@@ -11,13 +15,13 @@ const vehicleTypes = [
   { label: 'Camión', value: 'Camión' },
   { label: 'Van', value: 'Van' },
 ];
+
 const statusOptions = [
   { label: 'Disponible', value: 'Disponible' },
   { label: 'Reservado', value: 'Reservado' },
   { label: 'Mantenimiento', value: 'Mantenimiento' },
 ];
 
-// Form state
 const useNewVehicle = () => {
   const [mainViewImage, setMainViewImage] = useState(null);
   const [sideImage, setSideImage] = useState(null);
@@ -27,7 +31,7 @@ const useNewVehicle = () => {
   const [plate, setPlate] = useState('');
   const [brands, setBrands] = useState([]);
   const [brandId, setBrandId] = useState('');
-  const [vehicleClass, setVehicleClass] = useState('');
+  const [vehicleClass, setVehicleClass] = useState(vehicleTypes[0]?.value || '');
   const [color, setColor] = useState('');
   const [year, setYear] = useState('');
   const [capacity, setCapacity] = useState('');
@@ -35,83 +39,99 @@ const useNewVehicle = () => {
   const [engineNumber, setEngineNumber] = useState('');
   const [chassisNumber, setChassisNumber] = useState('');
   const [vinNumber, setVinNumber] = useState('');
-  const [status, setStatus] = useState(statusOptions[0].value);
-
-
-  // Estado para la lógica de envío
+  const [status, setStatus] = useState(statusOptions[0]?.value || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [response, setResponse] = useState(null);
 
-  // Envía el formulario de vehículo al backend
-  const submitVehicle = async (data, mainViewImage, sideImage, galleryImages = []) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    setResponse(null);
+  // Cargar datos guardados
+  useEffect(() => {
+    const loadFormState = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem(STORAGE_KEY);
+        if (storedData !== null) {
+          const data = JSON.parse(storedData);
+          setVehicleName(data.vehicleName || '');
+          setDailyPrice(data.dailyPrice || '');
+          setPlate(data.plate || '');
+          setBrandId(data.brandId || brands[0]?.value || '');
+          setVehicleClass(data.vehicleClass || vehicleTypes[0]?.value || '');
+          setColor(data.color || '');
+          setYear(data.year || '');
+          setCapacity(data.capacity || '');
+          setModel(data.model || '');
+          setEngineNumber(data.engineNumber || '');
+          setChassisNumber(data.chassisNumber || '');
+          setVinNumber(data.vinNumber || '');
+          setStatus(data.status || statusOptions[0]?.value || '');
+          setMainViewImage(data.mainViewImage || null);
+          setSideImage(data.sideImage || null);
+          setGalleryImages(data.galleryImages || []);
+        }
+      } catch (e) {
+        console.log('Fallo al cargar el estado del formulario:', e);
+      }
+    };
+    if (brands.length > 0) {
+      loadFormState();
+    }
+  }, [brands.length]);
+
+  // Guardar datos cada vez que cambian
+  useEffect(() => {
+    const saveFormState = async () => {
+      const dataToSave = {
+        vehicleName, dailyPrice, plate, brandId, vehicleClass, color, year, capacity, model, engineNumber, chassisNumber, vinNumber, status,
+        mainViewImage: (typeof mainViewImage === 'object' && mainViewImage?.uri) ? mainViewImage.uri : mainViewImage,
+        sideImage: (typeof sideImage === 'object' && sideImage?.uri) ? sideImage.uri : sideImage,
+        galleryImages: galleryImages.map(img => (typeof img === 'object' && img?.uri) ? img.uri : img),
+      };
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      } catch (e) {
+        console.log('Fallo al guardar el estado del formulario:', e);
+      }
+    };
+    const timeoutId = setTimeout(saveFormState, 500);
+    return () => clearTimeout(timeoutId);
+  }, [
+    vehicleName, dailyPrice, plate, brandId, vehicleClass, color, year, capacity, model, engineNumber, chassisNumber, vinNumber, status,
+    mainViewImage, sideImage, galleryImages.length
+  ]);
+
+  // Limpiar formulario tras éxito
+  const clearForm = async () => {
+    setVehicleName('');
+    setDailyPrice('');
+    setPlate('');
+    setBrandId('');
+    setVehicleClass(vehicleTypes[0]?.value || '');
+    setColor('');
+    setYear('');
+    setCapacity('');
+    setModel('');
+    setEngineNumber('');
+    setChassisNumber('');
+    setVinNumber('');
+    setStatus(statusOptions[0]?.value || '');
+    setMainViewImage(null);
+    setSideImage(null);
+    setGalleryImages([]);
     try {
-      // Construir FormData
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      if (mainViewImage) {
-        formData.append('mainViewImage', {
-          uri: mainViewImage.uri || mainViewImage,
-          name: mainViewImage.fileName || 'main.jpg',
-          type: mainViewImage.type || 'image/jpeg',
-        });
-      }
-      if (sideImage) {
-        formData.append('sideImage', {
-          uri: sideImage.uri || sideImage,
-          name: sideImage.fileName || 'side.jpg',
-          type: sideImage.type || 'image/jpeg',
-        });
-      }
-      if (galleryImages && galleryImages.length > 0) {
-        galleryImages.forEach((img, idx) => {
-          formData.append('galleryImages', {
-            uri: img.uri || img,
-            name: img.fileName || `gallery${idx}.jpg`,
-            type: img.type || 'image/jpeg',
-          });
-        });
-      }
-      // Llamada al backend
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
-      const res = await fetch(`${apiUrl}/vehicles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData?.message || 'Error al crear vehículo');
-      }
-      const resData = await res.json();
-      setSuccess(true);
-      setResponse(resData);
-      return resData;
-    } catch (err) {
-      setError(err?.message || 'Error desconocido');
-      return null;
-    } finally {
-      setLoading(false);
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.log('Fallo al limpiar AsyncStorage:', e);
     }
   };
 
-  // Fetch brands from backend
+  // Fetch brands
   useEffect(() => {
     const fetchBrands = async () => {
       try {
         const response = await fetch(BRANDS_API_URL);
         const data = await response.json();
         setBrands(data.map(b => ({ label: b.brandName, value: b._id })));
-        // No seleccionar marca por defecto
       } catch (err) {
         setBrands([]);
       }
@@ -119,26 +139,50 @@ const useNewVehicle = () => {
     fetchBrands();
   }, []);
 
-  // Image pickers
+  // Image picker
   const pickImage = async (setter, allowsMultiple = false) => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: allowsMultiple,
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      if (allowsMultiple && result.assets) {
-        setter(prev => [...prev, ...result.assets]);
-      } else if (result.assets && result.assets[0]) {
-        setter(result.assets[0]);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: allowsMultiple,
+        quality: 0.7,
+      });
+      if (!result.canceled) {
+        if (allowsMultiple && result.assets) {
+          setter(prev => [...prev, ...result.assets]);
+        } else if (result.assets && result.assets[0]) {
+          setter(result.assets[0]);
+        }
       }
+    } catch (error) {
+      console.error('Error al seleccionar imagen:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen');
     }
   };
 
-  // Form submit
+  const setImageUrl = (setter, url) => {
+    if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
+      setter(url);
+      return true;
+    } else {
+      Alert.alert('Error', 'Por favor ingresa una URL válida (debe comenzar con http:// o https://)');
+      return false;
+    }
+  };
+
+  // Submit vehicle (mejor manejo de error)
   const handleSubmit = async () => {
-    if (!mainViewImage || !sideImage) {
-      Alert.alert('Error', 'Debes seleccionar la imagen principal y lateral.');
+    // ...validaciones...
+    const hasMainImage = mainViewImage && (
+      (typeof mainViewImage === 'string' && (mainViewImage.startsWith('http://') || mainViewImage.startsWith('https://'))) ||
+      (typeof mainViewImage === 'object' && mainViewImage.uri)
+    );
+    const hasSideImage = sideImage && (
+      (typeof sideImage === 'string' && (sideImage.startsWith('http://') || sideImage.startsWith('https://'))) ||
+      (typeof sideImage === 'object' && sideImage.uri)
+    );
+    if (!hasMainImage || !hasSideImage) {
+      Alert.alert('Error', 'Debes seleccionar la imagen principal y lateral (archivos o URLs válidas).');
       return;
     }
     if (!vehicleName || !dailyPrice || !plate || !brandId || !vehicleClass || !color || !year || !capacity || !model || !engineNumber || !chassisNumber || !vinNumber) {
@@ -160,9 +204,71 @@ const useNewVehicle = () => {
       vinNumber,
       status,
     };
-    await submitVehicle(data, mainViewImage, sideImage, galleryImages);
+    try {
+      setLoading(true);
+      setError(null);
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+      // Añadir imágenes
+      const appendImage = (key, image) => {
+        if (typeof image === 'string') {
+          formData.append(key, image);
+        } else if (image && image.uri) {
+          const fileType = image.type || (image.uri.split('.').pop() === 'png' ? 'image/png' : 'image/jpeg');
+          const fileName = image.fileName || `${key}.${fileType.split('/')[1]}`;
+          formData.append(key, {
+            uri: image.uri,
+            type: fileType,
+            name: fileName,
+          });
+        }
+      };
+      appendImage('mainViewImage', mainViewImage);
+      appendImage('sideImage', sideImage);
+      if (galleryImages.length > 0) {
+        galleryImages.forEach((image, index) => {
+          if (typeof image === 'string') {
+            formData.append('galleryImages', image);
+          } else if (image && image.uri) {
+            const fileType = image.type || (image.uri.split('.').pop() === 'png' ? 'image/png' : 'image/jpeg');
+            const fileName = image.fileName || `gallery${index}.${fileType.split('/')[1]}`;
+            formData.append('galleryImages', {
+              uri: image.uri,
+              type: fileType,
+              name: fileName,
+            });
+          }
+        });
+      }
+      const apiUrl = 'https://diunsolorentacar.onrender.com/api'; // Siempre usar Render
+      const response = await axios.post(`${apiUrl}/vehicles`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setSuccess(true);
+      setResponse(response.data);
+      clearForm();
+    } catch (error) {
+      console.error('Error al crear vehículo:', error);
+      let errorMessage = 'Error al crear el vehículo';
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          errorMessage = error.response.data?.message || `Error del servidor: ${error.response.status}`;
+        } else if (error.request) {
+          errorMessage = 'Error de red: La API no está disponible o la conexión falló. Verifica el estado de la API.';
+        } else {
+          errorMessage = error.message || 'Error desconocido al enviar la petición.';
+        }
+      }
+      setError(errorMessage);
+      Alert.alert('ERROR', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
-
   return {
     brands,
     vehicleTypes,
@@ -204,7 +310,9 @@ const useNewVehicle = () => {
     success,
     response,
     pickImage,
+    setImageUrl,
     handleSubmit,
+    clearForm,
   };
 };
 
