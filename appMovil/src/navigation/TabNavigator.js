@@ -175,11 +175,7 @@ const TabNavigator = () => {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
             {/* Barra de estado personalizada */}
-            <StatusBar
-                backgroundColor="#3D83D2"
-                barStyle="light-content"
-                animated={true}
-            />
+            <StatusBar backgroundColor="#3D83D2" barStyle="light-content" />
             <View style={{ flex: 1, backgroundColor: '#fff' }}>
                 {/* Navegador de pestañas */}
                 <Tab.Navigator

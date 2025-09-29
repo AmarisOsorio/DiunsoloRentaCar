@@ -1,17 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, ActivityIndicator, Platform, StatusBar } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, ActivityIndicator, Platform, StatusBar, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as ImagePicker from 'expo-image-picker';
 import SuccessVehicle from './Components/SuccessVehicle';
 import useNewVehicle from './Hooks/useNewVehicle';
 
 
 export default function NewVehicle({ navigation, route }) {
-  // Ya no necesitamos el callback de parámetros, el useFocusEffect en Vehicles se encarga del refresh
+  //el useFocusEffect en Vehicles se encarga del refresh
   
   const form = useNewVehicle();
   const {
@@ -31,7 +29,6 @@ export default function NewVehicle({ navigation, route }) {
     engineNumber, setEngineNumber,
     chassisNumber, setChassisNumber,
     vinNumber, setVinNumber,
-    status, setStatus,
     loading, error, success,
     pickImage, handleSubmit: originalHandleSubmit
   } = form;
@@ -168,6 +165,13 @@ export default function NewVehicle({ navigation, route }) {
     if (navigation && navigation.goBack) navigation.goBack();
   };
 
+  // Altura estimada del header fijo
+  const HEADER_OFFSET_HEIGHT = Platform.select({
+    ios: 110,
+    android: 95,
+    default: 105,
+  });
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#F2F2F2' }}>
@@ -177,24 +181,39 @@ export default function NewVehicle({ navigation, route }) {
           backgroundColor="#3D83D2" 
           translucent={false} 
         />
-      {/* Encabezado */}
-      <View style={styles.headerContainer}>
-        <View style={styles.headerBg}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-              <Ionicons name="chevron-back" size={28} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Añadir vehículo</Text>
-          </View>
-          <View style={[styles.headerCurveContainer, { width: '100%' }]} pointerEvents="none">
-            <Svg height="50" width="100%" viewBox="0 0 400 50" preserveAspectRatio="none">
-              <Path d="M0,0 H400 V50 H0 Z" fill="#3D83D2" />
-              <Path d="M0,35 Q200,0 400,35 L400,50 L0,50 Z" fill="#F2F2F2" />
-            </Svg>
+        {/* Encabezado */}
+        <StatusBar 
+          backgroundColor="#3D83D2" 
+          barStyle="light-content" 
+          translucent={false}
+          animated={true}
+        />
+        <View style={styles.headerContainer}>
+          <View style={styles.headerBg}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+                <Ionicons name="chevron-back" size={28} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Nuevo Vehículo</Text>
+            </View>
+            <View style={[styles.headerCurveContainer, { width: '100%' }]} pointerEvents="none">
+              <Svg height="50" width="100%" viewBox="0 0 400 50" preserveAspectRatio="none">
+                <Path d="M0,0 H400 V50 H0 Z" fill="#3D83D2" />
+                <Path d="M0,40 Q200,0 400,40 L400,50 L0,50 Z" fill="#F2F2F2" />
+              </Svg>
+            </View>
           </View>
         </View>
-      </View>
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {/* ScrollView con paddingTop ajustado para dejar espacio al header fijo */}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: HEADER_OFFSET_HEIGHT }
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* Sección de imágenes */}
         <View style={styles.imageBox}>
           <Text style={{ color: '#3D83D2', fontSize: 13, marginBottom: 8, textAlign: 'center', fontWeight: 'bold' }}>
@@ -202,7 +221,7 @@ export default function NewVehicle({ navigation, route }) {
           </Text>
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
             {/* Imagen principal */}
-            <View style={{ alignItems: 'center' }} ref={mainViewImageBoxRef}>
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 12 }} ref={mainViewImageBoxRef}>
               <TouchableOpacity
                 onPress={() => {
                   pickImage((img) => {
@@ -242,7 +261,7 @@ export default function NewVehicle({ navigation, route }) {
               )}
             </View>
             {/* Imagen lateral */}
-            <View style={{ alignItems: 'center' }} ref={sideImageBoxRef}>
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 12 }} ref={sideImageBoxRef}>
               <TouchableOpacity
                 onPress={() => {
                   pickImage((img) => {
@@ -518,21 +537,23 @@ export default function NewVehicle({ navigation, route }) {
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: 6 }} ref={refs.brandId}>
             <Text style={styles.label}>Marca</Text>
-            <Picker
-              ref={refs.brandId}
-              selectedValue={brandId}
-              onValueChange={value => {
-                setBrandId(value);
-                if (fieldErrors.brandId) setFieldErrors(prev => ({ ...prev, brandId: undefined }));
-              }}
-              style={[styles.picker, fieldErrors.brandId && styles.inputError]}
-              dropdownIconColor="#3D83D2"
-            >
-              <Picker.Item label="Selecciona una marca..." value="" />
-              {brands.map(b => (
-                <Picker.Item key={b.value} label={b.label} value={b.value} />
-              ))}
-            </Picker>
+            <View style={[styles.pickerContainer, fieldErrors.brandId && styles.inputError]}>
+              <Picker
+                ref={refs.brandId}
+                selectedValue={brandId}
+                onValueChange={value => {
+                  setBrandId(value);
+                  if (fieldErrors.brandId) setFieldErrors(prev => ({ ...prev, brandId: undefined }));
+                }}
+                style={styles.pickerInner}
+                dropdownIconColor="#3D83D2"
+              >
+                <Picker.Item label="Selecciona una marca..." value="" />
+                {brands.map(b => (
+                  <Picker.Item key={b.value} label={b.label} value={b.value} />
+                ))}
+              </Picker>
+            </View>
             {fieldErrors.brandId && (
               <View style={[styles.errorBox, { marginTop: 6 }]}> 
                 <Ionicons name="alert-circle" size={16} color="#e74c3c" style={{ marginRight: 6 }} />
@@ -542,21 +563,23 @@ export default function NewVehicle({ navigation, route }) {
           </View>
           <View style={{ flex: 1, marginLeft: 6 }} ref={refs.vehicleClass}>
             <Text style={styles.label}>Tipo</Text>
-            <Picker
-              ref={refs.vehicleClass}
-              selectedValue={vehicleClass}
-              onValueChange={value => {
-                setVehicleClass(value);
-                if (fieldErrors.vehicleClass) setFieldErrors(prev => ({ ...prev, vehicleClass: undefined }));
-              }}
-              style={[styles.picker, fieldErrors.vehicleClass && styles.inputError]}
-              dropdownIconColor="#3D83D2"
-            >
-              <Picker.Item label="Selecciona un tipo..." value="" />
-              {vehicleTypes.map(t => (
-                <Picker.Item key={t.value} label={t.label} value={t.value} />
-              ))}
-            </Picker>
+            <View style={[styles.pickerContainer, fieldErrors.vehicleClass && styles.inputError]}>
+              <Picker
+                ref={refs.vehicleClass}
+                selectedValue={vehicleClass}
+                onValueChange={value => {
+                  setVehicleClass(value);
+                  if (fieldErrors.vehicleClass) setFieldErrors(prev => ({ ...prev, vehicleClass: undefined }));
+                }}
+                style={styles.pickerInner}
+                dropdownIconColor="#3D83D2"
+              >
+                <Picker.Item label="Selecciona un tipo..." value="" />
+                {vehicleTypes.map(t => (
+                  <Picker.Item key={t.value} label={t.label} value={t.value} />
+                ))}
+              </Picker>
+            </View>
             {fieldErrors.vehicleClass && (
               <View style={[styles.errorBox, { marginTop: 6 }]}> 
                 <Ionicons name="alert-circle" size={16} color="#e74c3c" style={{ marginRight: 6 }} />
@@ -732,12 +755,18 @@ export default function NewVehicle({ navigation, route }) {
           )}
         </View>
         {/* Botón para guardar */}
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Guardar vehículo</Text>}
-        </TouchableOpacity>
-        {/* Mensaje de error */}
-          {error ? <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>{error}</Text> : null}
-        </ScrollView>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit} disabled={loading}>
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Guardar vehículo</Text>}
+            </TouchableOpacity>
+            {/* Mensaje de error */}
+            {error ? (
+              <View style={[styles.errorBox, styles.globalErrorBox]}>
+                <Ionicons name="warning-outline" size={20} color="#e74c3c" style={{ marginRight: 8 }} />
+                <Text style={styles.errorText}>Error al enviar: {error}</Text>
+              </View>
+            ) : null}
+            <View style={{ height: 100 }} />
+          </ScrollView>
         <SuccessVehicle visible={showSuccess} message="¡Vehículo agregado exitosamente!" />
       </SafeAreaView>
     </SafeAreaProvider>
@@ -745,6 +774,16 @@ export default function NewVehicle({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
+  globalErrorBox: {
+    backgroundColor: '#fdebeb',
+    borderColor: '#e74c3c',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   inputError: {
     borderColor: '#e74c3c',
     backgroundColor: '#fff6f6',
@@ -756,16 +795,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    marginTop: -6,
-    marginBottom: 10,
+    marginTop: -8,
+    marginBottom: 15,
     marginLeft: 2,
-    borderWidth: 1,
-    borderColor: '#f5c6cb',
-    shadowColor: '#e74c3c',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 0,
   },
   errorText: {
     color: '#e74c3c',
@@ -783,15 +816,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginTop: 4,
     marginBottom: 6,
-    borderWidth: 1,
-    borderColor: '#f5c6a5',
-    shadowColor: '#d35400',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-    maxWidth: 170,
-    alignSelf: 'center',
+  },
+  saveBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
   imageErrorText: {
     color: '#d35400',
@@ -815,20 +845,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff6f6',
   },
   headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: 'transparent',
-    marginBottom: -19,
+    zIndex: 1000,
   },
   headerBg: {
     backgroundColor: '#3D83D2',
-    height: 120, 
+    height: 120,
     overflow: 'hidden',
     position: 'relative',
-    zIndex: 2,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 45 : 25, 
+    paddingTop: Platform.OS === 'ios' ? 50 : 35,
     paddingBottom: 8,
     paddingHorizontal: 16,
   },
@@ -838,7 +871,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -848,7 +881,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: -1,
     height: 50,
     width: '100%',
     overflow: 'hidden',
@@ -860,17 +893,18 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   imageBox: {
-    backgroundColor: '#eaf4ff',
-    borderRadius: 18,
+    backgroundColor: '#f8fbfd',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 18,
-    padding: 18,
+    marginBottom: 25,
+    padding: 20,
     minHeight: 180,
-  },
-  imagePickerBtn: {
-    alignItems: 'center',
-    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   mainImage: {
     width: 90,
@@ -883,12 +917,16 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginBottom: 4,
     backgroundColor: '#fff',
+    paddingTop: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   imageLabel: {
-    color: '#3D83D2',
-    fontWeight: 'bold',
-    fontSize: 13,
-    marginTop: 2,
+    color: '#7bb0f6',
+    fontWeight: '600',
+    fontSize: 14,
+    marginTop: 4,
   },
   galleryImage: {
     width: 60,
@@ -912,19 +950,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   input: {
-    backgroundColor: '#f7fbff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 13,
     fontSize: 16,
     color: '#2561a7',
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: '#b3d6fa',
-    shadowColor: '#3D83D2',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
     elevation: 2,
   },
   sectionTitle: {
@@ -941,28 +979,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    color: '#3D83D2',
+    color: '#555555',
     fontWeight: 'bold',
     fontSize: 14,
-    marginBottom: 2,
+    marginBottom: 6,
     marginLeft: 2,
   },
   picker: {
-    backgroundColor: '#f7fbff',
+    backgroundColor: '#FFFFFF',
     color: '#2561a7',
     borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#b3d6fa',
-    height: 46,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    height: 48,
     width: '100%',
-    marginBottom: 0,
+    marginBottom: 15,
     paddingHorizontal: 8,
-    // iOS shadow
-    shadowColor: '#3D83D2',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    // Android elevation
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
     elevation: 2,
     justifyContent: 'center',
   },
@@ -974,14 +1010,23 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-  saveBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  pickerAligned: {
+  pickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginBottom: 15,
     height: 48,
-    marginBottom: 12,
-    paddingVertical: 0,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  pickerInner: {
+    backgroundColor: 'transparent',
+    color: '#2561a7',
+    width: '100%',
   },
 });

@@ -5,11 +5,12 @@ import TabNavigator from './TabNavigator';
 // Import modal/stack screens
 import AddMaintenanceScreen from '../screens/Maintenances/AddMaintenance';
 import NewVehicleScreen from '../screens/Vehicles/NewVehicle';
-import BrandsScreen from '../screens/Vehicles/Brands';
+import BrandsScreen from '../screens/Brands/Brands';
 import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails';
 import AddReservationScreen from '../screens/Reservations/AddReservation';
 import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails';
 import EditReservationScreen from '../screens/Reservations/EditReservationScreen'; // Nueva importación
+import VehicleDetailsScreen from '../screens/Vehicles/VehicleDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,17 @@ const StackNavigator = () => {
         component={TabNavigator}
       />
       
+      {/* Vehicle details screen */}
+      <Stack.Screen
+        name="VehicleDetails"
+        component={VehicleDetailsScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
+
       {/* Add maintenance screen */}
       <Stack.Screen
         name="AddMaintenance"
