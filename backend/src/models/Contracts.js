@@ -243,7 +243,7 @@ const contractsSchema = new Schema({
         },
 
         conditionPhotos: [String],
-        deliverySignature: String
+        deliverySignature: Object
     },
 
     leaseData: {
@@ -276,8 +276,8 @@ const contractsSchema = new Schema({
         signatureHour: String,
         signatureDate: Date,
 
-        landlordSignature: String,
-        tenantSignature: String
+        landlordSignature: Object,
+        tenantSignature: Object
     },
 
     documents: {

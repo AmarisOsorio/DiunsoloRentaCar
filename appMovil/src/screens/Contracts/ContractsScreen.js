@@ -15,16 +15,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import useContracts from './hooks/useContracts';
 import ContractDetailsModal from './modals/ContractDetailsModal';
-import AddContractModal from './modals/addContractModal';
 
 const { width } = Dimensions.get('window');
 
-const ContractsScreen = () => {
+const ContractsScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('Todos');
   const [selectedContract, setSelectedContract] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [addModalVisible, setAddModalVisible] = useState(false); // NUEVO ESTADO
 
   const {
     contracts,
@@ -34,53 +32,54 @@ const ContractsScreen = () => {
     fetchContracts,
     deleteContract,
     generateContractPdf,
-    createContract // NUEVO MÉTODO (necesitarás agregarlo al hook)
+    refreshContracts,
+    getContractStats,
+    searchContracts
   } = useContracts();
 
-  // ARREGLO: Agregar useEffect para cargar contratos inicialmente
+  // Debug: Verificar estructura de datos
   useEffect(() => {
-    console.log('ContractsScreen: Cargando contratos inicialmente');
-    fetchContracts();
-  }, []);
+    if (contracts.length > 0) {
+      console.log('ContractsScreen: Estructura del primer contrato:', {
+        id: contracts[0]._id,
+        status: contracts[0].status,
+        startDate: contracts[0].startDate,
+        hasReservation: !!contracts[0].reservationId,
+        clientName: contracts[0].reservationId?.clientId?.name,
+        vehicleBrand: contracts[0].reservationId?.vehicleId?.brand,
+        leaseData: contracts[0].leaseData
+      });
+    }
+  }, [contracts]);
 
-  // ARREGLO: Agregar logs para debug
-  useEffect(() => {
-    console.log('ContractsScreen: Estado actual:', {
-      contractsCount: contracts.length,
-      loading,
-      error,
-      filteredCount: filteredContracts.length
-    });
-  }, [contracts, loading, error]);
+  // Función auxiliar para acceder a datos anidados de forma segura
+  const getNestedValue = (obj, path, defaultValue = 'N/A') => {
+    return path.split('.').reduce((current, key) => 
+      current && current[key] !== undefined ? current[key] : defaultValue, obj
+    );
+  };
 
-  // MEJORA: Filtros más específicos siguiendo el diseño de la imagen
+  // Usar estadísticas del hook para filtros
+  const contractStats = getContractStats();
   const statusFilters = [
-    { key: 'Todos', label: 'Todos', count: contracts.length },
-    { key: 'Pendientes', label: 'Pendientes', count: contracts.filter(c => c.status === 'Active').length },
-    { key: 'Activos', label: 'Activos', count: contracts.filter(c => c.status === 'Active').length },
-    { key: 'Completados', label: 'Completados', count: contracts.filter(c => c.status === 'Finished').length }
+    { key: 'Todos', label: 'Todos', count: contractStats.total },
+    { key: 'Active', label: 'Activos', count: contractStats.active },
+    { key: 'Finished', label: 'Completados', count: contractStats.finished },
+    { key: 'Canceled', label: 'Cancelados', count: contractStats.canceled }
   ];
 
-  // ARREGLO: Mejorar la lógica de filtrado con manejo de casos null/undefined
-  const filteredContracts = contracts.filter(contract => {
-    // ARREGLO: Verificar que el contrato existe y tiene las propiedades necesarias
-    if (!contract) return false;
-
-    const matchesSearch = searchText === '' || 
-      (contract.leaseData?.tenantName?.toLowerCase().includes(searchText.toLowerCase())) ||
-      (contract.statusSheetData?.plate?.toLowerCase().includes(searchText.toLowerCase())) ||
-      (contract.statusSheetData?.brandModel?.toLowerCase().includes(searchText.toLowerCase()));
+  // Usar función de búsqueda del hook y filtrar por estado
+  const getFilteredContracts = () => {
+    let filtered = searchContracts(searchText);
     
-    let matchesFilter = true;
-    if (selectedFilter === 'Pendientes' || selectedFilter === 'Activos') {
-      matchesFilter = contract.status === 'Active';
-    } else if (selectedFilter === 'Completados') {
-      matchesFilter = contract.status === 'Finished';
+    if (selectedFilter !== 'Todos') {
+      filtered = filtered.filter(contract => contract.status === selectedFilter);
     }
-    // 'Todos' siempre devuelve true
     
-    return matchesSearch && matchesFilter;
-  });
+    return filtered;
+  };
+
+  const filteredContracts = getFilteredContracts();
 
   const handleContractPress = (contract) => {
     console.log('ContractsScreen: Seleccionando contrato:', contract._id);
@@ -88,27 +87,12 @@ const ContractsScreen = () => {
     setModalVisible(true);
   };
 
-  // NUEVO: Manejar la apertura del modal de agregar
+  // Navegación a la nueva pantalla en lugar de modal
   const handleAddContract = () => {
-    console.log('ContractsScreen: Abriendo modal de agregar contrato');
-    setAddModalVisible(true);
+    console.log('ContractsScreen: Navegando a AddContract');
+    navigation.navigate('AddContract');
   };
 
-  // NUEVO: Manejar el guardado de un nuevo contrato
-  const handleSaveContract = async (contractData) => {
-    try {
-      console.log('ContractsScreen: Guardando nuevo contrato:', contractData);
-      await createContract(contractData);
-      setAddModalVisible(false);
-      Alert.alert('Éxito', 'Contrato creado correctamente');
-      fetchContracts(); // Recargar la lista
-    } catch (error) {
-      console.error('ContractsScreen: Error creando contrato:', error);
-      Alert.alert('Error', 'No se pudo crear el contrato');
-    }
-  };
-
-  // ARREGLO: Agregar mejor manejo de errores y loading states
   const handleDeleteContract = async (contractId) => {
     Alert.alert(
       'Confirmar eliminación',
@@ -122,10 +106,11 @@ const ContractsScreen = () => {
             try {
               console.log('ContractsScreen: Eliminando contrato:', contractId);
               await deleteContract(contractId);
+              setModalVisible(false);
               Alert.alert('Éxito', 'Contrato eliminado correctamente');
             } catch (error) {
               console.error('ContractsScreen: Error eliminando contrato:', error);
-              Alert.alert('Error', 'No se pudo eliminar el contrato');
+              Alert.alert('Error', error.message || 'No se pudo eliminar el contrato');
             }
           }
         }
@@ -136,25 +121,35 @@ const ContractsScreen = () => {
   const handleGeneratePdf = async (contractId) => {
     try {
       console.log('ContractsScreen: Generando PDF para contrato:', contractId);
-      await generateContractPdf(contractId);
+      const result = await generateContractPdf(contractId);
       Alert.alert('Éxito', 'PDF generado correctamente');
+      console.log('PDF URL:', result.pdfUrl);
     } catch (error) {
       console.error('ContractsScreen: Error generando PDF:', error);
-      Alert.alert('Error', 'No se pudo generar el PDF');
+      Alert.alert('Error', error.message || 'No se pudo generar el PDF');
     }
   };
 
-  // MEJORA: Función mejorada para colores de estado
+  // Función para manejar edición de contratos (nueva funcionalidad)
+  const handleEditContract = (contract) => {
+    console.log('ContractsScreen: Editando contrato:', contract._id);
+    navigation.navigate('AddContract', { 
+      editMode: true, 
+      contractData: contract 
+    });
+  };
+
+  // Colores y iconos de estado
   const getStatusColor = (status) => {
     switch (status) {
       case 'Active':
-        return '#00C896'; // Verde moderno
+        return '#00C896';
       case 'Finished':
-        return '#4285F4'; // Azul moderno
+        return '#4285F4';
       case 'Canceled':
-        return '#EA4335'; // Rojo moderno
+        return '#EA4335';
       default:
-        return '#9AA0A6'; // Gris moderno
+        return '#9AA0A6';
     }
   };
 
@@ -171,21 +166,50 @@ const ContractsScreen = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'Active':
+        return 'Activo';
+      case 'Finished':
+        return 'Completado';
+      case 'Canceled':
+        return 'Cancelado';
+      default:
+        return 'Sin estado';
+    }
   };
 
-  // MEJORA: Card de contrato completamente rediseñada siguiendo el estilo moderno
-  const renderContractItem = ({ item, index }) => {
-  // CAMBIO: Solo log el primer contrato para evitar spam
-  if (index === 0) {
-    console.log('ContractsScreen: Renderizando', filteredContracts.length, 'contratos');
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Fecha inválida';
+    }
   };
+
+  const formatCurrency = (amount) => {
+    return `Q ${parseFloat(amount || 0).toFixed(2)}`;
+  };
+
+  // Renderizar item de contrato con mejoras
+  const renderContractItem = ({ item, index }) => {
+    if (index === 0) {
+      console.log('ContractsScreen: Renderizando', filteredContracts.length, 'contratos');
+    }
+
+    // Extraer datos con valores por defecto
+    const clientName = getNestedValue(item, 'reservationId.clientId.name', 'Cliente') + ' ' + 
+                      getNestedValue(item, 'reservationId.clientId.lastName', 'N/A');
+    const vehicleBrand = getNestedValue(item, 'reservationId.vehicleId.brand', 'Vehículo');
+    const vehicleModel = getNestedValue(item, 'reservationId.vehicleId.model', 'N/A');
+    const vehiclePlate = getNestedValue(item, 'reservationId.vehicleId.plate', 'Sin placa');
+    const totalAmount = getNestedValue(item, 'leaseData.totalAmount', 0);
+    const contractId = item._id.slice(-8); // Últimos 8 caracteres del ID
     
     return (
       <TouchableOpacity 
@@ -193,24 +217,26 @@ const ContractsScreen = () => {
         onPress={() => handleContractPress(item)}
         activeOpacity={0.8}
       >
-        {/* Header con estado e ícono */}
+        {/* Header con estado e ID */}
         <View style={styles.cardHeader}>
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.status) }]}>
-              <Ionicons 
-                name={getStatusIcon(item.status)} 
-                size={12} 
-                color="#FFFFFF" 
-              />
+          <View style={styles.leftHeader}>
+            <View style={styles.statusContainer}>
+              <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.status) }]}>
+                <Ionicons 
+                  name={getStatusIcon(item.status)} 
+                  size={12} 
+                  color="#FFFFFF" 
+                />
+              </View>
+              <Text style={styles.statusLabel}>
+                {getStatusLabel(item.status)}
+              </Text>
             </View>
-            <Text style={styles.statusLabel}>
-              {item.status === 'Active' ? 'Activo' : 
-               item.status === 'Finished' ? 'Completado' : 'Cancelado'}
-            </Text>
+            <Text style={styles.contractId}>#{contractId}</Text>
           </View>
           <TouchableOpacity
             style={styles.moreButton}
-            onPress={() => {/* Menú de opciones */}}
+            onPress={() => handleContractPress(item)}
           >
             <Ionicons name="ellipsis-vertical" size={16} color="#9AA0A6" />
           </TouchableOpacity>
@@ -219,10 +245,10 @@ const ContractsScreen = () => {
         {/* Información principal */}
         <View style={styles.cardBody}>
           <Text style={styles.vehicleTitle}>
-            {item.statusSheetData?.brandModel || 'Vehículo N/A'}
+            {vehicleBrand} {vehicleModel}
           </Text>
           <Text style={styles.clientName}>
-            {item.leaseData?.tenantName || 'Cliente N/A'}
+            {clientName}
           </Text>
           
           {/* Detalles del vehículo */}
@@ -230,7 +256,7 @@ const ContractsScreen = () => {
             <View style={styles.detailItem}>
               <Ionicons name="car" size={14} color="#9AA0A6" />
               <Text style={styles.detailText}>
-                {item.statusSheetData?.plate || 'Sin placa'}
+                {vehiclePlate}
               </Text>
             </View>
             <View style={styles.detailItem}>
@@ -247,7 +273,7 @@ const ContractsScreen = () => {
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Total</Text>
             <Text style={styles.priceValue}>
-              ${item.leaseData?.totalAmount || 0}
+              {formatCurrency(totalAmount)}
             </Text>
           </View>
           <View style={styles.actionButtons}>
@@ -256,6 +282,12 @@ const ContractsScreen = () => {
               onPress={() => handleGeneratePdf(item._id)}
             >
               <Ionicons name="document-text" size={18} color="#4285F4" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => handleEditContract(item)}
+            >
+              <Ionicons name="create" size={18} color="#FF9800" />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.deleteButton]}
@@ -269,7 +301,7 @@ const ContractsScreen = () => {
     );
   };
 
-  // MEJORA: Botones de filtro con contador siguiendo el diseño
+  // Renderizar botón de filtro
   const renderFilterButton = (filter) => (
     <TouchableOpacity
       key={filter.key}
@@ -303,7 +335,7 @@ const ContractsScreen = () => {
     </TouchableOpacity>
   );
 
-  // ARREGLO: Mejorar el estado de error con botón de retry
+  // Estado de error
   if (error) {
     console.error('ContractsScreen: Error state:', error);
     return (
@@ -311,7 +343,7 @@ const ContractsScreen = () => {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color="#EA4335" />
           <Text style={styles.errorTitle}>Error al cargar</Text>
-          <Text style={styles.errorMessage}>No se pudieron cargar los contratos</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
           <TouchableOpacity 
             style={styles.retryButton} 
             onPress={() => {
@@ -330,11 +362,13 @@ const ContractsScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* MEJORA: Header moderno siguiendo el diseño */}
+      {/* Header mejorado */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Contratos</Text>
-          <Text style={styles.headerSubtitle}>Revisión al día.</Text>
+          <Text style={styles.headerSubtitle}>
+            {contractStats.total} contratos • {contractStats.active} activos
+          </Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
           <View style={styles.profileAvatar}>
@@ -343,28 +377,36 @@ const ContractsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* MEJORA: Search bar moderno */}
+      {/* Search bar */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#9AA0A6" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar contratos..."
+          placeholder="Buscar por cliente, vehículo o placa..."
           value={searchText}
           onChangeText={setSearchText}
           placeholderTextColor="#9AA0A6"
         />
+        {searchText.length > 0 && (
+          <TouchableOpacity 
+            style={styles.clearSearchButton}
+            onPress={() => setSearchText('')}
+          >
+            <Ionicons name="close" size={20} color="#9AA0A6" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.filterIconButton}>
           <Ionicons name="options" size={20} color="#9AA0A6" />
         </TouchableOpacity>
       </View>
 
-      {/* MEJORA: Botón de agregar moderno - ACTUALIZADO */}
+      {/* Botón de agregar mejorado */}
       <TouchableOpacity style={styles.addButton} onPress={handleAddContract}>
         <Ionicons name="add" size={24} color="#FFFFFF" />
-        <Text style={styles.addButtonText}>Agregar</Text>
+        <Text style={styles.addButtonText}>Nuevo contrato</Text>
       </TouchableOpacity>
 
-      {/* MEJORA: Filtros horizontales con scroll */}
+      {/* Filtros horizontales */}
       <View style={styles.filtersContainer}>
         <FlatList
           horizontal
@@ -376,7 +418,7 @@ const ContractsScreen = () => {
         />
       </View>
 
-      {/* MEJORA: Lista de contratos con mejor feedback visual */}
+      {/* Lista de contratos */}
       <View style={styles.listSection}>
         <Text style={styles.sectionTitle}>
           {selectedFilter} ({filteredContracts.length})
@@ -385,7 +427,7 @@ const ContractsScreen = () => {
         <FlatList
           data={filteredContracts}
           renderItem={renderContractItem}
-          keyExtractor={(item) => item._id || `contract-${Math.random()}`} // ARREGLO: Fallback para key
+          keyExtractor={(item) => item._id || `contract-${Math.random()}`}
           contentContainerStyle={[
             styles.listContainer,
             filteredContracts.length === 0 && styles.emptyListContainer
@@ -394,11 +436,9 @@ const ContractsScreen = () => {
           refreshControl={
             <RefreshControl 
               refreshing={refreshing} 
-              onRefresh={() => {
-                console.log('ContractsScreen: Pull to refresh');
-                fetchContracts();
-              }}
+              onRefresh={refreshContracts}
               colors={['#4285F4']}
+              tintColor="#4285F4"
             />
           }
           ListEmptyComponent={
@@ -412,9 +452,17 @@ const ContractsScreen = () => {
                   ? 'Obteniendo contratos del servidor...'
                   : searchText || selectedFilter !== 'Todos' 
                     ? 'No se encontraron contratos que coincidan con los filtros'
-                    : 'Agrega tu primer contrato para comenzar'
+                    : 'Crea tu primer contrato desde una reservación activa'
                 }
               </Text>
+              {!loading && !searchText && selectedFilter === 'Todos' && (
+                <TouchableOpacity 
+                  style={styles.emptyActionButton}
+                  onPress={handleAddContract}
+                >
+                  <Text style={styles.emptyActionText}>Crear contrato</Text>
+                </TouchableOpacity>
+              )}
             </View>
           }
         />
@@ -430,37 +478,26 @@ const ContractsScreen = () => {
         }}
         onDelete={handleDeleteContract}
         onGeneratePdf={handleGeneratePdf}
-      />
-
-      {/* NUEVO: Modal de agregar contrato */}
-      <AddContractModal
-        visible={addModalVisible}
-        onClose={() => {
-          console.log('ContractsScreen: Cerrando modal de agregar');
-          setAddModalVisible(false);
-        }}
-        onSave={handleSaveContract}
-        reservations={[]} // Aquí pasarías las reservaciones disponibles
+        onEdit={handleEditContract}
       />
     </SafeAreaView>
   );
 };
 
-// Los estilos siguen igual que antes...
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
   
-  // MEJORA: Header style siguiendo la imagen
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#4285F4', // Azul principal como en la imagen
+    backgroundColor: '#4285F4',
   },
   headerContent: {
     flex: 1,
@@ -488,7 +525,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // MEJORA: Search bar moderno
+  // Search bar
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -512,11 +549,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#202124',
   },
+  clearSearchButton: {
+    marginLeft: 8,
+    marginRight: 8,
+  },
   filterIconButton: {
     marginLeft: 12,
   },
 
-  // MEJORA: Botón de agregar prominente
+  // Add button
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -539,7 +580,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // MEJORA: Filtros horizontales
+  // Filters
   filtersContainer: {
     marginBottom: 8,
   },
@@ -588,7 +629,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // MEJORA: Sección de lista
+  // List section
   listSection: {
     flex: 1,
     paddingHorizontal: 20,
@@ -600,7 +641,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // MEJORA: Cards de contratos completamente rediseñadas
+  // Contract cards
   listContainer: {
     paddingBottom: 20,
   },
@@ -625,9 +666,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  leftHeader: {
+    flex: 1,
+  },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 4,
   },
   statusIndicator: {
     width: 20,
@@ -641,6 +686,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#5F6368',
+  },
+  contractId: {
+    fontSize: 10,
+    color: '#9AA0A6',
+    fontFamily: 'monospace',
   },
   moreButton: {
     padding: 4,
@@ -707,11 +757,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
+  editButton: {
+    backgroundColor: '#FFF8E1',
+  },
   deleteButton: {
     backgroundColor: '#FEF7F0',
   },
 
-  // MEJORA: Estados vacío y error
+  // Empty and error states
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: 48,
@@ -729,6 +782,18 @@ const styles = StyleSheet.create({
     color: '#9AA0A6',
     textAlign: 'center',
     lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyActionButton: {
+    backgroundColor: '#4285F4',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  emptyActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   errorContainer: {
     flex: 1,

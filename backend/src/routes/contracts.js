@@ -3,16 +3,13 @@ import contractsController from '../controllers/contractsController.js';
 
 const router = express.Router();
 
-// Obtener todos los contratos
-router.route('/')
-  .get(contractsController.getAllContracts)
-  .post(contractsController.insertContract);
-
-// Operaciones por ID
-router.route('/:id')
-  .delete(contractsController.deleteContracts);
-
-// Generar PDF (usa POST en vez de GET)
-router.post('/:id/pdf', contractsController.generateContractPdf);
+// Rutas de contratos
+router.get('/', contractsController.getAllContracts);                    // GET /api/contracts
+router.get('/debug-reservations', contractsController.debugReservations); // GET /api/contracts/debug-reservations
+router.get('/:id', contractsController.getContractById);                 // GET /api/contracts/:id
+router.post('/', contractsController.insertContract);                    // POST /api/contracts
+router.put('/:id', contractsController.updateContract);                  // PUT /api/contracts/:id
+router.delete('/:id', contractsController.deleteContracts);              // DELETE /api/contracts/:id
+router.post('/:id/pdf', contractsController.generateContractPdf);        // POST /api/contracts/:id/pdf
 
 export default router;

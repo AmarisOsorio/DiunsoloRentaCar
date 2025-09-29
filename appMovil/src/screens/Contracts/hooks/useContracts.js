@@ -1,4 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+
+// Para emulador Android usa 10.0.2.2 en lugar de localhost
+const API_BASE_URL = 'http://10.0.2.2:4000/api';
 
 const useContracts = () => {
   const [contracts, setContracts] = useState([]);
@@ -6,10 +9,7 @@ const useContracts = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // URL base de tu API - ajústala según tu configuración
-  const API_BASE_URL = 'http://10.0.2.2:4000/api'; // CAMBIAR POR TU URL
-
-  // Función para obtener todos los contratos
+  // 🔹 Obtener todos los contratos
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
@@ -20,333 +20,296 @@ const useContracts = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // Agregar headers de autenticación si es necesario
-          // 'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
         },
+        timeout: 15000,
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log('useContracts: Contratos obtenidos:', data.length);
-      setContracts(data);
+      const contractsData = await response.json();
+
+      if (Array.isArray(contractsData)) {
+        const validContracts = contractsData.filter(contract =>
+          contract._id && contract.reservationId
+        );
+
+        setContracts(validContracts);
+        console.log('useContracts: Contratos obtenidos:', validContracts.length);
+      } else {
+        throw new Error('La respuesta del servidor no es un array válido');
+      }
     } catch (err) {
       console.error('useContracts: Error fetching contracts:', err);
-      setError(err.message);
+      let errorMessage = 'Error desconocido';
+
+      if (err.message.includes('Network request failed') || err.message.includes('fetch')) {
+        errorMessage = 'No se puede conectar al servidor. Verifica que el backend esté corriendo en ' + API_BASE_URL;
+      } else if (err.message.includes('timeout')) {
+        errorMessage = 'Tiempo de espera agotado. El servidor tardó demasiado en responder.';
+      } else if (err.message.includes('JSON')) {
+        errorMessage = 'Error al procesar la respuesta del servidor.';
+      } else if (err.message.includes('404')) {
+        errorMessage = 'Endpoint no encontrado. Verifica que la ruta /api/contracts esté disponible.';
+      } else {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+      setContracts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  // Función para crear un nuevo contrato
+  // 🔹 Crear contrato
   const createContract = useCallback(async (contractData) => {
     try {
-      setLoading(true);
       setError(null);
-      console.log('useContracts: Creando contrato...', contractData);
+      console.log('useContracts: Creando contrato:', contractData);
 
-      // Preparar los datos del contrato según el schema de MongoDB
+      if (!contractData.reservationId) {
+        throw new Error('ID de reservación es requerido');
+      }
+
       const formattedData = {
         reservationId: contractData.reservationId,
-        status: 'Active',
-        startDate: new Date(),
-        
-        statusSheetData: {
-          deliveryDate: contractData.deliveryDate ? new Date(contractData.deliveryDate) : new Date(),
-          returnDate: contractData.returnDate ? new Date(contractData.returnDate) : null,
-          unitNumber: contractData.unitNumber,
-          brandModel: contractData.brandModel,
-          plate: contractData.plate,
-          clientName: contractData.clientName,
-          notes: contractData.notes,
-
-          vehicleDocumentation: {
-            delivery: {
-              keys: contractData.deliveryKeys || false,
-              circulationCard: contractData.deliveryCirculationCard || false,
-              consumerInvoice: contractData.deliveryConsumerInvoice || false
-            },
-            return: {
-              keys: false,
-              circulationCard: false,
-              consumerInvoice: false
-            }
-          },
-
-          physicalInspection: {
-            delivery: {
-              external: {
-                generalExteriorCondition: contractData.deliveryExteriorCondition || '',
-                hood: contractData.deliveryHood || false,
-                antenna: contractData.deliveryAntenna || false,
-                mirrors: contractData.deliveryMirrors || false,
-                trunk: contractData.deliveryTrunk || false,
-                windowsGoodCondition: contractData.deliveryWindows || false,
-                toolKit: contractData.deliveryToolKit || false,
-                doorHandles: contractData.deliveryDoorHandles || false,
-                fuelCap: contractData.deliveryFuelCap || false,
-                wheelCovers: {
-                  present: contractData.deliveryWheelCoversPresent || false,
-                  quantity: contractData.deliveryWheelCoversQuantity || 0
-                }
-              },
-              internal: {
-                startSwitch: contractData.deliveryStartSwitch || false,
-                ignitionKey: contractData.deliveryIgnitionKey || false,
-                lights: contractData.deliveryLights || false,
-                originalRadio: contractData.deliveryRadio || false,
-                acHeatingVentilation: contractData.deliveryAC || false,
-                dashboard: contractData.deliveryDashboard || '',
-                gearShift: contractData.deliveryGearShift || false,
-                doorLocks: contractData.deliveryDoorLocks || false,
-                mats: contractData.deliveryMats || false,
-                spareTire: contractData.deliverySpareTire || false
-              }
-            },
-            return: {
-              external: {
-                generalExteriorCondition: '',
-                hood: false,
-                antenna: false,
-                mirrors: false,
-                trunk: false,
-                windowsGoodCondition: false,
-                toolKit: false,
-                doorHandles: false,
-                fuelCap: false,
-                wheelCovers: { present: false, quantity: 0 }
-              },
-              internal: {
-                startSwitch: false,
-                ignitionKey: false,
-                lights: false,
-                originalRadio: false,
-                acHeatingVentilation: false,
-                dashboard: '',
-                gearShift: false,
-                doorLocks: false,
-                mats: false,
-                spareTire: false
-              }
-            }
-          },
-
-          fuelStatus: {
-            delivery: `${contractData.deliveryFuelLevel || 0}%`,
-            return: `${contractData.returnFuelLevel || 0}%`
-          },
-
-          conditionPhotos: [], // Se pueden agregar más tarde
-          deliverySignature: contractData.deliverySignature || ''
-        },
-
-        leaseData: {
-          tenantName: contractData.tenantName || '',
-          tenantProfession: contractData.tenantProfession || '',
-          tenantAddress: contractData.tenantAddress || '',
-          passportCountry: contractData.passportCountry || '',
-          passportNumber: contractData.passportNumber || '',
-          licenseCountry: contractData.licenseCountry || '',
-          licenseNumber: contractData.licenseNumber || '',
-
-          extraDriverName: contractData.extraDriverName || '',
-          extraDriverPassportCountry: contractData.extraDriverPassportCountry || '',
-          extraDriverPassportNumber: contractData.extraDriverPassportNumber || '',
-          extraDriverLicenseCountry: contractData.extraDriverLicenseCountry || '',
-          extraDriverLicenseNumber: contractData.extraDriverLicenseNumber || '',
-
-          deliveryCity: contractData.deliveryCity || '',
-          deliveryHour: contractData.deliveryHour || '',
-          deliveryDate: contractData.deliveryDate ? new Date(contractData.deliveryDate) : new Date(),
-
-          dailyPrice: contractData.dailyPrice || 0,
-          totalAmount: contractData.totalAmount || 0,
-          rentalDays: contractData.rentalDays || 0,
-          depositAmount: contractData.depositAmount || 0,
-          termDays: contractData.termDays || 0,
-          misusePenalty: contractData.misusePenalty || 0,
-
-          signatureCity: contractData.signatureCity || '',
-          signatureHour: contractData.signatureHour || '',
-          signatureDate: contractData.signatureDate ? new Date(contractData.signatureDate) : new Date(),
-
-          landlordSignature: contractData.landlordSignature || '',
-          tenantSignature: contractData.tenantSignature || ''
-        },
-
-        documents: {
-          statusSheetPdf: '',
-          leasePdf: ''
-        }
+        status: contractData.status || 'Active',
+        statusSheetData: contractData.statusSheetData || {},
+        leaseData: contractData.leaseData || {},
       };
 
       const response = await fetch(`${API_BASE_URL}/contracts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Agregar headers de autenticación si es necesario
-          // 'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
         },
         body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorText = errorData.message || await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const newContract = await response.json();
-      console.log('useContracts: Contrato creado:', newContract._id);
-      
-      // Agregar el nuevo contrato a la lista local
-      setContracts(prevContracts => [newContract, ...prevContracts]);
-      
-      return newContract;
+      const result = await response.json();
+
+      if (result.contract) {
+        // 🔹 POBLAR LA RESERVA ACTUALIZADA ANTES DE AGREGAR AL STATE
+        const populatedContractResponse = await fetch(`${API_BASE_URL}/contracts/${result.contract._id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!populatedContractResponse.ok) {
+          throw new Error('No se pudo obtener el contrato poblado con la reserva actualizada');
+        }
+
+        const populatedContract = await populatedContractResponse.json();
+
+        // 🔹 Agregar al state
+        setContracts(prev => [populatedContract, ...prev]);
+
+        console.log('useContracts: Contrato creado con reserva activada:', populatedContract._id);
+        return populatedContract;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
     } catch (err) {
       console.error('useContracts: Error creating contract:', err);
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [fetchContracts]);
 
-  // Función para actualizar un contrato
-  const updateContract = useCallback(async (contractId, updateData) => {
+
+  // 🔹 Actualizar contrato
+  const updateContract = useCallback(async (id, updateData) => {
     try {
-      setLoading(true);
       setError(null);
-      console.log('useContracts: Actualizando contrato:', contractId);
+      console.log('useContracts: Actualizando contrato:', id);
 
-      const response = await fetch(`${API_BASE_URL}/contracts/${contractId}`, {
+      const response = await fetch(`${API_BASE_URL}/contracts/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
         },
         body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorText = errorData.message || await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const updatedContract = await response.json();
-      console.log('useContracts: Contrato actualizado:', updatedContract._id);
-      
-      // Actualizar el contrato en la lista local
-      setContracts(prevContracts =>
-        prevContracts.map(contract =>
-          contract._id === contractId ? updatedContract : contract
-        )
-      );
-      
-      return updatedContract;
+      const result = await response.json();
+
+      if (result.contract) {
+        const updatedContract = result.contract;
+        setContracts(prev =>
+          prev.map(c => (c._id === id ? updatedContract : c))
+        );
+        console.log('useContracts: Contrato actualizado:', updatedContract._id);
+        return updatedContract;
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
     } catch (err) {
       console.error('useContracts: Error updating contract:', err);
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  // Función para eliminar un contrato
-  const deleteContract = useCallback(async (contractId) => {
+  // 🔹 Eliminar contrato
+  const deleteContract = useCallback(async (id) => {
     try {
-      setLoading(true);
       setError(null);
-      console.log('useContracts: Eliminando contrato:', contractId);
+      console.log('useContracts: Eliminando contrato:', id);
 
-      const response = await fetch(`${API_BASE_URL}/contracts/${contractId}`, {
+      const response = await fetch(`${API_BASE_URL}/contracts/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorText = errorData.message || await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      console.log('useContracts: Contrato eliminado:', contractId);
-      
-      // Remover el contrato de la lista local
-      setContracts(prevContracts =>
-        prevContracts.filter(contract => contract._id !== contractId)
-      );
+      const result = await response.json();
+
+      if (result.message) {
+        setContracts(prev => prev.filter(c => c._id !== id));
+        console.log('useContracts: Contrato eliminado:', id);
+        return result;
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
     } catch (err) {
       console.error('useContracts: Error deleting contract:', err);
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  // Función para generar PDF del contrato
-  const generateContractPdf = useCallback(async (contractId) => {
+  // 🔹 Generar PDF
+  const generateContractPdf = useCallback(async (id) => {
     try {
-      setLoading(true);
       setError(null);
-      console.log('useContracts: Generando PDF para contrato:', contractId);
+      console.log('useContracts: Generando PDF para contrato:', id);
 
-      const response = await fetch(`${API_BASE_URL}/contracts/${contractId}/generate-pdf`, {
+      const response = await fetch(`${API_BASE_URL}/contracts/${id}/pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorText = errorData.message || await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('useContracts: PDF generado:', result.pdfUrl);
-      
-      return result;
+
+      if (result.message) {
+        console.log('useContracts: PDF generado:', result.pdfUrl);
+        return result;
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
     } catch (err) {
       console.error('useContracts: Error generating PDF:', err);
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  // Función para refrescar la lista (pull to refresh)
+  // 🔹 Obtener contratos por estado
+  const getContractsByStatus = useCallback((status) => {
+    return contracts.filter(contract => contract.status === status);
+  }, [contracts]);
+
+  // 🔹 Buscar contratos
+  const searchContracts = useCallback((searchTerm) => {
+    if (!searchTerm.trim()) return contracts;
+
+    const term = searchTerm.toLowerCase();
+    return contracts.filter(contract => {
+      // Buscar en datos del cliente
+      const clientName = `${contract.reservationId?.clientId?.name || ''} ${contract.reservationId?.clientId?.lastName || ''}`.toLowerCase();
+
+      // Buscar en datos del vehículo
+      const vehicleInfo = `${contract.reservationId?.vehicleId?.brand || ''} ${contract.reservationId?.vehicleId?.model || ''} ${contract.reservationId?.vehicleId?.plate || ''}`.toLowerCase();
+
+      // Buscar en ID del contrato
+      const contractId = contract._id.toLowerCase();
+
+      return clientName.includes(term) ||
+        vehicleInfo.includes(term) ||
+        contractId.includes(term);
+    });
+  }, [contracts]);
+
+  // 🔹 Estadísticas de contratos
+  const getContractStats = useCallback(() => {
+    const stats = {
+      total: contracts.length,
+      active: contracts.filter(c => c.status === 'Active').length,
+      finished: contracts.filter(c => c.status === 'Finished').length,
+      canceled: contracts.filter(c => c.status === 'Canceled').length,
+    };
+
+    return stats;
+  }, [contracts]);
+
+  // 🔹 Refresh (pull to refresh)
   const refreshContracts = useCallback(() => {
+    console.log('useContracts: Pull to refresh');
     setRefreshing(true);
     fetchContracts();
   }, [fetchContracts]);
 
-  // Función para obtener un contrato específico
-  const getContract = useCallback(async (contractId) => {
+  // 🔹 Obtener un contrato específico
+  const getContract = useCallback(async (id) => {
     try {
       setError(null);
-      console.log('useContracts: Obteniendo contrato:', contractId);
+      console.log('useContracts: Obteniendo contrato:', id);
 
-      const response = await fetch(`${API_BASE_URL}/contracts/${contractId}`, {
+      const response = await fetch(`${API_BASE_URL}/contracts/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorText = errorData.message || await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const contract = await response.json();
       console.log('useContracts: Contrato obtenido:', contract._id);
-      
       return contract;
     } catch (err) {
       console.error('useContracts: Error getting contract:', err);
@@ -355,18 +318,33 @@ const useContracts = () => {
     }
   }, []);
 
+  // 🔹 Cargar contratos al inicializar el hook
+  useEffect(() => {
+    fetchContracts();
+  }, [fetchContracts]);
+
   return {
+    // Estado
     contracts,
     loading,
     refreshing,
     error,
+
+    // Acciones CRUD
     fetchContracts,
     createContract,
     updateContract,
     deleteContract,
+    getContract,
+
+    // Acciones adicionales
     generateContractPdf,
     refreshContracts,
-    getContract,
+
+    // Utilidades
+    getContractsByStatus,
+    searchContracts,
+    getContractStats,
   };
 };
 
