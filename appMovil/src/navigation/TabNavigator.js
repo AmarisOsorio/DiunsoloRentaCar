@@ -45,6 +45,7 @@ const TabConfig = {
     ]
 };
 
+
 // Animaciones para el botón de la pestaña cuando está enfocado y desenfocado
 const animate1 = { 0: { scale: .5, translateY: 7 }, .92: { translateY: -10 }, 1: { scale: 1.05, translateY: -6 } };
 const animate2 = { 0: { scale: 1.05, translateY: -6 }, 1: { scale: 1, translateY: 7 } };
@@ -117,6 +118,88 @@ const TabButton = (props) => {
             </Animatable.View>
         </TouchableOpacity>
     );
+
+  };
+
+  // Filtrar opciones del popout basado en el rol
+  const getPopoutOptions = () => {
+    const options = [];
+    
+    // Usuarios solo para Administrador (en el popout)
+    if (userRole === 'Administrador') {
+      options.push({
+        key: 'users',
+        icon: 'people',
+        label: 'Usuarios',
+        color: '#4A90E2',
+        onPress: () => { onClose(); navigation.navigate('Users'); }
+      });
+
+      // Perfil también para Administrador ya que usa el popout
+      options.push({
+        key: 'profile',
+        icon: 'person',
+        label: 'Perfil',
+        color: '#4A90E2',
+        onPress: () => { onClose(); navigation.navigate('Profile'); }
+      });
+    }
+    
+    // Cerrar sesión siempre disponible para todos
+    options.push({
+      key: 'logout',
+      icon: 'log-out',
+      label: 'Cerrar Sesión',
+      color: '#E74C3C',
+      onPress: handleLogout
+    });
+    
+    return options;
+  };
+
+  const popoutOptions = getPopoutOptions();
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <TouchableOpacity style={styles.popoutOverlay} activeOpacity={1} onPress={onClose}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+          <View style={styles.popoutWrapper}>
+            <View style={styles.popoutContent}>
+              {popoutOptions.map((option) => (
+                <TouchableOpacity key={option.key} style={styles.popoutRow} onPress={option.onPress}>
+                  <Ionicons name={option.icon} size={36} color={option.color} style={styles.popoutIcon} />
+                  <Text style={[styles.popoutItem, { color: option.color }]}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View pointerEvents="none" style={styles.popoutArrow} />
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+};
+
+// Función para filtrar tabs basado en el rol del usuario
+const getVisibleTabs = (userRole) => {
+  return TabArr.filter(tab => {
+    // Si el tab no tiene roles definidos, mostrar para todos
+    if (!tab.roles) return true;
+    // Si el tab tiene roles definidos, verificar si el usuario tiene acceso
+    return tab.roles.includes(userRole);
+  });
+};
+
+// Función para determinar cuántos tabs mostrar en la barra principal
+const getMainTabs = (visibleTabs, userRole) => {
+  // Para administradores, mostrar los primeros 5 tabs excluyendo los hidden
+  if (userRole === 'Administrador') {
+    return visibleTabs.filter(tab => !tab.hidden).slice(0, 6);
+  }
+  
+  // Para otros roles, mostrar todos sus tabs disponibles (incluyendo Usuarios que no está hidden para ellos)
+  return visibleTabs.filter(tab => !tab.hidden);
+
 };
 
 // Componente principal que gestiona la navegación por pestañas
