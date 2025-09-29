@@ -70,7 +70,7 @@ export default function ClientDetailsModal({ visible, cliente, onClose, onUpdate
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['image'],
       allowsEditing: true,
       aspect: field === 'foto' ? [1, 1] : [4, 3],
       quality: 0.7,

@@ -5,11 +5,17 @@ import TabNavigator from './TabNavigator';
 // Import modal/stack screens
 import AddMaintenanceScreen from '../screens/Maintenances/AddMaintenance';
 import NewVehicleScreen from '../screens/Vehicles/NewVehicle';
-import BrandsScreen from '../screens/Vehicles/Brands';
+import BrandsScreen from '../screens/Brands/Brands';
 import MaintenanceDetailsScreen from '../screens/Maintenances/MaintenanceDetails';
 import AddReservationScreen from '../screens/Reservations/AddReservation';
 import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails';
 import EditReservationScreen from '../screens/Reservations/EditReservationScreen'; // Nueva importación
+
+import AddContractScreen from '../screens/Contracts/AddContractsScreen';
+
+
+import VehicleDetailsScreen from '../screens/Vehicles/VehicleDetails';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +32,17 @@ const StackNavigator = () => {
         component={TabNavigator}
       />
       
+      {/* Vehicle details screen */}
+      <Stack.Screen
+        name="VehicleDetails"
+        component={VehicleDetailsScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          gestureEnabled: true,
+        }}
+      />
+
       {/* Add maintenance screen */}
       <Stack.Screen
         name="AddMaintenance"
@@ -37,8 +54,8 @@ const StackNavigator = () => {
         }}
       />
 
-       {/* Pantalla detalles mantenimiento */}
-       <Stack.Screen
+      {/* Pantalla detalles mantenimiento */}
+      <Stack.Screen
         name="MaintenanceDetails"
         component={MaintenanceDetailsScreen}
         options={{
@@ -48,16 +65,16 @@ const StackNavigator = () => {
         }}
       />
 
-      {/* Pantalla para agregar vehículo */}
-      <Stack.Screen
-        name="NewVehicle"
-        component={NewVehicleScreen}
-        options={{
-          headerShown: false,
-          presentation: 'card',
-          gestureEnabled: true,
-        }}
-      />
+          {/* Pantalla para agregar vehículo */}
+          <Stack.Screen
+            name="NewVehicle"
+            component={NewVehicleScreen}
+            options={{
+              headerShown: false,
+              presentation: 'card',
+              gestureEnabled: true,
+            }}
+          />
 
       {/* Brands screen */}
       <Stack.Screen
@@ -69,7 +86,7 @@ const StackNavigator = () => {
           gestureEnabled: true,
         }}
       />
-      
+
       {/* Pantalla para agregar reserva */}
       <Stack.Screen
         name="AddReservation"
@@ -101,6 +118,13 @@ const StackNavigator = () => {
           presentation: 'card',
           gestureEnabled: true,
         }}
+      />
+
+      {/* Añadir Contrato */}
+      <Stack.Screen
+        name="AddContract"
+        component={AddContractScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

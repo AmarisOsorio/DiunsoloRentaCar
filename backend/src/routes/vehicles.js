@@ -28,20 +28,45 @@ const uploadFields = upload.fields([
   { name: 'sideImage', maxCount: 1 }
 ]);
 
+// Middleware condicional para multer
+const conditionalUpload = (req, res, next) => {
+  console.log('🔍 Middleware conditionalUpload - Content-Type:', req.headers['content-type']);
+  
+  // Si es JSON, omitir multer
+  if (req.headers['content-type']?.includes('application/json')) {
+    console.log('📄 JSON detectado, omitiendo multer');
+    return next();
+  }
+  
+  // Si es FormData, usar multer
+  console.log('📎 FormData detectado, usando multer');
+  return uploadFields(req, res, next);
+};
+
 //Routes
 router.route("/")
   .get(vehiclesController.getVehicles)
-  .post(uploadFields, validateVehicleData, vehiclesController.addVehicle);
+  .post(conditionalUpload, validateVehicleData, vehiclesController.addVehicle);
 
 router.route("/home")
   .get(vehiclesController.getHomeVehicles); //Get featured vehicles [Home]
+
+router.route("/test-connection")
+  .get(vehiclesController.testConnection); // Test basic connection
+
+router.route("/test-contract")
+  .get(vehiclesController.testContract); // Test contract download
+
+router.route("/test-pdf")
+  .get(vehiclesController.testPdf); // Test PDF generation
+
+router.route("/contract-download/:id")
+  .get(vehiclesController.downloadLeaseContract);
 
 router.route("/:id")
   .get(vehiclesController.getVehicleById)
   .put(uploadFields, validateVehicleData, vehiclesController.updateVehicle)
   .delete(vehiclesController.deleteVehicle);
-router.route("/:id/download-lease-contract")
-  .get(vehiclesController.downloadLeaseContract);
 
 //Export
 export default router;
