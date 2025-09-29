@@ -35,6 +35,10 @@ export default function useLogin(onClose) {
         setError(result.message || 'Tu cuenta no está verificada. Revisa tu correo.');
         setPendingVerificationEmail(email);
         setPendingVerificationPassword(password);
+        
+        // Generar nuevo token de verificación para este email
+        await generateVerificationToken(email);
+        
         setShowVerifyModal(true);
         setLoading(false);
         return;
@@ -47,16 +51,58 @@ export default function useLogin(onClose) {
         setTimeout(() => {
           setShowLogged(false);
           onClose && onClose();
+          window.dispatchEvent(new Event('auth-changed'));
+          window.location.href = '/';
         }, 2200);
       }
     } catch (err) {
+      console.error('Error en handleSubmit:', err);
       setError('Error de red o servidor');
     } finally {
       setLoading(false);
     }
   };
 
-  // Nuevo useEffect para mostrar verify y quitar loading
+  // Función para generar token de verificación
+  const generateVerificationToken = async (userEmail) => {
+    try {
+      const response = await fetch('/api/login/generateVerificationToken', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail })
+      });
+      
+      if (!response.ok) {
+        console.error('Error generando token de verificación:', response.status);
+        // Si el endpoint no existe, intentar con el de registro
+        await fallbackGenerateToken(userEmail);
+      }
+    } catch (error) {
+      console.error('Error en generateVerificationToken:', error);
+      // Fallback al método de registro
+      await fallbackGenerateToken(userEmail);
+    }
+  };
+
+  // Función de respaldo para generar token usando el endpoint de registro
+  const fallbackGenerateToken = async (userEmail) => {
+    try {
+      const response = await fetch('/api/registerClients/resendCodeEmail', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        console.error('Error en fallback generateToken:', response.status);
+      }
+    } catch (error) {
+      console.error('Error en fallbackGenerateToken:', error);
+    }
+  };
+
+  // useEffect para mostrar verify y quitar loading
   useEffect(() => {
     if (pendingShowVerify) {
       setShowVerifyModal(true);
@@ -67,25 +113,106 @@ export default function useLogin(onClose) {
 
   // Verificar el código y hacer login
   const handleVerifyAndLogin = async (code) => {
+    if (!code || code.trim().length === 0) {
+      return { message: 'Código de verificación requerido' };
+    }
+
     try {
-      const res = await fetch('/api/registerClients/verifyCodeEmail', {
+      console.log('Verificando código:', code);
+      
+      // Primero verificar el código
+      const verifyRes = await fetch('/api/registerClients/verifyCodeEmail', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verificationCode: code })
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          verificationCode: code.trim().toUpperCase() 
+        })
       });
-      const data = await res.json();
-      if (data.message && data.message.toLowerCase().includes('verificado')) {
-        setShowVerifyModal(false);
-        setShowLogged(true);
-        setTimeout(() => {
-          setShowLogged(false);
-          window.location.href = '/';
-        }, 3500);
+      
+      const verifyData = await verifyRes.json();
+      console.log('Respuesta verificación:', verifyData);
+      
+      if (!verifyRes.ok) {
+        console.error('Error en verificación:', verifyRes.status, verifyData);
+        return { 
+          message: verifyData.message || 'Error verificando el código' 
+        };
       }
-      return data;
-    } catch {
-      return { message: 'Error verificando el código' };
+      
+      if (verifyData.message && verifyData.message.toLowerCase().includes('verificado')) {
+        // Ahora hacer login automáticamente
+        try {
+          console.log('Intentando login automático después de verificación');
+          const loginResult = await login({ 
+            email: pendingVerificationEmail, 
+            password: pendingVerificationPassword 
+          });
+          
+          console.log('Resultado login post-verificación:', loginResult);
+          
+          if (loginResult.message === 'login exitoso') {
+            setShowVerifyModal(false);
+            setShowLogged(true);
+            setTimeout(() => {
+              setShowLogged(false);
+              window.dispatchEvent(new Event('auth-changed'));
+              window.location.href = '/';
+            }, 1500);
+            return { message: 'Cuenta verificada y sesión iniciada exitosamente' };
+          } else {
+            // Si el login falla, al menos la cuenta está verificada
+            setShowVerifyModal(false);
+            setError('');
+            return { 
+              message: 'Cuenta verificada exitosamente. Por favor inicia sesión nuevamente.' 
+            };
+          }
+        } catch (loginError) {
+          console.error('Error en login después de verificación:', loginError);
+          setShowVerifyModal(false);
+          setError('');
+          return { 
+            message: 'Cuenta verificada exitosamente. Por favor inicia sesión nuevamente.' 
+          };
+        }
+      }
+      
+      return verifyData;
+    } catch (error) {
+      console.error('Error en handleVerifyAndLogin:', error);
+      return { message: 'Error de red al verificar el código' };
+    }
+  };
+
+  // Función para reenviar código de verificación
+  const handleResendVerificationCode = async () => {
+    try {
+      console.log('Reenviando código para:', pendingVerificationEmail);
+      
+      // Primero intentar generar nuevo token
+      await generateVerificationToken(pendingVerificationEmail);
+      
+      // Luego intentar reenviar
+      const res = await fetch('/api/registerClients/resendCodeEmail', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await res.json();
+      console.log('Respuesta reenvío:', data);
+      
+      if (res.ok) {
+        return { message: 'Código reenviado exitosamente' };
+      } else {
+        return { message: data.message || 'Error reenviando el código' };
+      }
+    } catch (err) {
+      console.error('Error reenviando código:', err);
+      return { message: 'No se pudo reenviar el código.' };
     }
   };
 
@@ -107,5 +234,6 @@ export default function useLogin(onClose) {
     loading,
     pendingShowVerify,
     handleVerifyAndLogin,
+    handleResendVerificationCode, // Esta función ahora está incluida en el hook
   };
 }

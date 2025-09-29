@@ -8,7 +8,8 @@ import VerifyAccountModal from '../../../profile/accountInformation/modals/verif
 import LoadingModalBackdrop from './LoadingModalBackdrop.jsx';
 import SuccessCheckAnimation from '../../../interactions/SuccessCheck/SuccessCheckAnimation.jsx';
 
-const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const {
+const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {
+  const {
     email,
     password,
     error,
@@ -26,11 +27,14 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
     loading,
     pendingShowVerify,
     handleVerifyAndLogin,
-    setError // <-- Agregar setError aquí
+    handleResendVerificationCode, // <-- AGREGADO: Función del hook
+    setError
   } = useLogin(onClose);
+
   const [show, setShow] = React.useState(false);
   const [emailRef, setEmailRef] = React.useState(null);
-  const [passwordRef, setPasswordRef] = React.useState(null);  const [emailError, setEmailError] = React.useState('');
+  const [passwordRef, setPasswordRef] = React.useState(null);
+  const [emailError, setEmailError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
   const [focusedField, setFocusedField] = React.useState(null);
   const [hasTriedLogin, setHasTriedLogin] = React.useState(false);
@@ -41,14 +45,14 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
       setEmailError('');
       setPasswordError('');
       setFocusedField(null);
-      setHasTriedLogin(false); // <-- Reset al abrir
-      setError && setError(''); // <-- Limpiar error global
+      setHasTriedLogin(false);
+      setError && setError('');
     } else {
       // Espera la animación antes de desmontar
       const timeout = setTimeout(() => setShow(false), 300);
       return () => clearTimeout(timeout);
     }
-  }, [open]);
+  }, [open, setError]);
 
   // useEffect para redirección tras éxito
   React.useEffect(() => {
@@ -65,7 +69,9 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
   const handleOpenRegister = (e) => {
     e.preventDefault();
     onOpenRegister && onOpenRegister();
-  };  const handleOpenForgot = (e) => {
+  };
+
+  const handleOpenForgot = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (onOpenForgot) {
@@ -78,6 +84,7 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return 'Correo inválido';
     return '';
   };
+
   const validatePassword = (value) => {
     if (!value) return 'La contraseña es obligatoria';
     if (value.length < 6) return 'Mínimo 6 caracteres';
@@ -88,10 +95,12 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
     setEmailError(validateEmail(email));
     setHasTriedLogin(true);
   };
+
   const handlePasswordBlur = () => {
     setPasswordError(validatePassword(password));
     setHasTriedLogin(true);
   };
+
   const handleSubmitWithValidation = (e) => {
     e.preventDefault();
     setHasTriedLogin(true);
@@ -109,19 +118,8 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
     onClose && onClose();
   };
 
-  // Handler para reenviar el código de verificación
-  const handleResendVerificationCode = async () => {
-    try {
-      const res = await fetch('/api/registerClients/resendCodeEmail', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      return await res.json();
-    } catch (err) {
-      return { message: 'No se pudo reenviar el código.' };
-    }
-  };
+  // ELIMINADO: La función handleResendVerificationCode local ya no es necesaria
+  // porque ahora viene del hook useLogin
 
   // Escucha el evento para mostrar el modal de éxito tras verificación
   React.useEffect(() => {
@@ -139,12 +137,13 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
         open={showVerifyModal}
         onClose={() => setShowVerifyModal(false)}
         onVerify={handleVerifyAndLogin}
-        onResend={handleResendVerificationCode}
+        onResend={handleResendVerificationCode} // <-- ACTUALIZADO: Usa la función del hook
         email={pendingVerificationEmail}
         password={pendingVerificationPassword}
       />
     );
   }
+
   // Mostrar pantalla de éxito si corresponde
   if (showSuccess) {
     return (
@@ -162,8 +161,15 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
   return (
     <>
       {SuccessScreen && <SuccessScreen onClose={() => {}} />}
-      <div className={`login-modal-backdrop${open ? ' modal-fade-in' : ' modal-fade-out'}`} onClick={onClose} style={showSuccess ? { pointerEvents: 'none', opacity: 0.5 } : {}}>
-        <div className={`login-modal-content${open ? ' modal-slide-in' : ' modal-slide-out'}`} onClick={e => e.stopPropagation()}>
+      <div 
+        className={`login-modal-backdrop${open ? ' modal-fade-in' : ' modal-fade-out'}`} 
+        onClick={onClose} 
+        style={showSuccess ? { pointerEvents: 'none', opacity: 0.5 } : {}}
+      >
+        <div 
+          className={`login-modal-content${open ? ' modal-slide-in' : ' modal-slide-out'}`} 
+          onClick={e => e.stopPropagation()}
+        >
           <div className="login-modal-left">
             <img src={LoginImg} alt="Ejemplo" className="login-modal-img-bg" />
             <div className="login-modal-overlay" />
@@ -174,7 +180,9 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
             <div className="login-modal-register">
               ¿Aún no tienes cuenta?{' '}
               <a href="#" className="login-modal-link" onClick={handleOpenRegister}>Regístrate</a>.
-            </div>            <form className="login-modal-form" onSubmit={handleSubmitWithValidation} autoComplete="off">
+            </div>
+            
+            <form className="login-modal-form" onSubmit={handleSubmitWithValidation} autoComplete="off">
               <label htmlFor="login-email" className="login-modal-label">Correo electrónico</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -194,10 +202,14 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
                 {(emailError || error === 'Usuario no encontrado') && (
                   <span className="fb-error-icon">!</span>
                 )}
-                <TooltipPortal targetRef={{ current: emailRef }} visible={((hasTriedLogin || focusedField === 'email') && (!!emailError || error === 'Usuario no encontrado'))}>
+                <TooltipPortal 
+                  targetRef={{ current: emailRef }} 
+                  visible={((hasTriedLogin || focusedField === 'email') && (!!emailError || error === 'Usuario no encontrado'))}
+                >
                   {emailError || (error === 'Usuario no encontrado' ? error : '')}
                 </TooltipPortal>
               </div>
+
               <label htmlFor="login-password" className="login-modal-label">Contraseña</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -225,12 +237,19 @@ const LoginModal = ({ open, onClose, onOpenRegister, onOpenForgot }) => {  const
                 {(passwordError || error === 'Contraseña inválida') && (
                   <span className="fb-error-icon">!</span>
                 )}
-                <TooltipPortal targetRef={{ current: passwordRef }} visible={((hasTriedLogin || focusedField === 'password') && (!!passwordError || error === 'Contraseña inválida'))}>
+                <TooltipPortal 
+                  targetRef={{ current: passwordRef }} 
+                  visible={((hasTriedLogin || focusedField === 'password') && (!!passwordError || error === 'Contraseña inválida'))}
+                >
                   {passwordError || (error === 'Contraseña inválida' ? error : '')}
                 </TooltipPortal>
               </div>
-              <button type="submit" className="login-modal-btn" disabled={loading}>Iniciar sesión</button>
+
+              <button type="submit" className="login-modal-btn" disabled={loading}>
+                Iniciar sesión
+              </button>
             </form>
+
             <div className="login-modal-forgot">
               ¿Olvidaste tu contraseña?{' '}
               <button 
