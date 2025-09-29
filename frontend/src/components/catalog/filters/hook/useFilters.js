@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMemo } from 'react';
 
 // Hook para obtener las clases únicas de los vehículos usando el campo del backend (vehicleClass)

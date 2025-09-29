@@ -1,4 +1,5 @@
 // Importaciones principales de React y los íconos usados en el modal
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../../hooks/useAuth';
 import { useLocation } from 'react-router-dom';

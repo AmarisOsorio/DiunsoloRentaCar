@@ -1,4 +1,5 @@
 // Importaciones de librerías y componentes necesarios para el catálogo
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Catalog.css';
