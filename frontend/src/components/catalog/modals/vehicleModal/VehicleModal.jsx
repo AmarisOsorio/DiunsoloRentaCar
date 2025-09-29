@@ -1,5 +1,10 @@
 // Importaciones principales de React y los íconos usados en el modal
+<<<<<<< HEAD
+import React from 'react';
+import { useState } from 'react';
+=======
 import { useState, useEffect } from 'react';
+>>>>>>> 40349ca4f3c8c6305971b210111fa3fe3b4178f3
 import { useAuth } from '../../../../hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 import { FaTimes, FaCar, FaChevronLeft, FaChevronRight, FaCalendar, FaExchangeAlt } from 'react-icons/fa';

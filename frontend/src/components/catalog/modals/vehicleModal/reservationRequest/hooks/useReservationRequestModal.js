@@ -62,6 +62,14 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle, editingReservati
   useEffect(() => {
     if (isOpen) {
       setValidationErrors({});
+<<<<<<< HEAD
+      if (isAuthenticated && userInfo) {
+        let fullName = '';
+        if (userInfo.fullname) {
+          fullName = userInfo.fullname.trim();
+        } else if (userInfo.nombres && userInfo.apellidos) {
+          fullName = `${userInfo.nombres} ${userInfo.apellidos}`.trim();
+=======
       setError(null);
       
       if (isEditingMode) {
@@ -98,6 +106,7 @@ const useReservationRequestModal = ({ isOpen, onClose, vehicle, editingReservati
             clientPhone: userInfo.telefono || userInfo.phone || '',
             clientEmail: userInfo.correo || userInfo.email || '',
           }));
+>>>>>>> 40349ca4f3c8c6305971b210111fa3fe3b4178f3
         }
       }
     }

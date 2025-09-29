@@ -26,7 +26,7 @@ const HTMLVerifyAccountEmail = (code, name = "", lastName = "") => {
         ¿Necesitas ayuda? Contáctanos en <a href="mailto:soporte@diunsolo.com" style="color:#009BDB;">soporte@diunsolo.com</a>
       </p>
       <div style="text-align: center; margin-top: 18px;">
-        <a href="http://localhost:5173" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
+        <a href="https://diunsolo-rent-car.vercel.app" style="color: #009BDB; text-decoration: none; font-weight: bold;">Diunsolo RentaCar</a>
       </div>
     </div>
   `;
