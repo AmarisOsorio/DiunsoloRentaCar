@@ -193,7 +193,7 @@ const ContractsScreen = ({ navigation }) => {
   };
 
   const formatCurrency = (amount) => {
-    return `Q ${parseFloat(amount || 0).toFixed(2)}`;
+    return `$ ${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   // Renderizar item de contrato con mejoras
@@ -367,7 +367,7 @@ const ContractsScreen = ({ navigation }) => {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Contratos</Text>
           <Text style={styles.headerSubtitle}>
-            {contractStats.total} contratos • {contractStats.active} activos
+           Todo en orden
           </Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>

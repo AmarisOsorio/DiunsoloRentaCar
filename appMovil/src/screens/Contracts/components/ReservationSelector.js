@@ -246,11 +246,11 @@ const ReservationSelector = ({ reservations, selectedReservation, onSelectReserv
                             <View style={styles.priceSection}>
                                 <View style={styles.priceRow}>
                                     <Text style={styles.priceLabel}>Precio/día:</Text>
-                                    <Text style={styles.priceValue}>Q {(reservation.pricePerDay || 0).toFixed(2)}</Text>
+                                    <Text style={styles.priceValue}>${(reservation.pricePerDay || 0).toFixed(2)}</Text>
                                 </View>
                                 <View style={styles.totalRow}>
                                     <Text style={styles.totalLabel}>Total estimado:</Text>
-                                    <Text style={styles.totalValue}>Q {totalAmount.toFixed(2)}</Text>
+                                    <Text style={styles.totalValue}>$ {totalAmount.toFixed(2)}</Text>
                                 </View>
                             </View>
 

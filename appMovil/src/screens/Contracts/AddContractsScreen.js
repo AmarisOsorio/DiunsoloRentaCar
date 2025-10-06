@@ -287,7 +287,7 @@ const AddContractScreen = ({ navigation }) => {
     const validateStep2 = () => {
         const required = [
             'tenantName', 'tenantAddress', 'passportNumber', 'licenseNumber',
-            'deliveryCity', 'dailyPrice', 'totalAmount'
+            'deliveryCity', 'dailyPrice', 'total Amount'
         ];
 
         for (let field of required) {

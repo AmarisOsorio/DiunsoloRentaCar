@@ -48,7 +48,7 @@ const ContractDetailsModal = ({
   };
 
   const formatCurrency = (amount) => {
-    return `Q ${parseFloat(amount || 0).toFixed(2)}`;
+    return `$ ${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   const getStatusConfig = (status) => {

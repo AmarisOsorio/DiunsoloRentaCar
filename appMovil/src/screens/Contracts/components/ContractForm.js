@@ -20,7 +20,7 @@ const ContractForm = ({
   };
 
   const formatCurrency = (value) => {
-    return `Q ${parseFloat(value || 0).toFixed(2)}`;
+    return `$ ${parseFloat(value || 0).toFixed(2)}`;
   };
 
   return (

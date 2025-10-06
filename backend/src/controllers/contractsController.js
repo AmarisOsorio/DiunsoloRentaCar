@@ -322,10 +322,10 @@ contractsController.generateContractPdf = async (req, res) => {
         doc.fontSize(14).text("INFORMACIÓN FINANCIERA:", { underline: true });
         doc.fontSize(12)
            .text(`Días de renta: ${contract.leaseData?.rentalDays || 0}`)
-           .text(`Precio por día: Q${contract.leaseData?.dailyPrice || 0}`)
-           .text(`Monto total: Q${contract.leaseData?.totalAmount || 0}`)
-           .text(`Depósito: Q${contract.leaseData?.depositAmount || 0}`)
-           .text(`Penalidad por mal uso: Q${contract.leaseData?.misusePenalty || 0}`);
+           .text(`Precio por día: $${contract.leaseData?.dailyPrice || 0}`)
+           .text(`Monto total: $${contract.leaseData?.totalAmount || 0}`)
+           .text(`Depósito: $${contract.leaseData?.depositAmount || 0}`)
+           .text(`Penalidad por mal uso: $${contract.leaseData?.misusePenalty || 0}`);
         doc.moveDown();
 
         // Fechas importantes
