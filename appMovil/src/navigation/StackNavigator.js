@@ -14,6 +14,12 @@ import ReservationDetailsScreen from '../screens/Reservations/ReservationDetails
 import EditReservationScreen from '../screens/Reservations/EditReservationScreen';
 import AddContractScreen from '../screens/Contracts/AddContractsScreen';
 
+import AddContractScreen from '../screens/Contracts/AddContractsScreen';
+
+
+import VehicleDetailsScreen from '../screens/Vehicles/VehicleDetails';
+
+
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
@@ -29,10 +35,10 @@ const StackNavigator = () => {
         component={TabNavigator}
       />
       
-      {/* Add maintenance screen */}
+      {/* Vehicle details screen */}
       <Stack.Screen
-        name="AddMaintenance"
-        component={AddMaintenanceScreen}
+        name="VehicleDetails"
+        component={VehicleDetailsScreen}
         options={{
           headerShown: false,
           presentation: 'card',
@@ -51,10 +57,10 @@ const StackNavigator = () => {
         }}
       />
 
-      {/* Pantalla para agregar vehículo */}
+      {/* Pantalla detalles mantenimiento */}
       <Stack.Screen
-        name="NewVehicle"
-        component={NewVehicleScreen}
+        name="MaintenanceDetails"
+        component={MaintenanceDetailsScreen}
         options={{
           headerShown: false,
           presentation: 'card',
@@ -94,7 +100,7 @@ const StackNavigator = () => {
           gestureEnabled: true,
         }}
       />
-      
+
       {/* Pantalla para agregar reserva */}
       <Stack.Screen
         name="AddReservation"

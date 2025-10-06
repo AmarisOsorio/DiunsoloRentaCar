@@ -32,7 +32,9 @@ function useForgotPasswordModal(onClose) {
     const result = await requestPasswordRecovery(data.email);
     setMessage(result.message);
     setLoading(false);
-    if (result.message && result.message.includes('enviado')) setStep(2);
+    if (result.message && result.message.includes('enviado')) {
+      setStep(2);
+    }
   };
 
   /**

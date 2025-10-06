@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // 👈
 
 const API_BASE_URL = 'http://10.0.2.2:4000/api';
 
@@ -30,7 +32,7 @@ const useNewVehicle = () => {
   const [plate, setPlate] = useState('');
   const [brands, setBrands] = useState([]);
   const [brandId, setBrandId] = useState('');
-  const [vehicleClass, setVehicleClass] = useState('');
+  const [vehicleClass, setVehicleClass] = useState(vehicleTypes[0]?.value || '');
   const [color, setColor] = useState('');
   const [year, setYear] = useState('');
   const [capacity, setCapacity] = useState('');
@@ -176,8 +178,17 @@ const useNewVehicle = () => {
   };
 
   const handleSubmit = async () => {
-    if (!mainViewImage || !sideImage) {
-      Alert.alert('Error', 'Debes seleccionar la imagen principal y lateral.');
+    // ...validaciones...
+    const hasMainImage = mainViewImage && (
+      (typeof mainViewImage === 'string' && (mainViewImage.startsWith('http://') || mainViewImage.startsWith('https://'))) ||
+      (typeof mainViewImage === 'object' && mainViewImage.uri)
+    );
+    const hasSideImage = sideImage && (
+      (typeof sideImage === 'string' && (sideImage.startsWith('http://') || sideImage.startsWith('https://'))) ||
+      (typeof sideImage === 'object' && sideImage.uri)
+    );
+    if (!hasMainImage || !hasSideImage) {
+      Alert.alert('Error', 'Debes seleccionar la imagen principal y lateral (archivos o URLs válidas).');
       return;
     }
     
@@ -247,7 +258,6 @@ const useNewVehicle = () => {
       }, 2500);
     }
   };
-
   return {
     brands,
     vehicleTypes,
@@ -289,7 +299,9 @@ const useNewVehicle = () => {
     success,
     response,
     pickImage,
+    setImageUrl,
     handleSubmit,
+    clearForm,
   };
 };
 
