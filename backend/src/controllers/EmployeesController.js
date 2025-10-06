@@ -390,6 +390,14 @@ EmployeesController.updateEmployees = async (req, res) => {
     
     // Solo actualizar contraseña si se proporciona
     if (password && password.trim() !== '') {
+      // Verificar que la nueva contraseña sea diferente a la actual
+      const isSamePassword = await bcryptjs.compare(password, currentEmployee.password);
+      if (isSamePassword) {
+        return res.status(400).json({
+          message: "La nueva contraseña debe ser diferente a la actual"
+        });
+      }
+      
       const passwordHash = await bcryptjs.hash(password, 10);
       updateData.password = passwordHash;
     }

@@ -72,12 +72,9 @@ app.use("/api/maintenances", maintenancesRoutes);//--
 app.use("/api/brands", brandsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-app.get('/api/contracts/debug-reservations', contractsRoutes);
-
-
 // Rutas utilitarias y de comunicación
 app.use("/api/sendWelcome", sendWelcomeRoutes);
 app.use("/api/contact", contactRoutes);
 
 
-export default app;
+export default app; 

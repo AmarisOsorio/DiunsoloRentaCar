@@ -1,7 +1,7 @@
   // --- Eliminar cuenta con validación de reservas/contratos ---
   const handleDeleteAccount = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/delete`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api'}/profile/delete`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -75,7 +75,7 @@ export function useInfoPerfil() {
         console.log(pair[0]+ ':', pair[1]);
       }
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/upload-document`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api'}/profile/upload-document`, {
           method: 'POST',
           credentials: 'include',
           body: formData
@@ -107,7 +107,7 @@ export function useInfoPerfil() {
     } else if (imageConfirmModal.action === 'delete') {
       // Eliminar imagen
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/delete-document`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api'}/profile/delete-document`, {
           method: 'DELETE',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -166,7 +166,7 @@ export function useInfoPerfil() {
     }
     try {
       // Llama al backend para enviar código
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/request-email-change`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api'}/profile/request-email-change`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -199,7 +199,7 @@ export function useInfoPerfil() {
     setEmailVerificationError('');
     setEmailVerifying(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/verify-email-change`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api'}/profile/verify-email-change`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -231,7 +231,7 @@ export function useInfoPerfil() {
     setEmailResending(true);
     setEmailVerificationError('');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/profile/request-email-change`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://diunsolorentacar.onrender.com/api'}/profile/request-email-change`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

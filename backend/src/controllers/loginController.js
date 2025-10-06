@@ -98,11 +98,28 @@ loginController.login = async (req, res) => {
       return;
     }
 
-    // Verificar contraseña (changed from contraseña to password)
-    if (userType !== "Administrador") {
+
+    //Check if user is locked
+  if (userType !== "Admin") {
+    if (userFound.lockTime && userFound.lockTime > Date.now()) {
+      const remainingTime = Math.ceil((userFound.lockTime - Date.now()) / 60000);
+      return res.json({message: `Account locked. Try again in ${remainingTime} minutes.`});
+    }
+  }
+
+    if (userType !== "Admin") {
       const isMatch = await bcryptjs.compare(password, userFound.password);
       if (!isMatch) {
-        return res.status(401).json({ message: "Contraseña inválida" });
+        //Invalid password, increment login attempts
+        userFound.loginAttempts = (userFound.loginAttempts || 0) + 1;
+        if (userFound.loginAttempts > maxAttempts) {
+          userFound.lockTime = Date.now() + lockTime;
+        }
+        await userFound.save();
+        if (userFound.loginAttempts > maxAttempts) {
+          return res.status(403).json({message: "Account locked. Too many failed attempts."});
+        }
+        return res.status(400).json({ message: "Contraseña inválida" });
       }
     }
 
@@ -147,10 +164,11 @@ loginController.login = async (req, res) => {
             name: userFound.name,
             email: userFound.email,
             phone: userFound.phone,
-            dui: userFound.dui,
-            rol: userFound.rol,
-            photo: userFound.photo,
-            fechaRegistro: userFound.createdAt
+            birthDate: userFound.birthDate,
+            passport: userFound.passport,
+            license: userFound.license,
+            isVerified: userFound.isVerified,
+            registrationDate: userFound.createdAt
           };
         }
 

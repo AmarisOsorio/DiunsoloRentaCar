@@ -1,11 +1,11 @@
 /*
     Fields:
-        nombre_completo (string),
-        correo_electronico (string),
-        contraseña (string),
-        telefono (string),
+        name (string),
+        email (string),
+        password (string),
+        phone (string),
         dui (string),
-        rol (string: "Empleado,Gestor,Admin")
+        role (string: "Employee,Manager,Admin")
 */
 
 //Imports
