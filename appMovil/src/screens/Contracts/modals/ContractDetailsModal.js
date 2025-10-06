@@ -8,7 +8,8 @@ import {
   StyleSheet,
   Alert,
   Dimensions,
-  Image
+  StatusBar,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -19,38 +20,244 @@ const ContractDetailsModal = ({
   contract, 
   onClose, 
   onDelete, 
-  onGeneratePdf 
+  onGeneratePdf,
+  onEdit
 }) => {
   const [activeTab, setActiveTab] = useState('general');
 
   if (!contract) return null;
 
+  // Helpers
+  const getNestedValue = (obj, path, defaultValue = 'N/A') => {
+    return path.split('.').reduce((current, key) => 
+      current && current[key] !== undefined ? current[key] : defaultValue, obj
+    );
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-ES');
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Fecha inválida';
+    }
   };
 
   const formatCurrency = (amount) => {
-    return `$${amount || 0}`;
+    return `Q ${parseFloat(amount || 0).toFixed(2)}`;
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Active':
-        return '#4CAF50';
-      case 'Finished':
-        return '#2196F3';
-      case 'Canceled':
-        return '#F44336';
-      default:
-        return '#757575';
-    }
+  const getStatusConfig = (status) => {
+    const configs = {
+      Active: { color: '#00C896', icon: 'play-circle', label: 'Activo', bg: '#E6F9F4' },
+      Finished: { color: '#4285F4', icon: 'checkmark-circle', label: 'Completado', bg: '#E8F0FE' },
+      Canceled: { color: '#EA4335', icon: 'close-circle', label: 'Cancelado', bg: '#FEF7F0' }
+    };
+    return configs[status] || { color: '#9AA0A6', icon: 'help-circle', label: status, bg: '#F1F3F4' };
+  };
+
+  // Extract data
+  const clientName = getNestedValue(contract, 'reservationId.clientId.name', '') + ' ' + 
+                    getNestedValue(contract, 'reservationId.clientId.lastName', '');
+  const vehicleBrand = getNestedValue(contract, 'reservationId.vehicleId.brand', 'Vehículo');
+  const vehicleModel = getNestedValue(contract, 'reservationId.vehicleId.model', 'N/A');
+  const vehiclePlate = getNestedValue(contract, 'reservationId.vehicleId.plate', 'Sin placa');
+  const statusConfig = getStatusConfig(contract.status);
+
+  // Components
+  const InfoCard = ({ icon, label, value, iconColor = '#4285F4', iconBg = '#E8F0FE' }) => (
+    <View style={styles.infoCard}>
+      <View style={[styles.infoIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={20} color={iconColor} />
+      </View>
+      <View style={styles.infoContent}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
+
+  const StatCard = ({ label, value, color = '#202124', icon }) => (
+    <View style={styles.statCard}>
+      {icon && <Ionicons name={icon} size={18} color={color} style={styles.statIcon} />}
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+    </View>
+  );
+
+  const CheckItem = ({ label, checked }) => (
+    <View style={styles.checkItem}>
+      <View style={[styles.checkCircle, checked && styles.checkCircleActive]}>
+        <Ionicons 
+          name={checked ? "checkmark" : "close"} 
+          size={14} 
+          color={checked ? "#00C896" : "#EA4335"} 
+        />
+      </View>
+      <Text style={styles.checkLabel}>{label}</Text>
+    </View>
+  );
+
+  const renderGeneralTab = () => {
+    const tenantName = getNestedValue(contract, 'leaseData.tenantName', clientName);
+    const tenantAddress = getNestedValue(contract, 'leaseData.tenantAddress', 'N/A');
+    const passportNumber = getNestedValue(contract, 'leaseData.passportNumber', 'N/A');
+    const licenseNumber = getNestedValue(contract, 'leaseData.licenseNumber', 'N/A');
+    const dailyPrice = getNestedValue(contract, 'leaseData.dailyPrice', 0);
+    const totalAmount = getNestedValue(contract, 'leaseData.totalAmount', 0);
+    const rentalDays = getNestedValue(contract, 'leaseData.rentalDays', 0);
+    const depositAmount = getNestedValue(contract, 'leaseData.depositAmount', 0);
+    const deliveryDate = getNestedValue(contract, 'statusSheetData.deliveryDate', contract.startDate);
+    const returnDate = getNestedValue(contract, 'statusSheetData.returnDate', contract.endDate);
+
+    return (
+      <View style={styles.tabContent}>
+        {/* Vehicle Header Card */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroIcon}>
+            <Ionicons name="car-sport" size={40} color="#FFFFFF" />
+          </View>
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>{vehicleBrand} {vehicleModel}</Text>
+            <Text style={styles.heroSubtitle}>{vehiclePlate}</Text>
+            <View style={[styles.heroBadge, { backgroundColor: statusConfig.bg }]}>
+              <Ionicons name={statusConfig.icon} size={14} color={statusConfig.color} />
+              <Text style={[styles.heroBadgeText, { color: statusConfig.color }]}>
+                {statusConfig.label}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <StatCard label="Días" value={rentalDays} icon="calendar" color="#4285F4" />
+          <StatCard label="Diario" value={formatCurrency(dailyPrice)} icon="cash" color="#FF9800" />
+          <StatCard label="Depósito" value={formatCurrency(depositAmount)} icon="wallet" color="#9C27B0" />
+          <StatCard label="Total" value={formatCurrency(totalAmount)} icon="card" color="#00C896" />
+        </View>
+
+        {/* Client Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="person" size={20} color="#4285F4" />
+            <Text style={styles.sectionTitle}>Información del Cliente</Text>
+          </View>
+          <View style={styles.cardContent}>
+            <InfoCard icon="person-circle" label="Nombre" value={tenantName} />
+            <InfoCard icon="location" label="Dirección" value={tenantAddress} iconColor="#00C896" iconBg="#E6F9F4" />
+            <InfoCard icon="card" label="Pasaporte" value={passportNumber} iconColor="#FF9800" iconBg="#FFF8E1" />
+            <InfoCard icon="newspaper" label="Licencia" value={licenseNumber} iconColor="#9C27B0" iconBg="#F3E5F5" />
+          </View>
+        </View>
+
+        {/* Dates Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="calendar" size={20} color="#4285F4" />
+            <Text style={styles.sectionTitle}>Período de Renta</Text>
+          </View>
+          <View style={styles.dateRange}>
+            <View style={styles.dateCard}>
+              <Ionicons name="arrow-forward-circle" size={24} color="#00C896" />
+              <Text style={styles.dateLabel}>Entrega</Text>
+              <Text style={styles.dateValue}>{formatDate(deliveryDate)}</Text>
+            </View>
+            <View style={styles.dateDivider}>
+              <Ionicons name="swap-horizontal" size={20} color="#E8EAED" />
+            </View>
+            <View style={styles.dateCard}>
+              <Ionicons name="arrow-back-circle" size={24} color="#4285F4" />
+              <Text style={styles.dateLabel}>Devolución</Text>
+              <Text style={styles.dateValue}>{formatDate(returnDate)}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderInspectionTab = () => {
+    const fuelDelivery = getNestedValue(contract, 'statusSheetData.fuelStatus.delivery', '50');
+    const fuelReturn = getNestedValue(contract, 'statusSheetData.fuelStatus.return', '50');
+    const physicalInspection = getNestedValue(contract, 'statusSheetData.physicalInspection.delivery', {});
+
+    return (
+      <View style={styles.tabContent}>
+        {/* Fuel Status */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="speedometer" size={20} color="#4285F4" />
+            <Text style={styles.sectionTitle}>Combustible</Text>
+          </View>
+          <View style={styles.fuelGrid}>
+            <View style={styles.fuelCard}>
+              <View style={styles.fuelIcon}>
+                <Ionicons name="speedometer" size={32} color="#00C896" />
+              </View>
+              <Text style={styles.fuelLabel}>Entrega</Text>
+              <Text style={styles.fuelValue}>{fuelDelivery}%</Text>
+              <View style={styles.fuelBar}>
+                <View style={[styles.fuelFill, { width: `${fuelDelivery}%`, backgroundColor: '#00C896' }]} />
+              </View>
+            </View>
+            <View style={styles.fuelCard}>
+              <View style={styles.fuelIcon}>
+                <Ionicons name="speedometer" size={32} color="#4285F4" />
+              </View>
+              <Text style={styles.fuelLabel}>Devolución</Text>
+              <Text style={styles.fuelValue}>{fuelReturn}%</Text>
+              <View style={styles.fuelBar}>
+                <View style={[styles.fuelFill, { width: `${fuelReturn}%`, backgroundColor: '#4285F4' }]} />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* External Inspection */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="car" size={20} color="#4285F4" />
+            <Text style={styles.sectionTitle}>Inspección Externa</Text>
+          </View>
+          <View style={styles.checkGrid}>
+            <CheckItem label="Capó" checked={physicalInspection.external?.hood} />
+            <CheckItem label="Antena" checked={physicalInspection.external?.antenna} />
+            <CheckItem label="Espejos" checked={physicalInspection.external?.mirrors} />
+            <CheckItem label="Baúl" checked={physicalInspection.external?.trunk} />
+            <CheckItem label="Ventanas" checked={physicalInspection.external?.windowsGoodCondition} />
+            <CheckItem label="Herramientas" checked={physicalInspection.external?.toolKit} />
+          </View>
+        </View>
+
+        {/* Internal Inspection */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="construct" size={20} color="#4285F4" />
+            <Text style={styles.sectionTitle}>Inspección Interna</Text>
+          </View>
+          <View style={styles.checkGrid}>
+            <CheckItem label="Encendido" checked={physicalInspection.internal?.startSwitch} />
+            <CheckItem label="Llave" checked={physicalInspection.internal?.ignitionKey} />
+            <CheckItem label="Luces" checked={physicalInspection.internal?.lights} />
+            <CheckItem label="Radio" checked={physicalInspection.internal?.originalRadio} />
+            <CheckItem label="A/C" checked={physicalInspection.internal?.acHeatingVentilation} />
+            <CheckItem label="Alfombras" checked={physicalInspection.internal?.mats} />
+            <CheckItem label="Repuesto" checked={physicalInspection.internal?.spareTire} />
+          </View>
+        </View>
+      </View>
+    );
   };
 
   const handleDeletePress = () => {
     Alert.alert(
-      'Confirmar eliminación',
-      '¿Estás seguro de que deseas eliminar este contrato?',
+      'Eliminar Contrato',
+      '¿Estás seguro? Esta acción no se puede deshacer.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -65,300 +272,95 @@ const ContractDetailsModal = ({
     );
   };
 
-  const handleGeneratePdfPress = () => {
-    onGeneratePdf(contract._id);
-  };
-
-  const renderGeneralTab = () => (
-    <View style={styles.tabContent}>
-      {/* Contract Status */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Estado del Contrato</Text>
-        <View style={styles.statusContainer}>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(contract.status) }]}>
-            <Text style={styles.statusText}>{contract.status}</Text>
-          </View>
-          <View style={styles.dateInfo}>
-            <Text style={styles.dateLabel}>Fecha de inicio:</Text>
-            <Text style={styles.dateValue}>{formatDate(contract.startDate)}</Text>
-            {contract.endDate && (
-              <>
-                <Text style={styles.dateLabel}>Fecha de fin:</Text>
-                <Text style={styles.dateValue}>{formatDate(contract.endDate)}</Text>
-              </>
-            )}
-          </View>
-        </View>
-      </View>
-
-      {/* Client Information */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información del Cliente</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Nombre:</Text>
-          <Text style={styles.infoValue}>{contract.leaseData?.tenantName || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Profesión:</Text>
-          <Text style={styles.infoValue}>{contract.leaseData?.tenantProfession || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Dirección:</Text>
-          <Text style={styles.infoValue}>{contract.leaseData?.tenantAddress || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Pasaporte:</Text>
-          <Text style={styles.infoValue}>
-            {contract.leaseData?.passportNumber || 'N/A'} 
-            {contract.leaseData?.passportCountry && ` (${contract.leaseData.passportCountry})`}
-          </Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Licencia:</Text>
-          <Text style={styles.infoValue}>
-            {contract.leaseData?.licenseNumber || 'N/A'}
-            {contract.leaseData?.licenseCountry && ` (${contract.leaseData.licenseCountry})`}
-          </Text>
-        </View>
-      </View>
-
-      {/* Vehicle Information */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información del Vehículo</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Vehículo:</Text>
-          <Text style={styles.infoValue}>{contract.statusSheetData?.brandModel || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Placa:</Text>
-          <Text style={styles.infoValue}>{contract.statusSheetData?.plate || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Unidad:</Text>
-          <Text style={styles.infoValue}>{contract.statusSheetData?.unitNumber || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Fecha de entrega:</Text>
-          <Text style={styles.infoValue}>{formatDate(contract.statusSheetData?.deliveryDate)}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Fecha de devolución:</Text>
-          <Text style={styles.infoValue}>{formatDate(contract.statusSheetData?.returnDate)}</Text>
-        </View>
-      </View>
-
-      {/* Pricing Information */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información de Precios</Text>
-        <View style={styles.pricingGrid}>
-          <View style={styles.pricingItem}>
-            <Text style={styles.pricingLabel}>Días de renta</Text>
-            <Text style={styles.pricingValue}>{contract.leaseData?.rentalDays || 0}</Text>
-          </View>
-          <View style={styles.pricingItem}>
-            <Text style={styles.pricingLabel}>Precio diario</Text>
-            <Text style={styles.pricingValue}>{formatCurrency(contract.leaseData?.dailyPrice)}</Text>
-          </View>
-          <View style={styles.pricingItem}>
-            <Text style={styles.pricingLabel}>Depósito</Text>
-            <Text style={styles.pricingValue}>{formatCurrency(contract.leaseData?.depositAmount)}</Text>
-          </View>
-          <View style={styles.pricingItem}>
-            <Text style={styles.pricingLabel}>Total</Text>
-            <Text style={[styles.pricingValue, styles.totalAmount]}>
-              {formatCurrency(contract.leaseData?.totalAmount)}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderInspectionTab = () => (
-    <ScrollView style={styles.tabContent}>
-      {/* Vehicle Documentation */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Documentación del Vehículo</Text>
-        
-        <Text style={styles.subSectionTitle}>Entrega</Text>
-        <View style={styles.checklistContainer}>
-          <View style={styles.checklistItem}>
-            <Ionicons 
-              name={contract.statusSheetData?.vehicleDocumentation?.delivery?.keys ? "checkmark-circle" : "close-circle"} 
-              size={20} 
-              color={contract.statusSheetData?.vehicleDocumentation?.delivery?.keys ? "#4CAF50" : "#F44336"} 
-            />
-            <Text style={styles.checklistText}>Llaves</Text>
-          </View>
-          <View style={styles.checklistItem}>
-            <Ionicons 
-              name={contract.statusSheetData?.vehicleDocumentation?.delivery?.circulationCard ? "checkmark-circle" : "close-circle"} 
-              size={20} 
-              color={contract.statusSheetData?.vehicleDocumentation?.delivery?.circulationCard ? "#4CAF50" : "#F44336"} 
-            />
-            <Text style={styles.checklistText}>Tarjeta de circulación</Text>
-          </View>
-          <View style={styles.checklistItem}>
-            <Ionicons 
-              name={contract.statusSheetData?.vehicleDocumentation?.delivery?.consumerInvoice ? "checkmark-circle" : "close-circle"} 
-              size={20} 
-              color={contract.statusSheetData?.vehicleDocumentation?.delivery?.consumerInvoice ? "#4CAF50" : "#F44336"} 
-            />
-            <Text style={styles.checklistText}>Factura de consumidor</Text>
-          </View>
-        </View>
-
-        <Text style={styles.subSectionTitle}>Devolución</Text>
-        <View style={styles.checklistContainer}>
-          <View style={styles.checklistItem}>
-            <Ionicons 
-              name={contract.statusSheetData?.vehicleDocumentation?.return?.keys ? "checkmark-circle" : "close-circle"} 
-              size={20} 
-              color={contract.statusSheetData?.vehicleDocumentation?.return?.keys ? "#4CAF50" : "#F44336"} 
-            />
-            <Text style={styles.checklistText}>Llaves</Text>
-          </View>
-          <View style={styles.checklistItem}>
-            <Ionicons 
-              name={contract.statusSheetData?.vehicleDocumentation?.return?.circulationCard ? "checkmark-circle" : "close-circle"} 
-              size={20} 
-              color={contract.statusSheetData?.vehicleDocumentation?.return?.circulationCard ? "#4CAF50" : "#F44336"} 
-            />
-            <Text style={styles.checklistText}>Tarjeta de circulación</Text>
-          </View>
-          <View style={styles.checklistItem}>
-            <Ionicons 
-              name={contract.statusSheetData?.vehicleDocumentation?.return?.consumerInvoice ? "checkmark-circle" : "close-circle"} 
-              size={20} 
-              color={contract.statusSheetData?.vehicleDocumentation?.return?.consumerInvoice ? "#4CAF50" : "#F44336"} 
-            />
-            <Text style={styles.checklistText}>Factura de consumidor</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Fuel Status */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Estado del Combustible</Text>
-        <View style={styles.fuelContainer}>
-          <View style={styles.fuelItem}>
-            <Text style={styles.fuelLabel}>Entrega:</Text>
-            <Text style={styles.fuelValue}>{contract.statusSheetData?.fuelStatus?.delivery || 'N/A'}</Text>
-          </View>
-          <View style={styles.fuelItem}>
-            <Text style={styles.fuelLabel}>Devolución:</Text>
-            <Text style={styles.fuelValue}>{contract.statusSheetData?.fuelStatus?.return || 'N/A'}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Notes */}
-      {contract.statusSheetData?.notes && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notas</Text>
-          <Text style={styles.notesText}>{contract.statusSheetData.notes}</Text>
-        </View>
-      )}
-    </ScrollView>
-  );
-
-  const renderDocumentsTab = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Documentos</Text>
-        
-        <TouchableOpacity style={styles.documentItem} onPress={handleGeneratePdfPress}>
-          <View style={styles.documentIcon}>
-            <Ionicons name="document-text" size={24} color="#2196F3" />
-          </View>
-          <View style={styles.documentInfo}>
-            <Text style={styles.documentTitle}>Contrato de Arrendamiento</Text>
-            <Text style={styles.documentSubtitle}>Generar PDF</Text>
-          </View>
-          <Ionicons name="download-outline" size={20} color="#2196F3" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.documentItem}>
-          <View style={styles.documentIcon}>
-            <Ionicons name="clipboard" size={24} color="#4CAF50" />
-          </View>
-          <View style={styles.documentInfo}>
-            <Text style={styles.documentTitle}>Hoja de Estado</Text>
-            <Text style={styles.documentSubtitle}>Inspección del vehículo</Text>
-          </View>
-          <Ionicons name="download-outline" size={20} color="#4CAF50" />
-        </TouchableOpacity>
-
-        {contract.statusSheetData?.conditionPhotos && contract.statusSheetData.conditionPhotos.length > 0 && (
-          <View style={styles.photosContainer}>
-            <Text style={styles.photosTitle}>Fotos del Estado del Vehículo</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {contract.statusSheetData.conditionPhotos.map((photo, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: photo }}
-                  style={styles.conditionPhoto}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
+      onRequestClose={onClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#4285F4" />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#212121" />
+          <TouchableOpacity onPress={onClose} style={styles.headerButton}>
+            <Ionicons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Detalles del Contrato</Text>
-          <TouchableOpacity onPress={handleDeletePress} style={styles.deleteButton}>
-            <Ionicons name="trash-outline" size={24} color="#F44336" />
-          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>Contrato</Text>
+            <Text style={styles.headerSubtitle}>#{contract._id?.slice(-8)}</Text>
+          </View>
+          <View style={styles.headerButton} />
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabsContainer}>
+        <View style={styles.tabBar}>
           <TouchableOpacity
             style={[styles.tab, activeTab === 'general' && styles.activeTab]}
             onPress={() => setActiveTab('general')}
           >
+            <Ionicons 
+              name="information-circle" 
+              size={20} 
+              color={activeTab === 'general' ? '#4285F4' : '#9AA0A6'} 
+            />
             <Text style={[styles.tabText, activeTab === 'general' && styles.activeTabText]}>
               General
             </Text>
           </TouchableOpacity>
+          
           <TouchableOpacity
             style={[styles.tab, activeTab === 'inspection' && styles.activeTab]}
             onPress={() => setActiveTab('inspection')}
           >
+            <Ionicons 
+              name="clipboard" 
+              size={20} 
+              color={activeTab === 'inspection' ? '#4285F4' : '#9AA0A6'} 
+            />
             <Text style={[styles.tabText, activeTab === 'inspection' && styles.activeTabText]}>
               Inspección
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'documents' && styles.activeTab]}
-            onPress={() => setActiveTab('documents')}
-          >
-            <Text style={[styles.tabText, activeTab === 'documents' && styles.activeTabText]}>
-              Documentos
-            </Text>
-          </TouchableOpacity>
         </View>
 
-        {/* Tab Content */}
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {activeTab === 'general' && renderGeneralTab()}
-          {activeTab === 'inspection' && renderInspectionTab()}
-          {activeTab === 'documents' && renderDocumentsTab()}
+        {/* Content */}
+        <ScrollView 
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
+        >
+          {activeTab === 'general' ? renderGeneralTab() : renderInspectionTab()}
         </ScrollView>
+
+        {/* Action Bar */}
+        <View style={styles.actionBar}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.pdfButton]}
+            onPress={() => onGeneratePdf(contract._id)}
+          >
+            <Ionicons name="document-text" size={20} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>PDF</Text>
+          </TouchableOpacity>
+
+          {onEdit && (
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => onEdit(contract)}
+            >
+              <Ionicons name="create" size={20} color="#FFFFFF" />
+              <Text style={styles.actionButtonText}>Editar</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.deleteButton]}
+            onPress={handleDeletePress}
+          >
+            <Ionicons name="trash" size={20} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   );
@@ -367,250 +369,363 @@ const ContractDetailsModal = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8F9FA',
   },
+  
+  // Header
   header: {
+    backgroundColor: '#4285F4',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
-  closeButton: {
+  headerButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerCenter: {
+    flex: 1,
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212121',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  deleteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFEBEE',
-    justifyContent: 'center',
-    alignItems: 'center',
+  headerSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontFamily: 'monospace',
+    marginTop: 2,
   },
-  tabsContainer: {
+
+  // Tabs
+  tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8EAED',
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 2,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 8,
+    borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#2196F3',
-    backgroundColor: '#ffffff',
+    borderBottomColor: '#4285F4',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: '#757575',
+    color: '#9AA0A6',
   },
   activeTabText: {
-    color: '#2196F3',
+    color: '#4285F4',
+    fontWeight: '600',
   },
+
+  // Content
   content: {
     flex: 1,
   },
-  tabContent: {
+  contentContainer: {
     padding: 20,
+    paddingBottom: 40,
   },
-  section: {
-    marginBottom: 24,
+  tabContent: {
+    gap: 20,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 16,
-  },
-  subSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#424242',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  statusBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+
+  // Hero Card
+  heroCard: {
+    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundColor: '#4285F4',
     borderRadius: 20,
-    marginRight: 16,
+    padding: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  statusText: {
+  heroIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  heroContent: {
+    flex: 1,
+  },
+  heroTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  heroSubtitle: {
     fontSize: 14,
-    color: '#ffffff',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 12,
+  },
+  heroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+  },
+  heroBadgeText: {
+    fontSize: 12,
     fontWeight: '600',
   },
-  dateInfo: {
-    flex: 1,
-  },
-  dateLabel: {
-    fontSize: 12,
-    color: '#757575',
-    marginBottom: 2,
-  },
-  dateValue: {
-    fontSize: 14,
-    color: '#212121',
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#757575',
-    flex: 1,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#212121',
-    fontWeight: '500',
-    flex: 2,
-    textAlign: 'right',
-  },
-  pricingGrid: {
+
+  // Stats Grid
+  statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 12,
   },
-  pricingItem: {
-    width: '48%',
-    backgroundColor: '#F8F9FA',
+  statCard: {
+    flex: 1,
+    minWidth: '47%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  pricingLabel: {
-    fontSize: 12,
-    color: '#757575',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  pricingValue: {
-    fontSize: 18,
-    color: '#212121',
-    fontWeight: 'bold',
-  },
-  totalAmount: {
-    color: '#4CAF50',
-  },
-  checklistContainer: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  checklistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  statIcon: {
     marginBottom: 8,
   },
-  checklistText: {
-    fontSize: 14,
-    color: '#212121',
-    marginLeft: 12,
-  },
-  fuelContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  fuelItem: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-    padding: 16,
-    borderRadius: 8,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  fuelLabel: {
+  statLabel: {
     fontSize: 12,
-    color: '#757575',
+    color: '#9AA0A6',
+    fontWeight: '500',
     marginBottom: 4,
   },
-  fuelValue: {
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  // Section
+  section: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  sectionTitle: {
     fontSize: 16,
-    color: '#212121',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#202124',
   },
-  notesText: {
-    fontSize: 14,
-    color: '#424242',
-    lineHeight: 20,
-    backgroundColor: '#F8F9FA',
-    padding: 16,
-    borderRadius: 8,
+  cardContent: {
+    gap: 12,
   },
-  documentItem: {
+
+  // Info Card
+  infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
-    padding: 16,
     borderRadius: 12,
-    marginBottom: 12,
+    padding: 12,
   },
-  documentIcon: {
+  infoIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
-  documentInfo: {
+  infoContent: {
     flex: 1,
   },
-  documentTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
+  infoLabel: {
+    fontSize: 12,
+    color: '#9AA0A6',
     marginBottom: 2,
   },
-  documentSubtitle: {
-    fontSize: 12,
-    color: '#757575',
-  },
-  photosContainer: {
-    marginTop: 20,
-  },
-  photosTitle: {
-    fontSize: 16,
+  infoValue: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#212121',
+    color: '#202124',
+  },
+
+  // Date Range
+  dateRange: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dateCard: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  dateDivider: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dateLabel: {
+    fontSize: 12,
+    color: '#9AA0A6',
+    fontWeight: '500',
+  },
+  dateValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#202124',
+  },
+
+  // Fuel Grid
+  fuelGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  fuelCard: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  fuelIcon: {
     marginBottom: 12,
   },
-  conditionPhoto: {
-    width: 120,
-    height: 120,
+  fuelLabel: {
+    fontSize: 12,
+    color: '#9AA0A6',
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  fuelValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#202124',
+    marginBottom: 12,
+  },
+  fuelBar: {
+    width: '100%',
+    height: 6,
+    backgroundColor: '#E8EAED',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  fuelFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+
+  // Check Grid
+  checkGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  checkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '47%',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
-    marginRight: 12,
-    backgroundColor: '#F5F5F5',
+    padding: 12,
+    gap: 8,
+  },
+  checkCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FEF7F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkCircleActive: {
+    backgroundColor: '#E6F9F4',
+  },
+  checkLabel: {
+    fontSize: 13,
+    color: '#202124',
+    fontWeight: '500',
+    flex: 1,
+  },
+
+  // Action Bar
+  actionBar: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E8EAED',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  pdfButton: {
+    backgroundColor: '#4285F4',
+  },
+  editButton: {
+    backgroundColor: '#FF9800',
+  },
+  deleteButton: {
+    backgroundColor: '#EA4335',
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

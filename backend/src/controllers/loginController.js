@@ -124,7 +124,7 @@ loginController.login = async (req, res) => {
           userData = {
             id: userFound._id,
             nombreCompleto: userFound.nombreCompleto,
-            correo: userFound.correo,
+            correo: userFound.email,
             telefono: userFound.telefono,
             fechaDeNacimiento: userFound.fechaDeNacimiento,
             pasaporteDui: userFound.pasaporteDui,
